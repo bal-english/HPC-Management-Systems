@@ -1,0 +1,17 @@
+FROM ubuntu
+MAINTAINER TH2 Alex
+
+RUN apt-get update
+RUN apt-get install -y nodejs
+RUN apt-get install -y npm
+RUN npm update
+
+RUN mkdir /home/app
+
+#ADD node-api-postgres/package.json /home/app/node-api-postgres/package.json
+#ADD node-api-postgres/index.js /home/app/node-api-postgres/index.js
+#ADD dbjs/queries.js /home/app/dbjs/queries.js
+
+RUN npm install pg express
+
+CMD ["/bin/echo", "test"]

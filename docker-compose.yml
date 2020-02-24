@@ -1,16 +1,20 @@
-version: '3.1'                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                             
-services:                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                             
-  db:                                                                                                                                                                                                                                        
-    image: postgres                                                                                                                                                                                                                          
-    restart: always                                                                                                                                                                                                                          
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
     environment:
       POSTGRES_USER: example
-      POSTGRES_PASSWORD: example                                                                                                                                                                                                             
+      POSTGRES_PASSWORD: example
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 35000:8080
+
+  test:
+    image: benglish4/testapp
+    restart: always
