@@ -33,7 +33,9 @@ for(i = 0; i < usercount; i++){
   };
 
   client.add('cn=foo, o=example', entry, function(err){ //async in a for, bad, fix later
-    assert.ifError(err);
+    if(err){
+      console.log(err);
+    }
   });
 
 }
