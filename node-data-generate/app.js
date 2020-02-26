@@ -32,7 +32,7 @@ for(i = 0; i < usercount; i++){
     objectclass: 'put_something_here'
   };
 
-  client.add('cn=foo, o=example', entry, function(err){ //asyn in a for, bad, fix later
+  client.add('cn=foo, o=example', entry, function(err){ //async in a for, bad, fix later
     assert.ifError(err);
   });
 
