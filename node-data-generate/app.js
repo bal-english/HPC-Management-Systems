@@ -31,6 +31,13 @@ for(i = 0; i < usercount; i++){
     email: [email],
     objectclass: 'put_something_here'
   };
+  
+  /*
+  
+  adding api - add(dn, entry, controls, callback)
+  only thing to change here is dn
+  
+  */
 
   client.add('cn=foo, o=example', entry, function(err){ //async in a for, bad, fix later
     if(err){
