@@ -1,0 +1,87 @@
+dn: ou=people,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: organizationalUnit
+objectClass: top
+ou: people
+
+dn: ou=group,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: organizationalUnit
+objectClass: top
+ou: group
+
+dn: ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: organizationalUnit
+objectClass: top
+ou: ldapconfig
+
+dn: cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: top
+objectClass: suseModuleConfiguration
+objectClass: suseUserConfiguration
+suseDefaultBase: ou=people,dc=linuxlab,dc=salisbury,dc=edu
+suseDefaultTemplate: cn=usertemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,
+ dc=edu
+suseMaxPasswordLength: 8
+suseMaxUniqueId: 60000
+suseMinPasswordLength: 5
+suseMinUniqueId: 1000
+susePasswordHash: SSHA
+suseSearchFilter: objectClass=posixAccount
+suseSkelDir: /etc/skel
+cn: userconfiguration
+
+dn: cn=groupconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: top
+objectClass: suseModuleConfiguration
+objectClass: suseGroupConfiguration
+suseDefaultBase: ou=group,dc=linuxlab,dc=salisbury,dc=edu
+suseDefaultTemplate: cn=grouptemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury
+ ,dc=edu
+suseMaxUniqueId: 60000
+suseMinUniqueId: 1000
+suseSearchFilter: objectClass=posixGroup
+cn: groupconfiguration
+
+dn: cn=usertemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: top
+objectClass: suseObjectTemplate
+objectClass: suseUserTemplate
+suseDefaultValue: homeDirectory=/home/%uid
+suseDefaultValue: loginShell=/bin/bash
+suseNamingAttribute: uid
+susePlugin: UsersPluginLDAPAll
+cn: usertemplate
+
+dn: cn=grouptemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: top
+objectClass: suseObjectTemplate
+objectClass: suseGroupTemplate
+suseNamingAttribute: cn
+susePlugin: UsersPluginLDAPAll
+cn: grouptemplate
+
+dn: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+cn: Dummy Account
+gidNumber: 100
+homeDirectory: /home/dummyaccount
+objectClass: top
+objectClass: posixAccount
+objectClass: inetOrgPerson
+sn: dummyaccount
+uid: dummyaccount
+uidNumber: 999999
+
+dn: cn=students,ou=group,dc=linuxlab,dc=salisbury,dc=edu
+cn: students
+gidNumber: 1001
+member: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: posixGroup
+objectClass: top
+objectClass: groupOfNames
+
+dn: cn=faculty,ou=group,dc=linuxlab,dc=salisbury,dc=edu
+cn: faculty
+gidNumber: 1000
+member: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: groupOfNames
+objectClass: top
+objectClass: posixGroup
