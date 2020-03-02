@@ -1,17 +1,18 @@
 FROM ubuntu
 MAINTAINER TH2 Alex
 
+RUN mkdir -p /home/app/migration/
+WORKDIR /home/app/migration
+
 RUN apt-get update
+RUN apt-get install -y postgresql
 RUN apt-get install -y nodejs
 RUN apt-get install -y npm
+
 RUN npm update
+RUN npm install pg express --save -g db-migrate -g db-migrate-pg
 
-RUN mkdir /home/app
 
-#ADD node-api-postgres/package.json /home/app/node-api-postgres/package.json
-#ADD node-api-postgres/index.js /home/app/node-api-postgres/index.js
-#ADD dbjs/queries.js /home/app/dbjs/queries.js
+ADD db-migrate-pg/database.json /home/app/migration/database.json
 
-RUN npm install pg express
-
-CMD ["/bin/echo", "test"]
+#CMD ["/bin/echo", "test"]

@@ -3,18 +3,19 @@ version: '3.1'
 services:
 
   db:
-    image: postgres
+    image: postgres:10.12
+    container_name: pg
     restart: always
     environment:
-      POSTGRES_USER: example
-      POSTGRES_PASSWORD: example
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
 
-  adminer:
-    image: adminer
+  web:
+    image: dpage/pgadmin4
+    container_name: web
     restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     ports:
-      - 35000:8080
-
-  test:
-    image: benglish4/testapp
-    restart: always
+      - "${PGADMIN_PORT:-5050}:80"
