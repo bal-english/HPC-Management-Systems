@@ -1,16 +1,21 @@
-version: '3.1'                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                             
-services:                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                             
-  db:                                                                                                                                                                                                                                        
-    image: postgres                                                                                                                                                                                                                          
-    restart: always                                                                                                                                                                                                                          
-    environment:
-      POSTGRES_USER: example
-      POSTGRES_PASSWORD: example                                                                                                                                                                                                             
+version: '3.1'
 
-  adminer:
-    image: adminer
+services:
+
+  db:
+    image: postgres:10.12
+    container_name: pg
     restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+
+  web:
+    image: dpage/pgadmin4
+    container_name: web
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     ports:
-      - 35000:8080
+      - "${PGADMIN_PORT:-5050}:80"
