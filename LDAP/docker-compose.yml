@@ -2,9 +2,7 @@ version: '3.5'
 services:
   openldap:
     image: cosc425/openldap:1.0.1
-    container_name: ${SUDO_USER}_openldap
-    networks:
-      - network1
+    #container_name: ${SUDO_USER}_openldap
     environment:
       LDAP_DOMAIN: "linuxlab.salisbury.edu"
       LDAP_ADMIN_PASSWORD: "password"
@@ -19,17 +17,19 @@ services:
       - /etc/ldap/slapd.d
       - /container/service/slapd/assets/certs/
     #domainname: "openldap" # important: same as hostname
-    #hostname: "openldap"
-  phpldapadmin:
-    image: osixia/phpldapadmin:latest
-    container_name: ${SUDO_USER}_phpldapadmin
+    hostname: "openldap"
     networks:
       - network1
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    #container_name: ${SUDO_USER}_phpldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
       PHPLDAPADMIN_HTTPS: "false"
     depends_on:
       - openldap
+    networks:
+      - network1
 networks:
   network1:
-    name: ${SUDO_USER}_default
+    name: $NETWORK_NAME
