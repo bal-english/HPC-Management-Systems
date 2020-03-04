@@ -23,6 +23,8 @@ services:
   phpldapadmin:
     image: osixia/phpldapadmin:latest
     container_name: phpldapadmin
+    networks:
+      - network1
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
       PHPLDAPADMIN_HTTPS: "false"
