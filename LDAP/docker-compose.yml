@@ -1,8 +1,10 @@
-version: '2'
+version: '3.5'
 services:
   openldap:
     image: cosc425/openldap:1.0.1
-    container_name: $USER_openldap
+    container_name: ${SUDO_USER}_openldap
+    networks:
+      - network1
     environment:
       LDAP_DOMAIN: "linuxlab.salisbury.edu"
       LDAP_ADMIN_PASSWORD: "password"
@@ -28,3 +30,6 @@ services:
       - "45679:80"
     depends_on:
       - openldap
+networks:
+  network1:
+    name: ${SUDO_USER}_default
