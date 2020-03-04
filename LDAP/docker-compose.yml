@@ -22,7 +22,7 @@ services:
     #hostname: "openldap"
   phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: phpldapadmin
+    container_name: ${SUDO_USER}_phpldapadmin
     networks:
       - network1
     environment:
