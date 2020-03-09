@@ -30,13 +30,6 @@ services:
       - openldap
     networks:
       - network1
-  node:
-    image: cosc425/node:1.0.1
-    hostname: cosc425/node
-    volumes: 
-      - ./app:/app
-     #container_name: ${SUDO_USER}_nodejs
 networks:
   network1:
     name: $NETWORK_NAME
- 
