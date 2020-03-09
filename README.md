@@ -24,6 +24,7 @@ Goals for Spring 2020
 - [x] Create dummy data for LDAP server
 
 ##### ldapusers
+- [x] dependencies (/app)
 - [ ] User delete/insert
 - [ ] Atomically create/add users
 - [ ] Format student rosters for LDAP
