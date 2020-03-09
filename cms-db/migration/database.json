@@ -1,0 +1,12 @@
+{
+  "pg": {
+    "driver": "pg",
+    "user": "admin",
+    "password": "password",
+    "host": "172.19.0.2",
+    "database": "db",
+    "port": "5432",
+    "ssl": "true",
+    "schema": "my_schema"
+  }
+}
