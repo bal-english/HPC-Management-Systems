@@ -10,16 +10,23 @@ Goals for Spring 2020
 - Create skeleton for CMS
 
 #### CMS (Content Management System)
+##### webdb
 - [x] DB Schema
+- [ ] Users & User roles
+
+##### CMSweb
 - [ ] Routing
 - [ ] Dynamic Rooting
-- [ ] Users & User roles
 - [ ] Support Ticket Page
 
-#### User Management SYstem
+#### User Management System
+##### NodeJS Branch
 - [x] Create dummy data for LDAP server
-- [ ] Set up Nginx reverse proxy server
+
+##### ldapusers
 - [ ] User delete/insert
-- [ ] 2FA Password authenication
 - [ ] Atomically create/add users
 - [ ] Format student rosters for LDAP
+
+- [ ] Set up Nginx reverse proxy server
+- [ ] 2FA Password authenication
