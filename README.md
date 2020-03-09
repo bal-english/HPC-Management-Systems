@@ -1,4 +1,8 @@
-## cosc425
+# COSC 425 Software Engineering
+A study of classical and object‑oriented software engineering principles and methods.  Topics include software processes, requirements analysis, design, testing and maintenance, project management and software metrics, process improvement. Agile software development and open-source software development are also covered.
+
+## Project: HPCL User Management System & Website Development
+
 ### HPCL Website and User Management System
 
 Goals for Spring 2020
