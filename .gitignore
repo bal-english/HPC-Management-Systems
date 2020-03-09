@@ -1,1 +1,4 @@
 LDAP/.env
+LDAP/app/node_modules
+LDAP/app/.npm
+LDAP/app/dist/*
