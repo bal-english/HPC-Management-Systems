@@ -11,11 +11,7 @@ services:
       POSTGRES_PASSWORD: password
 
   web:
-    image: dpage/pgadmin4
-    container_name: web
+    image: adminer
     restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - 35000:8080
