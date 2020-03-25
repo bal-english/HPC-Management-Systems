@@ -39,6 +39,8 @@ for(i = 0; i < usercount; i++){
   adding api - add(dn, entry, controls, callback)
   only thing to change here is dn
   
+  use: dn: uid=dummyaccount, ou=people....
+  
   */
 	
   var dn = 'cn=' + entry.cn + ', sn=' + entry.sn;
