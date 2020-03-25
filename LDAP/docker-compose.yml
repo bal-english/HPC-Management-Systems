@@ -35,8 +35,10 @@ services:
     hostname: cosc425/node
     volumes: 
       - ./app:/app
-     #container_name: ${SUDO_USER}_nodejs
+    container_name: ${SUDO_USER}_nodejs
+    networks:
+      - network1    
 networks:
   network1:
-    name: $NETWORK_NAME
+    name: network1
  
