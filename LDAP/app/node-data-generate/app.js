@@ -40,9 +40,12 @@ for(i = 0; i < usercount; i++){
   only thing to change here is dn
   
   */
+	
+  var dn = 'cn=' + entry.cn + ', sn=' + entry.sn;
 
-  client.add('cn=foo, o=example', entry, function(err){ //async in a for, bad, fix later
+  client.add(dn, entry, function(err){ //async in a for, bad, fix later
     if(err){
+      console.log('LDAP Insertion Err on dn: ' + dn);
       console.log(err);
     }
   });
