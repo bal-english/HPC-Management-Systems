@@ -16,8 +16,10 @@ Goals for Spring 2020
 - [ ] Users & User roles
 
 ##### CMSweb
-- [ ] Routing
-- [ ] Dynamic Rooting
+- [x] Routing
+- [ ] Dynamic Routing
+  - [ ] Group routes using PUG?
+  - [ ] Middleware to log requests (tickets?)
 - [ ] Support Ticket Page
 
 #### User Management System
