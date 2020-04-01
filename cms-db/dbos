@@ -18,7 +18,7 @@ ADD migration/database.json /home/app/cms/database.json
 ADD migration/migrations/ /home/app/cms/migrations
 
 ADD routing/ /home/app/cms/routing
-RUN bash -c "npm install -y --save express"
+#RUN bash -c "npm install -y --save express"
 RUN bash -c "npm install -y --save pg"
 
 #CMD ["/bin/echo", "test"]
