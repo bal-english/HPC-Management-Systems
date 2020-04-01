@@ -12,7 +12,7 @@ Goals for Spring 2020
 #### CMS (Content Management System)
 ##### webdb
 - [x] DB Schema
-  - [ ] Migrations 
+  - [x] Migrations 
 - [ ] Users & User roles
 
 ##### CMSweb
