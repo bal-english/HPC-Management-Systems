@@ -1,14 +1,9 @@
-	var app = express();
+	
 	var express = require('express');
+	var app = express();
 
-	app.set('view engine', 'pug');
 	app.set('views','./views');
-
-		//The app.use function call on route '/things' attaches the things router with this route
-		//basically like an include statement
-	var things = require('./things.js');
-
-	app.use('/things', things);
+	var path = require('path');
 	app.use(express.static('images'));
 
 		//path prefix for serving static files. For example, if you want to provide a path prefix like '/static'
@@ -21,23 +16,21 @@
 		//This technique can come in handy when providing multiple directories as static files. 
 		//These prefixes can help distinguish between multiple directories.
 
-//TODO: Calculatable when create page...
-
-	app.get('/home', function(req, res){
-	   res.send("Hello world!");
+	app.get('/', function(req, res) {
+    	res.sendFile(path.join(__dirname + '/views/home.html'));
 	});
 
 	app.get('/blog', function(req, res){
-		res.send("Blog view will go here");
+    	res.sendFile(path.join(__dirname + '/views/bloghome.html'));
 	});
 
 	app.get('/ticket', function(req, res){
-		res.send("Ticketing will go here");
+    	res.sendFile(path.join(__dirname + '/views/tickethome.html'));
 	});
 
 		app.get('/ticket/create', function(req, res){
-			res.send("Ticketing will go here");
-		});
+				res.send("Ticketing will go here");
+			});
 
 
 
@@ -51,12 +44,14 @@
 		//id can only be 5 digits from 0-9
 		//for blog posts 
 	app.get('/blog/:id([0-9]{5})', function(req, res){
+	   res.send("TODO: Blog individual page goes here");
 	   res.send('id: ' + req.params.id);
 	});
 
 		//id can only be 5 digits from 0-9
 		//for tickets
 	app.get('/ticket/:id([0-9]{5})', function(req, res){
+	   res.send("TODO: Ticket individual page goes here");
 	   res.send('id: ' + req.params.id);
 	});
 
