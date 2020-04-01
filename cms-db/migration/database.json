@@ -3,10 +3,9 @@
     "driver": "pg",
     "user": "admin",
     "password": "password",
-    "host": "localhost",
+    "host": "db",
     "database": "db",
     "port": "5432",
-    "ssl": "false",
     "schema": "my_schema"
   }
 }

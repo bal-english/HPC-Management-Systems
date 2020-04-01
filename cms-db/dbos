@@ -1,0 +1,24 @@
+FROM ubuntu
+MAINTAINER TH2 Alex
+
+#RUN mkdir -p /home/app/migration/
+WORKDIR /home/app/cms/
+
+RUN apt-get update
+RUN apt-get install -y postgresql
+RUN apt-get install -y nodejs
+RUN apt-get install -y npm
+RUN apt-get install -y iputils-ping
+
+RUN npm update
+RUN npm init --yes
+RUN npm install --save -g db-migrate -g db-migrate-pg
+
+ADD migration/database.json /home/app/cms/database.json
+ADD migration/migrations/ /home/app/cms/migrations
+
+ADD routing/ /home/app/cms/routing
+RUN bash -c "npm install -y --save express"
+RUN bash -c "npm install -y --save pg"
+
+#CMD ["/bin/echo", "test"]
