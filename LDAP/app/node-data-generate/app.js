@@ -9,10 +9,14 @@ install/run
 var ldap = require('ldapjs');
 var faker = require('faker');
 
-var usercount = 10; //how many fake users to add
+var usercount = 1; //how many fake users to add
 
 var client = ldap.createClient({
-  url: 'ldap://127.0.0.1:1389' //put the url here
+	url: 'ldap://user_openldap_1' //put the url here
+});
+
+client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password' ,function(err){
+console.log(err);
 });
 
 var i;
@@ -29,18 +33,18 @@ for(i = 0; i < usercount; i++){
   */
 
   var entry = {
-    cn: 'Dummy Account',
-    gidNumber: 100,
-    homeDirectory: '/home/dummyaccount',
+    cn: 'Dummy Account3',
+    //gidNumber: '100' ,
+    //homeDirectory: '/home/dummyaccount',
     objectClass: 'top',
     objectClass: 'posixAccount',
     objectClass: 'inetOrgPerson',
-    sn: 'dummyaccount',
-    uid: 'dummyaccount',
-    uidNumber: 999999
+    sn: 'dummyaccount3',
+    uid: 'dummyaccount3'
+    //uidNumber: '1'
   };
   
-  var dn = 'uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu'
+  var dn = 'uid=dummyaccount3,ou=people,dc=linuxlab,dc=salisbury,dc=edu'
   
   /*
   
