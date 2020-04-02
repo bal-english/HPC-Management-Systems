@@ -23,7 +23,8 @@ exports.up = function(db, callback) {
     },*/
     tag: {
       type: 'text',
-      primaryKey: true//unique: true
+      primaryKey: true
+      //unique: true
     },
     disallowed: {
       type: 'boolean',
