@@ -18,6 +18,6 @@ Goals for Spring 2020
 ##### CMSweb
 - [x] Routing
 - [ ] Dynamic Routing
-  - [ ] Group routes using PUG?
+  - [x] Group routes
   - [ ] Middleware to log requests (tickets?)
-- [ ] Support Ticket Page
+- [ ] Support Ticket Page (ticketing page, needs to be BEEF'D)
