@@ -2,11 +2,11 @@ version: '3.5'
 services:
   openldap:
     image: cosc425/openldap:1.0.1
-    #container_name: ${SUDO_USER}_openldap
+    #container_name: ${COMPOSE_PROJECT_NAME}_openldap
     environment:
       LDAP_DOMAIN: "linuxlab.salisbury.edu"
       LDAP_ADMIN_PASSWORD: "password"
-      LDAP_ORGANISATION: "Salisbury University"
+      LDAP_ORGINISATION: "Salisbury University"
       LDAP_RFC2307BIS_SCHEMA: "true"
       LDAP_CONFIG_PASSWORD: "password"
       LDAP_LOG_LEVEL: "256"
@@ -22,7 +22,7 @@ services:
       - network1
   phpldapadmin:
     image: osixia/phpldapadmin:latest
-    #container_name: ${SUDO_USER}_phpldapadmin
+    #container_name: ${COMPOSE_PROJECT_NAME}_phpldapadmin
     environment:
       PHPLDAPADMIN_LDAP_HOSTS: "openldap"
       PHPLDAPADMIN_HTTPS: "false"
@@ -33,9 +33,11 @@ services:
   node:
     image: cosc425/node:1.0.1
     hostname: cosc425/node
-    volumes: 
+    volumes:
       - ./app:/app
+    container_name: ${COMPOSE_PROJECT_NAME}_nodejs
+    networks:
+      - network1    
 networks:
   network1:
-    name: $NETWORK_NAME
- 
+    name: network1
