@@ -14,11 +14,18 @@ exports.setup = function(options, seedLink) {
   seed = seedLink;
 };
 
-exports.up = function(db) {
-  return null;
+exports.up = function(db, callback) {
+	db.insert('usergroup', ['name'], ['superuser']);
+	db.insert('usergroup', ['name'], ['ticket_admin']);
+	db.insert('usergroup', ['name'], ['ticket_worker']);
+	db.insert('usergroup', ['name'], ['content_admin']);
+	db.insert('usergroup', ['name'], ['content_creator']);
+	db.insert('usergroup', ['name'], ['su_faculty']);
+	db.insert('usergroup', ['name'], ['su_student']);
+	return db.insert('usergroup', ['name'], ['su_alumnus'], callback);
 };
 
-exports.down = function(db) {
+exports.down = function(db, callback) {
   return null;
 };
 
