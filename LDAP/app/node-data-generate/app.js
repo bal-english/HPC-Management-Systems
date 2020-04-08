@@ -11,7 +11,7 @@ var faker = require('faker');
 
 var usercount = 1; //how many fake users to add
 
-module.exports = {
+LDAPUtils = {
   
   initLDAP: () => {
     
@@ -29,7 +29,7 @@ module.exports = {
   
   add: (dn, entry, callback) => {
     
-    var client = this.initLDAP();
+    var client = LDAPUtils.initLDAP();
     
     client.add(dn, entry, function(err){
       if(err){
@@ -43,6 +43,8 @@ module.exports = {
   },
   
 };
+
+module.exports = LDAPUtils;
 
 var i;
 for(i = 0; i < usercount; i++){
