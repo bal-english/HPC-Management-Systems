@@ -1,5 +1,6 @@
 {
-  "pg": {
+  "defaultEnv": "cmspg",
+  "cmspg": {
     "driver": "pg",
     "user": "admin",
     "password": "password",
