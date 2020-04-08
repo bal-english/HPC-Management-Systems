@@ -11,13 +11,38 @@ var faker = require('faker');
 
 var usercount = 1; //how many fake users to add
 
-var client = ldap.createClient({
-	url: 'ldap://openldap' //put the url here
-});
+module.exports = {
+  
+  initLDAP: () => {
+    
+    var client = ldap.createClient({
+      url: 'ldap://pi_openldap_1' //put the url here
+    });
 
-client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password' ,function(err){
-console.log(err);
-});
+    client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password' ,function(err){
+      console.log(err);
+    });
+
+    return client;
+    
+  },
+  
+  add: (dn, entry, callback) => {
+    
+    var client = this.initLDAP();
+    
+    client.add(dn, entry, function(err){
+      if(err){
+        console.log(err);
+        callback(err);
+      } else {
+        callback(null);
+      }
+    });
+    
+  },
+  
+};
 
 var i;
 for(i = 0; i < usercount; i++){
@@ -31,20 +56,20 @@ for(i = 0; i < usercount; i++){
   /*
   dn format: cn=faculty,ou=group,dc=linuxlab,dc=salisbury,dc=edu
   */
-  var array = ["top", "posixAccount", "inetOrgPerson"];
+
   var entry = {
-    cn: 'Dummy Account6',
-    gidNumber: '100' ,
-    homeDirectory: "home/dummyaccount",
+    cn: 'Dummy Account3',
+    gidNumber: 100,
+    homeDirectory: '/home/dummyaccount',
     //objectClass: 'top',
     //objectClass: 'posixAccount',
-    objectClass: array ,
-    sn: 'dummyaccount6',
-    uid: 'dummyaccount6',
-    uidNumber: '1'
+    objectClass: ['top', 'posixaccount', 'inetorgperson'],
+    sn: 'dummyaccount3',
+    uid: 'dummyaccount3',
+    uidNumber: 1
   };
   
-  var dn = 'uid=dummyaccount6,ou=people,dc=linuxlab,dc=salisbury,dc=edu'
+  var dn = 'uid=dummyaccount3,ou=people,dc=linuxlab,dc=salisbury,dc=edu'
   
   /*
   
@@ -53,7 +78,7 @@ for(i = 0; i < usercount; i++){
   
   */
 
-  client.add(dn, entry, function(err){ //async in a for, bad, fix later
+  module.exports.add(dn, entry, function(err){
     if(err){
       console.log(err);
     }
