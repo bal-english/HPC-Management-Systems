@@ -32,8 +32,8 @@
 	});
 
 		app.get('/ticket/create', function(req, res){
-				res.send("Ticketing will go here");
-			});
+    		res.sendFile(path.join(__dirname + '/views/ticketcreation.html'));
+		});
 
 
 
