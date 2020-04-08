@@ -16,19 +16,8 @@ Goals for Spring 2020
 - [ ] Users & User roles
 
 ##### CMSweb
-- [ ] Routing
-- [ ] Dynamic Rooting
-- [ ] Support Ticket Page
-
-#### User Management System
-##### NodeJS Branch
-- [x] Create dummy data for LDAP server
-
-##### ldapusers
-- [x] dependencies (/app)
-- [ ] User delete/insert
-- [ ] Atomically create/add users
-- [ ] Format student rosters for LDAP
-
-- [ ] Set up Nginx reverse proxy server
-- [ ] 2FA Password authenication
+- [x] Routing
+- [ ] Dynamic Routing
+  - [x] Group routes
+  - [ ] Middleware to log requests (tickets?)
+- [ ] Support Ticket Page (ticketing page, needs to be BEEF'D)
