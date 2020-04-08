@@ -9,14 +9,15 @@ install/run
 var ldap = require('ldapjs');
 var faker = require('faker');
 
-var usercount = 1; //how many fake users to add
+//LDAP Utilites export
+//For Michael and Dan's class to use
 
-LDAPUtils = {
+var LDAPUtils = {
   
   initLDAP: () => {
     
     var client = ldap.createClient({
-      url: 'ldap://pi_openldap_1' //put the url here
+      url: 'ldap://openldap' //put the url here
     });
 
     client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password' ,function(err){
@@ -46,7 +47,9 @@ LDAPUtils = {
 
 module.exports = LDAPUtils;
 
+var usercount = 1; //how many fake users to add
 var i;
+
 for(i = 0; i < usercount; i++){
 
   var fn = faker.name.firstName(),
