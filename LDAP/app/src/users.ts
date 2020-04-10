@@ -48,11 +48,10 @@ export class User {
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
         const gidNumber:LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(100);
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
-        const uidNum:LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69); // MAYBE
-        const homeDir:LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
+        const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69); // MAYBE
+        const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
         const inDBflag:boolean=false;
-        // Ask Richard about DBflag
         const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, inDBflag);
         createdUser.isInDB=false; // come back to when making save
 
@@ -87,17 +86,86 @@ export class User {
         //    --Based on modify or create
         return this;
     }
-    static loadUser(dn:string):User{
+    static loadUser(dn: string, callback: (name:User) => void):User{
         // Finds user and returns user object
         // 1. LDAPsearch with DN
         // 2. Fill in user variables with fields from LDAP
         // 3. Return user object or Maybe if not found
 
+        let uid: LdapTypes.UserID;
+        let objClass: LdapTypes.ObjectClass;
+        let distinguishedName: LdapTypes.DistinguishedName;
+        let cn: LdapTypes.CommonName;
+        let gidNumber: LdapTypes.GroupIDNumber;
+        let uidNum: LdapTypes.UserIDNumber; // MAYBE
+        let homeDir: LdapTypes.HomeDirectory;
+        let surname: LdapTypes.Surname;
+        const inDBflag: boolean = true;
+
         client.search(dn,(err:any,res:any)=>{
             res.on('searchEntry', (entry:any)=>{
                 console.log('entry: ' + JSON.stringify(entry.object));
+
+
+                const objClassComponents: LdapTypes.LdapKeyValuePair[] = [
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[0]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[1]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[2])
+                ];
+                objClass = new LdapTypes.ObjectClass(objClassComponents);
+
+                const dnComponents: string[] = dn.split(",");
+                const ret: LdapTypes.LdapKeyValuePair[] = new Array();
+                for (const val of dnComponents) {
+                    const keyValueSplit: string[] = val.split('=');
+                    // TODO: Error handling
+                    switch (keyValueSplit[0]) {
+                        case "dc":
+                            ret.push(new LdapTypes.DomainComponent(keyValueSplit[1]));
+                            break;
+                        case "ou":
+                            ret.push(new LdapTypes.OrganizationalUnit(keyValueSplit[1]));
+                            break;
+                        case "uid":
+                            ret.push(new LdapTypes.UserID(keyValueSplit[1]));
+                            break;
+                    }
+
+                }
+
+                distinguishedName = new LdapTypes.DistinguishedName(ret);
+
+                uid = new LdapTypes.UserID(entry.object.uid);
+                cn = new LdapTypes.CommonName(entry.object.cn);
+                gidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
+                uidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
+                homeDir = new LdapTypes.HomeDirectory("/home/" + uid.toString());
+                surname = new LdapTypes.Surname(entry.object.sn);
+
+                /*
+                console.log(distinguishedName.toString());
+                console.log(uid.toString());
+                console.log(cn.toString());
+                console.log(gidNumber.toNumber());
+                console.log(uidNum.toNumber());
+                console.log(homeDir.toString());
+                console.log(surname.toString());
+                */
+
+                const loadedUser = new User(distinguishedName, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, inDBflag);
+                callback(loadedUser);
+                /* To ask Dr. Quack
+                 *  1. Callback/return loadedUser
+                 *  2. Controls in entry.object
+                 *  3. Set-up exception for ObjectClass LDAP elements
+                 *  4. How to integrate Billy & Ian w Michael & Dan
+                 *  5. Set-up UID using Maybes
+                 */
+
             });
         });
+
+
 
         return null;
     }
