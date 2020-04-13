@@ -4,8 +4,14 @@ import { User } from "./users";
 
 // User.loadUser("uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu");
 
-const tempUser: User = User.loadUser("uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu", (loadUser: User) => { });
-console.log(tempUser.dn.toString());
+
+User.loadUser("uid=dumbaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu", (testUser: User) => {
+    console.log(testUser.dn.toString());
+
+});
+
+
+
 /*console.log(tempUser.toString());
 console.log(tempUser.toString());
 console.log(tempUser.toNumber());

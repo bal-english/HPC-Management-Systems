@@ -1,30 +1,26 @@
-// import * as LdapTypes from "./LdapTypes/*";
-// import type { DistinguishedName } from "./LdapTypes";
-// import * as LdapTypes from "LdapTypes";
-import * as LdapTypes from "./LdapTypes/index"
-
-
-// import {OrganizationalUnit} from "./LdapTypes";
+import * as LdapTypes from "./LdapTypes/index";
 import ldap from 'ldapjs';
-// import * as ldap from "./ldapjs";
+const TsMonad = require('tsmonad');
 
 const client:any = ldap.createClient({
         url: 'ldap://openldap'
-    });
+});
     client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password', (err:any)=> {
         console.log(err);
-      });
+    });
+
 export class User {
-    isInDB:boolean;
 
     dn:LdapTypes.DistinguishedName;
-    cn:LdapTypes.CommonName; //
+    cn:LdapTypes.CommonName;
     gidNumber:LdapTypes.GroupIDNumber;
     homeDirectory:LdapTypes.HomeDirectory;
-    objectClass:LdapTypes.ObjectClass; // What do
+    objectClass:LdapTypes.ObjectClass;
+    sn:LdapTypes.Surname;
     uid:LdapTypes.UserID;
     uidNumber:LdapTypes.UserIDNumber;
-    sn:LdapTypes.Surname;
+    isInDB: boolean;
+
 
     static createUser(comName:string, email:string):User
     {
@@ -43,6 +39,7 @@ export class User {
             new LdapTypes.ObjectClassPart("posixAccount"),
             new LdapTypes.ObjectClassPart("inetOrgPerson")
         ];
+
         const objClass:LdapTypes.ObjectClass = new LdapTypes.ObjectClass(objClassComponents);
         const dn:LdapTypes.DistinguishedName = new LdapTypes.DistinguishedName(studentsDNComponents);
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
@@ -84,36 +81,34 @@ export class User {
         // -If already in, then throw error
         // -If not already in, add based on user object
         //    --Based on modify or create
+
+
         return this;
     }
-    static loadUser(dn: string, callback: (name:User) => void):User{
+    static loadUser(dn: string, callback: (retUser:User)=> void):void{
         // Finds user and returns user object
         // 1. LDAPsearch with DN
         // 2. Fill in user variables with fields from LDAP
         // 3. Return user object or Maybe if not found
 
-        let uid: LdapTypes.UserID;
-        let objClass: LdapTypes.ObjectClass;
-        let distinguishedName: LdapTypes.DistinguishedName;
-        let cn: LdapTypes.CommonName;
-        let gidNumber: LdapTypes.GroupIDNumber;
-        let uidNum: LdapTypes.UserIDNumber; // MAYBE
-        let homeDir: LdapTypes.HomeDirectory;
-        let surname: LdapTypes.Surname;
+        let loadedDN: LdapTypes.DistinguishedName;
+        let loadedCN: LdapTypes.CommonName;
+        let loadedGidNumber: LdapTypes.GroupIDNumber;
+        let loadedHomeDir: LdapTypes.HomeDirectory;
+        let loadedObjClass: LdapTypes.ObjectClass;
+        let loadedSN: LdapTypes.Surname;
+        let loadedUid: LdapTypes.UserID;
+        let loadedUidNum: Maybe<LdapTypes.UserIDNumber>; // MAYBE
         const inDBflag: boolean = true;
 
+        let loadedUser: User = null;
+
         client.search(dn,(err:any,res:any)=>{
-            res.on('searchEntry', (entry:any)=>{
+            res.on('searchEntry', (entry: any) => {
+
                 console.log('entry: ' + JSON.stringify(entry.object));
 
-
-                const objClassComponents: LdapTypes.LdapKeyValuePair[] = [
-                    new LdapTypes.ObjectClassPart(entry.object.objectClass[0]),
-                    new LdapTypes.ObjectClassPart(entry.object.objectClass[1]),
-                    new LdapTypes.ObjectClassPart(entry.object.objectClass[2])
-                ];
-                objClass = new LdapTypes.ObjectClass(objClassComponents);
-
+                // Assemble the dn
                 const dnComponents: string[] = dn.split(",");
                 const ret: LdapTypes.LdapKeyValuePair[] = new Array();
                 for (const val of dnComponents) {
@@ -130,17 +125,23 @@ export class User {
                             ret.push(new LdapTypes.UserID(keyValueSplit[1]));
                             break;
                     }
-
                 }
+                // Assemble the ObjectClass
+                const objClassComponents: LdapTypes.LdapKeyValuePair[] = [
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[0]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[1]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[2])
+                ];
 
-                distinguishedName = new LdapTypes.DistinguishedName(ret);
 
-                uid = new LdapTypes.UserID(entry.object.uid);
-                cn = new LdapTypes.CommonName(entry.object.cn);
-                gidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
-                uidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
-                homeDir = new LdapTypes.HomeDirectory("/home/" + uid.toString());
-                surname = new LdapTypes.Surname(entry.object.sn);
+                loadedDN = new LdapTypes.DistinguishedName(ret);
+                loadedObjClass = new LdapTypes.ObjectClass(objClassComponents);
+                loadedUid = new LdapTypes.UserID(entry.object.uid);
+                loadedCN = new LdapTypes.CommonName(entry.object.cn);
+                loadedGidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
+                loadedUidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
+                loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
+                loadedSN = new LdapTypes.Surname(entry.object.sn);
 
                 /*
                 console.log(distinguishedName.toString());
@@ -152,11 +153,14 @@ export class User {
                 console.log(surname.toString());
                 */
 
-                const loadedUser = new User(distinguishedName, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, inDBflag);
+                loadedUser = new User(loadedDN, loadedCN, loadedGidNumber, loadedHomeDir,
+                    loadedObjClass, loadedUid, loadedUidNum, loadedSN, inDBflag);
+
                 callback(loadedUser);
+
                 /* To ask Dr. Quack
-                 *  1. Callback/return loadedUser
-                 *  2. Controls in entry.object
+                 *  1. Callback/return loadedUser DONE
+                 *  2. Controls in entry.object DONE
                  *  3. Set-up exception for ObjectClass LDAP elements
                  *  4. How to integrate Billy & Ian w Michael & Dan
                  *  5. Set-up UID using Maybes
@@ -165,8 +169,5 @@ export class User {
             });
         });
 
-
-
-        return null;
     }
 }
