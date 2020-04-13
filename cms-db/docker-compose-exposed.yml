@@ -4,16 +4,25 @@ services:
 
   db:
     image: postgres:10.12
-    container_name: pg
+    hostname: cmsdb
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    networks:
+      - default
     ports:
       - 35001:5432
 
   web:
     image: adminer
     restart: always
+    networks:
+      - default
     ports:
       - 35000:8080
+      
+networks:
+  default:
+    driver: bridge
