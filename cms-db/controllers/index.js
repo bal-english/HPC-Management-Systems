@@ -3,10 +3,13 @@
 	var app = express();
 
 	app.set('views','./views');
+	// app.set('view engine', 'ejs');
+
 	var path = require('path');
 
-	app.use(express.static('images'));
+	// app.use(express.static('images'));
 	app.use(express.static('dbconnect.js'));
+	//app.use(express.static(__dirname+"/views/css"));
 
 
 		//path prefix for serving static files. For example, if you want to provide a path prefix like '/static'
@@ -27,8 +30,12 @@
     	res.sendFile(path.join(__dirname + '/views/bloghome.html'));
 	});
 
+	app.get('/admin', function(req, res){
+	    	res.sendFile(path.join(__dirname + '/views/adminhome.html'));
+		});
+
 	app.get('/ticket', function(req, res){
-    	res.sendFile(path.join(__dirname + '/views/ticketcreation.html'));
+	    	res.sendFile(path.join(__dirname + '/views/tickethome.html'));
 	});
 
 		app.get('/ticket/create', function(req, res){
@@ -109,7 +116,7 @@
 //***** OTHER ROUTES *****
 
 	app.get('*', function(req, res){
-	   res.send('Sorry, this is an invalid URL.');
+	   res.sendFile(path.join(__dirname + '/views/error.html'));
 	});
 
 
