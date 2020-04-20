@@ -2,24 +2,38 @@ version: '3.1'
 
 services:
 
-  db:
+  postgres:
     image: postgres:10.12
+    container_name: ${SERVNAME_PG:-db-cont}
     hostname: cmsdb
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: db
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-db}
     networks:
       - default
 
-  web:
+  adminer:
     image: adminer
+    container_name: ${SERVNAME_ADMINER:-adminer-cont}
     restart: always
     networks:
       - default
     ports:
-      - 35000:8080
+      - "${ADMINER_PORT_EXT:-35000}:${ADMINER_PORT_INT:-8080}"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ${SERVNAME_PGADMIN:-pgadmin-cont}
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-password}
+    networks:
+      - default
+    ports:
+      - "${PGADMIN_PORT_EXT:-35001}:${PGADMIN_PORT_INT:-80}"
       
 networks:
   default:
