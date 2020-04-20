@@ -12,13 +12,13 @@ RUN apt-get install -y iputils-ping
 
 RUN npm update
 RUN npm init --yes
+RUN bash -c "npm install -y --save pg"
 RUN npm install --save -g db-migrate -g db-migrate-pg
+#RUN bash -c "npm install -y --save -g express"
 
 ADD migration/database.json /home/app/cms/database.json
-ADD migration/migrations/ /home/app/cms/migrations
+ADD migration/migrations/ /home/app/cms/migrations/
+ADD init/env/ /home/app/cms/init/env
 
-ADD routing/ /home/app/cms/routing
-#RUN bash -c "npm install -y --save express"
-RUN bash -c "npm install -y --save pg"
-
+#ADD routing/ /home/app/cms/routing
 #CMD ["/bin/echo", "test"]

@@ -4,8 +4,8 @@
     "driver": "pg",
     "user": "admin",
     "password": "password",
-    "host": "db",
-    "database": "db",
+    "host": "pg-cont",
+    "database": "cms",
     "port": "5432",
     "schema": "my_schema"
   }
