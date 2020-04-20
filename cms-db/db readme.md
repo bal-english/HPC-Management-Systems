@@ -15,3 +15,9 @@ Create Database:
 
 	db-migrate up
 	exit
+
+RESTful API Example:
+	cd init/env/
+	source env_setup.sh
+	cd ../../rest_ex/
+	node index.js

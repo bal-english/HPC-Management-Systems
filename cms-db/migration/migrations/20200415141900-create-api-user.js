@@ -15,7 +15,8 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-	db.runSql('CREATE ROLE api_user WITH LOGIN PASSWORD \'password\';', [], callback);
+	db.runSql('CREATE ROLE api_user WITH LOGIN PASSWORD \'password\';');
+	db.runSql('ALTER ROLE api_user CREATEDB;', [], callback);
 };
 
 exports.down = function(db, callback) {
