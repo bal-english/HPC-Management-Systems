@@ -28,7 +28,7 @@
 	});
 
 	app.get('/ticket', function(req, res){
-    	res.sendFile(path.join(__dirname + '/views/tickethome.html'));
+    	res.sendFile(path.join(__dirname + '/views/ticketcreation.html'));
 	});
 
 		app.get('/ticket/create', function(req, res){
