@@ -8,4 +8,5 @@ export default class DomainComponent extends LdapKeyValuePair
         public toString():string{
             return this.value;
         }
+
     }

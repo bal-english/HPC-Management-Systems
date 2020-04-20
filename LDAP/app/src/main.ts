@@ -13,9 +13,11 @@ const test:User=User.createUser("Michael Mandulak", "mmandulak1@linuxlab.salisbu
 test.save();
 User.loadUser("uid=mmandulak1,ou=people,dc=linuxlab,dc=salisbury,dc=edu", (testUser: User) => {
     // console.log(testUser.dn.toString());
+    console.log("1" + testUser.cn.toString());
+    testUser.cn.setCommonName("Dan");
     testUser.save();
+    console.log(testUser.cn.toString());
 });
-
 
 
 

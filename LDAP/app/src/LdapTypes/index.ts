@@ -12,3 +12,4 @@ export { default as OrganizationalUnit } from "./OrganizationalUnit";
 export { default as Surname } from "./Surname";
 export { default as UserID } from "./UserID";
 export { default as UserIDNumber } from "./UserIDNumber";
+export { default as UserPassword } from "./UserPassword";

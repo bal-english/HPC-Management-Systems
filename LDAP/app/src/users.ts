@@ -20,7 +20,8 @@ export class User {
     objectClass:LdapTypes.ObjectClass;
     sn:LdapTypes.Surname;
     uid:LdapTypes.UserID;
-    uidNumber:Maybe<LdapTypes.UserIDNumber>;
+    uidNumber:LdapTypes.UserIDNumber;
+    userPassword:LdapTypes.UserPassword;
     isInDB: boolean;
 
 
@@ -47,11 +48,12 @@ export class User {
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
         const gidNumber:LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(100);
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
-        const uidNum: Maybe<LdapTypes.UserIDNumber> = new Maybe<LdapTypes.UserIDNumber>(69); // MAYBE
+        const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69); // MAYBE
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
+        const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
         const inDBflag:boolean=false;
-        const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, inDBflag);
+        const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
         createdUser.isInDB=false; // come back to when making save
 
         return createdUser;
@@ -65,8 +67,9 @@ export class User {
         homeDirectory:LdapTypes.HomeDirectory,
         objectClass:LdapTypes.ObjectClass,
         uid:LdapTypes.UserID,
-        uidNumber:Maybe<LdapTypes.UserIDNumber>,
+        uidNumber:LdapTypes.UserIDNumber,
         sn:LdapTypes.Surname,
+        userPassword:LdapTypes.UserPassword,
         isInDB:boolean){
             this.isInDB=isInDB;
             this.cn=cn;
@@ -77,6 +80,7 @@ export class User {
             this.uid=uid;
             this.uidNumber=uidNumber;
             this.sn=sn;
+            this.userPassword=userPassword;
     }
     save():User{
         // Checks if user is in db by DN
@@ -104,14 +108,17 @@ export class User {
                             objectClass: ['top', 'posixAccount', 'inetOrgPerson'], // Ask Richard about bag + exception -return string array
                             sn: this.sn.toString(),
                             uid: this.uid.toString(),
-                            uidNumber: 1// this.uidNumber, // this.uidNumber Ask Richard  types:#
+                            uidNumber: 1,// this.uidNumber, // this.uidNumber Ask Richard  types:#
+                            userPassword: this.userPassword.toString(),
                           };
+                          console.log(this.dn.toString());
                           console.log(`cn: ${JSON.stringify(entry.cn)}`);
                           console.log(`gidNum: ${JSON.stringify(entry.gidNumber)}`);
                           console.log(`HD: ${JSON.stringify(entry.homeDirectory)}`);
                           console.log(`sn: ${JSON.stringify(entry.sn)}`);
                           console.log(`uid: ${JSON.stringify(entry.uid)}`);
                           console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`); // Ask Richard about maybe print out
+                          console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
                           client.add(this.dn.toString(),entry,(errorAdd:any)=>{
                             assert.ifError(errorAdd);
                             if(errorAdd)
@@ -133,7 +140,21 @@ export class User {
                 {
                     // modify
 
-                    client.modifyDN('uid=mmandulak1,ou=people,dc=linuxlab,dc=salisbury,dc=edu', 'uid=mmandulak2,ou=people,dc=linuxlab,dc=salisbury,dc=edu', (errorModify:any)=> {
+                    // const change:ldap.Change[] = [];
+
+
+                    const change = new ldap.Change({
+                        operation: 'replace',
+                        modification: {
+                          cn: this.cn,
+
+                        }
+                      });
+
+                      // change[0].push(changeCN);
+
+
+                    client.modify(this.dn.toString(), change, (errorModify:any)=> {
                         assert.ifError(errorModify);
                         if(errorModify)
                         {
@@ -165,7 +186,8 @@ export class User {
         let loadedObjClass: LdapTypes.ObjectClass;
         let loadedSN: LdapTypes.Surname;
         let loadedUid: LdapTypes.UserID;
-        let loadedUidNum: Maybe<LdapTypes.UserIDNumber>; // MAYBE
+        let loadedUidNum: LdapTypes.UserIDNumber; // MAYBE
+        let loadedUserPassword: LdapTypes.UserPassword;
         const inDBflag: boolean = true;
 
         let loadedUser: User = null;
@@ -211,9 +233,10 @@ export class User {
                     loadedUid = new LdapTypes.UserID(entry.object.uid);
                     loadedCN = new LdapTypes.CommonName(entry.object.cn);
                     loadedGidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
-                    loadedUidNum = new Maybe<LdapTypes.UserIDNumber>(entry.object.uidNumber);
+                    loadedUidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
                     loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
                     loadedSN = new LdapTypes.Surname(entry.object.sn);
+                    loadedUserPassword = new LdapTypes.UserPassword("wordpass");
 
                     /*
                     console.log(distinguishedName.toString());
@@ -226,7 +249,7 @@ export class User {
                     */
 
                     loadedUser = new User(loadedDN, loadedCN, loadedGidNumber, loadedHomeDir,
-                        loadedObjClass, loadedUid, loadedUidNum, loadedSN, inDBflag);
+                        loadedObjClass, loadedUid, loadedUidNum, loadedSN, loadedUserPassword, inDBflag);
 
                     callback(loadedUser);
 

@@ -8,4 +8,8 @@ export default class UserIDNumber extends LdapKeyValuePairNum
         public toNumber():number{
             return this.value;
         }
+
+        public setUIDNum(uidNum:number):void{
+            this.value = uidNum;
+        }
     }

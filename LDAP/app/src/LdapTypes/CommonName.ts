@@ -9,4 +9,8 @@ export default class CommonName extends LdapKeyValuePair
         public toString():string{
             return this.value;
         }
+
+        public setCommonName(cn:string):void{
+            this.value = cn;
+        }
     }

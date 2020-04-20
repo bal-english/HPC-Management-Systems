@@ -8,4 +8,8 @@ export default class GroupIDNumber extends LdapKeyValuePairNum // return as numb
         public toNumber():number{
             return this.value;
         }
+
+        public setGIDNum(GIDNum:number):void{
+            this.value = GIDNum;
+        }
     }
