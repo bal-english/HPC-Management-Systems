@@ -7,7 +7,8 @@
 
 	var path = require('path');
 
-	// app.use(express.static('images'));
+	app.use('/static', express.static(path.join(__dirname, '/views/images')));
+
 	app.use(express.static('dbconnect.js'));
 	//app.use(express.static(__dirname+"/views/css"));
 
