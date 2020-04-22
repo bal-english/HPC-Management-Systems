@@ -6,7 +6,7 @@ export POSTGRES_DB="cms"
 export POSTGRES_PORT=5432
 
 export PGUSER="admin";
-export PGHOST="172.20.0.2";
+export PGHOST="172.22.0.2";
 export PGPASSWORD="password"
 export PGDATABASE="cms"
 export PGPORT=5432
