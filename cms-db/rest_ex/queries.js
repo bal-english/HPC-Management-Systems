@@ -56,10 +56,32 @@ const deleteUser = (req, res) => {
 	})
 }
 
+const createUsergroup = (req, res) => {
+	const { name } = req.body;
+	pool.query('INSERT INTO \"usergroup\" (\"name\") VALUES ($1)', [name], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(201).send(`Usergroup added with ID: ${results.id}`);
+	})
+}
+
+const createBloggroup = (req, res) => {
+	const { name } = req.body;
+	pool.query('INSERT INTO \"bloggroup\" (\"name\") VALUES ($1)', [name], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(201).send('Bloggroup added with ID: ${results.id}');
+	})
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
 	createUser,
 	updateUser,
-	deleteUser
+	deleteUser,
+	createUsergroup,
+	createBloggroup
 }

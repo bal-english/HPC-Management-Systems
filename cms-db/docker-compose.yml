@@ -4,13 +4,13 @@ services:
 
   postgres:
     image: postgres:10.12
-    container_name: ${SERVNAME_PG:-db-cont}
+    container_name: ${SERVNAME_PG:-pg-cont}
     hostname: cmsdb
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-db}
+      POSTGRES_DB: ${POSTGRES_DB:-cms}
     networks:
       - default
 
