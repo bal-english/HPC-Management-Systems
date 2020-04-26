@@ -1,6 +1,6 @@
 if test $# -eq 1
 then
-	if test "$0" == "--help"
+	if test "$1" == "--help"
 		then
 			echo -e "Usage:\n\t source addUser.sh <lastName> <firstName> <email>"
 			return 1;

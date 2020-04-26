@@ -24,11 +24,11 @@ const getUserById = (req, res) => {
 const createUser = (req, res) => {
 	const { lastName, firstName, email } = req.body;
 
-	pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\") VALUES ($1, $2, $3)', [lastName, firstName, email], (error, results) => {
+	pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\") VALUES ($1, $2, $3) RETURNING \"id\"', [lastName, firstName, email], (error, results) => {
 		if(error) {
 			throw error;
 		}
-		res.status(201).send(`User added with ID: ${results.id}`);
+		res.status(201).send(`User added with ID: ${results.rows[0].id}\n`);
 	})
 }
 
@@ -40,7 +40,7 @@ const updateUser = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).send(`User modified with ID: ${id}`);
+		res.status(200).send(`User modified with ID: ${id}\n`);
 	})
 }
 
@@ -52,7 +52,7 @@ const deleteUser = (req, res) => {
 		if(error) {
 			throw error; 
 		}
-		res.status(200).send(`User hidden with ID: ${id}`);
+		res.status(200).send(`User hidden with ID: ${id}\n`);
 	})
 }
 
@@ -62,7 +62,7 @@ const createUsergroup = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(201).send(`Usergroup added with ID: ${results.id}`);
+		res.status(201).send(`Usergroup added with ID: ${results.id}\n`);
 	})
 }
 
@@ -72,9 +72,22 @@ const createBloggroup = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(201).send('Bloggroup added with ID: ${results.id}');
+		res.status(201).send(`Bloggroup added with ID: ${results.id}\n`);
 	})
 }
+
+const createBlog = (req, res) => {
+	const { title, author, body } = req.body;
+	pool.query('INSERT INTO \"blog\" (\"title\", \"author\", \"body\") VALUES ($1, $2, $3)' [title, author, body], (error, results) => {
+		if(error) {
+			throw error
+		}
+		res.status(200).send(`Blog created with ID: ${results.id}\n`);
+	})
+}
+
+//const groupBlog = (req, res) => {
+//	const { id
 
 module.exports = {
 	getUsers,
@@ -83,5 +96,6 @@ module.exports = {
 	updateUser,
 	deleteUser,
 	createUsergroup,
-	createBloggroup
+	createBloggroup,
+	createBlog
 }
