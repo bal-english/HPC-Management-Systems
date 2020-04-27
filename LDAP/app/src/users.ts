@@ -2,14 +2,18 @@ import * as LdapTypes from "./LdapTypes/index";
 import ldap, { NoSuchObjectError, InsufficientAccessRightsError } from 'ldapjs';
 import TsMonad, { Maybe } from 'tsmonad';
 import assert from 'assert';
+const Promises = require("bluebird");
 // const assert = require('assert').strict;
 
 const client:any = ldap.createClient({
         url: 'ldap://openldap'
 });
-    client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password', (err:any)=> {
-        console.log(err);
-    });
+client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password', (err:any)=> {
+    console.log(err);
+});
+
+Promises.promisifyAll(client);
+
 
 export class User {
 
@@ -82,12 +86,13 @@ export class User {
             this.sn=sn;
             this.userPassword=userPassword;
     }
-    save():User{
+    // save():User{
+        async save():Promise<User>{
         // Checks if user is in db by DN
         // -If already in, then throw error
         // -If not already in, add based on user object
         //    --Based on modify or create
-        client.search(this.dn.toString(), (err:any, res:any)=>{
+        client.searchAsync(this.dn.toString(), (err:any, res:any)=>{
             assert.ifError(err);
             res.on('error', (error:any)=> { // Catches Error
                 if(error.name==="NoSuchObjectError")
@@ -119,7 +124,7 @@ export class User {
                           console.log(`uid: ${JSON.stringify(entry.uid)}`);
                           console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`); // Ask Richard about maybe print out
                           console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
-                          client.add(this.dn.toString(),entry,(errorAdd:any)=>{
+                          client.addAsync(this.dn.toString(),entry,(errorAdd:any)=>{
                             assert.ifError(errorAdd);
                             if(errorAdd)
                             {
@@ -154,7 +159,7 @@ export class User {
                       // change[0].push(changeCN);
 
 
-                    client.modify(this.dn.toString(), change, (errorModify:any)=> {
+                    client.modifyAsync(this.dn.toString(), change, (errorModify:any)=> {
                         assert.ifError(errorModify);
                         if(errorModify)
                         {
@@ -169,11 +174,13 @@ export class User {
                     // error
                 }
             });
+            return Promise.resolve(this);
         });
 
-        return this;
+        return Promise.resolve(this);
     }
-    static loadUser(dn: string, callback: (retUser:User)=> void):void{
+    // static loadUser(dn: string, callback: (retUser:User)=> void):void{
+        static async loadUser(dn: string /*callback: (retUser:User)=> void*/):Promise<User>{
         // Finds user and returns user object
         // 1. LDAPsearch with DN
         // 2. Fill in user variables with fields from LDAP
@@ -191,11 +198,11 @@ export class User {
         const inDBflag: boolean = true;
 
         let loadedUser: User = null;
-            client.search(dn,(err:any,res:any)=>{
+            client.searchAsync(dn,(err:any,res:any)=>{
                 assert.ifError(err); // Throws error if error
                 res.on('error', (error:any)=> { // Catches Error
                     if(error.name==="NoSuchObjectError")
-                        console.error('error is NoSuchObjectError');
+                        console.error('error3 is NoSuchObjectError');
                     else
                         console.error('error: ' + error.message);
                   });
@@ -250,8 +257,8 @@ export class User {
 
                     loadedUser = new User(loadedDN, loadedCN, loadedGidNumber, loadedHomeDir,
                         loadedObjClass, loadedUid, loadedUidNum, loadedSN, loadedUserPassword, inDBflag);
-
-                    callback(loadedUser);
+                    return Promise.resolve(loadedUser);
+                    // callback(loadedUser);
 
                     /* To ask Dr. Quack
                     *  1. Callback/return loadedUser DONE
@@ -270,6 +277,7 @@ export class User {
                    */
                 });
             });
-
+            return Promise.resolve(loadedUser);
+            // return loadedUser;
     }
 }
