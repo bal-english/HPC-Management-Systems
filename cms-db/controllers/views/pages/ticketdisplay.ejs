@@ -1,0 +1,22 @@
+
+<div class = "container">
+	<h2> Test Table </h2>
+	<table class = "table">
+		<thead>
+			<tr>
+				<td> Ticket ID </td>
+				<td> Issue </td>
+				<td> Creator </td>
+				<!--<td> Status </td>-->
+			</tr>
+		</thead>
+		<tbody>
+			<% tickets.forEach(function(ticket){ %>
+				<% console.log(ticket); %>
+				<tr>
+					<%- include('ticketrow', {ticket: ticket}); %>
+				</tr>
+			<% }); %>
+		</tbody>
+	</table>
+</div>

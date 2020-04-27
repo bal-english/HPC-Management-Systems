@@ -2,7 +2,8 @@
     "name": "node-ejs",
     "main": "server.js",
     "dependencies": {
-        "ejs": "^1.0.0",
+        "ejs": "^3.1.2",
         "express": "^4.6.1"
+		"pg": "^8.0.3"
     }
 }

@@ -1,25 +1,33 @@
-	
-	var express = require('express');
-	var app = express();
+const port = 35000;
+var express = require('express');
+var app = express();
+var api = require('api/api.js');
 
-	app.set('view engine','ejs');
+app.set('view engine','ejs');
 
-	app.get('/', function(req, res) {
-		res.render('pages/home');
-	});
+app.use('/api', api);
 
-	// app.get('/blog', function(req, res){
-	// 	res.render('views/bloghome');
-	// });
+app.get('/', function(req, res) {
+	res.render('pages/home');
+});
 
-	// app.get('/admin', function(req, res){
-	// 	res.render('views/admin');
-	// 	});
+app.get('/tickets', function(req, res) {
+	list = [{id: 7, creator: 0, title: "This is a test title for tickets"},{id: 8, creator: 1, title: "This is a second test title for tickets"}];
+	res.render('pages/ticketlist', {tickets: list});
+});
+
+// app.get('/blog', function(req, res){
+// 	res.render('views/bloghome');
+// });
+
+// app.get('/admin', function(req, res){
+// 	res.render('views/admin');
+// 	});
 
 
-	// app.get('/ticket/create', function(req, res){
-	// 	res.render('views/ticketcreate');
-	// });
+// app.get('/ticket/create', function(req, res){
+// 	res.render('views/ticketcreate');
+// });
 
 
 
@@ -85,12 +93,14 @@
 
 //***** OTHER ROUTES *****
 
-	app.get('*', function(req, res){
+	/*app.get('*', function(req, res){
 	   res.sendFile(path.join(__dirname + '/views/error.html'));
 	});
+*/
 
 
 
 
-
-app.listen(3069);
+app.listen(port, () => {
+	console.log(`App running on port ${port}`);
+});
