@@ -27,9 +27,16 @@ app.put('/users/:id', db.updateUser)
 app.delete('/users/:id', db.deleteUser)
 
 app.post('/groups/user', db.createUsergroup)
+app.put('/groups/user', db.updateUsergroup)
+
 app.post('/groups/blog', db.createBloggroup)
+app.put('/groups/blog', db.updateBloggroup)
 
 app.post('/blogs', db.createBlog)
+
+app.put('/blogs/group', db.groupBlog)
+
+
 
 app.listen(port, () => {
 	console.log(`App running on port ${port}`);
