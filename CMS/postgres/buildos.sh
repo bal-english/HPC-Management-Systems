@@ -1,5 +1,5 @@
 #!/bin/bash
 
-sudo docker build . -f dbos --tag benglish4/dbos >&1
+sudo docker build . -f migos --tag TH2/CMS-migration >&1
 
 exit 0
