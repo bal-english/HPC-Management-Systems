@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<% include(../templates/header); %>
+
+<% include(../templates/nav); %>
+
+
+<body class = "text-center">
+  <br> <br>
+<h3> High Performance Computing Lab </h3>
+<br>
+
+  <div class = "card">
+    <div class = "bg-light border-bottom-1 card-header" style="padding: 1rem 1rem">
+    <h5> Create a ticket below </h5>
+  </div>
+    <br>
+    <form>
+      <br>
+        <div class="form-group col-auto">
+          <input type = "text" class="form-control-sm" id="user-fname" placeholder="First name">
+        </div>
+        <div class="form-group col-auto">
+          <input type = "text"  class="form-control-sm" id="user-lname" placeholder="Last name">
+        </div>
+       <div class="form-group col-auto">
+        <input type = "text" class="form-control-sm" id="user-uname" placeholder="HPCL Username">
+        </div>
+      <div class="form-group col-auto">
+        <input type = "text" class="form-control-sm" id="user-suid" placeholder="SU ID Number">
+      </div>
+      <div class="form-group">
+        <label for="ticket-info">Fill out your issue here</label>
+        <textarea class="form-control-sm" id="ticket-info"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+
+    </form>
+ </div>
+
+    
+</body>
+</html>
