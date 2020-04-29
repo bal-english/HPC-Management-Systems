@@ -2,17 +2,18 @@ import * as LdapTypes from "./LdapTypes/index";
 import ldap, { NoSuchObjectError, InsufficientAccessRightsError } from 'ldapjs';
 import TsMonad, { Maybe } from 'tsmonad';
 import assert from 'assert';
+const { once, EventEmitter } = require('events');
 const Promises = require("bluebird");
 // const assert = require('assert').strict;
 
 const client:any = ldap.createClient({
         url: 'ldap://openldap'
 });
-client.bind('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password', (err:any)=> {
+Promises.promisifyAll(client);
+client.bindAsync('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password', (err:any)=> {
     console.log(err);
 });
 
-Promises.promisifyAll(client);
 
 
 export class User {
@@ -29,7 +30,7 @@ export class User {
     isInDB: boolean;
 
 
-    static createUser(comName:string, email:string):User
+    static async createUser(comName:string, email:string):Promise<User>
     {
         const emailComponents:string[] = email.split("@",2);
         const dc:LdapTypes.LdapKeyValuePair[] = [
@@ -60,7 +61,7 @@ export class User {
         const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
         createdUser.isInDB=false; // come back to when making save
 
-        return createdUser;
+        return Promise.resolve(createdUser);
 
     }
 
@@ -180,7 +181,7 @@ export class User {
         return Promise.resolve(this);
     }
     // static loadUser(dn: string, callback: (retUser:User)=> void):void{
-        static async loadUser(dn: string /*callback: (retUser:User)=> void*/):Promise<User>{
+        static async loadUser(dn: string):Promise<User>{
         // Finds user and returns user object
         // 1. LDAPsearch with DN
         // 2. Fill in user variables with fields from LDAP
@@ -197,87 +198,49 @@ export class User {
         let loadedUserPassword: LdapTypes.UserPassword;
         const inDBflag: boolean = true;
 
-        let loadedUser: User = null;
-            client.searchAsync(dn,(err:any,res:any)=>{
-                assert.ifError(err); // Throws error if error
-                res.on('error', (error:any)=> { // Catches Error
-                    if(error.name==="NoSuchObjectError")
-                        console.error('error3 is NoSuchObjectError');
-                    else
-                        console.error('error: ' + error.message);
-                  });
-                res.on('searchEntry', (entry: any) => {
-                    console.log('entry: ' + JSON.stringify(entry.object));
-
-                    // Assemble the dn
-                    const dnComponents: string[] = dn.split(",");
-                    const ret: LdapTypes.LdapKeyValuePair[] = new Array();
-                    for (const val of dnComponents) {
-                        const keyValueSplit: string[] = val.split('=');
-                        // TODO: Error handling
-                        switch (keyValueSplit[0]) {
-                            case "dc":
-                                ret.push(new LdapTypes.DomainComponent(keyValueSplit[1]));
-                                break;
-                            case "ou":
-                                ret.push(new LdapTypes.OrganizationalUnit(keyValueSplit[1]));
-                                break;
-                            case "uid":
-                                ret.push(new LdapTypes.UserID(keyValueSplit[1]));
-                                break;
-                        }
+        return User.searchOnce(dn)
+            .then(async (entry: any) => {
+            // console.log('entry: ' + JSON.stringify(entry.object));
+                const dnComponents: string[] = dn.split(",");
+                const ret: LdapTypes.LdapKeyValuePair[] = new Array();
+                for (const val of dnComponents) {
+                    const keyValueSplit: string[] = val.split('=');
+                    // TODO: Error handling
+                    switch (keyValueSplit[0]) {
+                        case "dc":
+                            ret.push(new LdapTypes.DomainComponent(keyValueSplit[1]));
+                            break;
+                        case "ou":
+                            ret.push(new LdapTypes.OrganizationalUnit(keyValueSplit[1]));
+                            break;
+                        case "uid":
+                            ret.push(new LdapTypes.UserID(keyValueSplit[1]));
+                            break;
                     }
-                    // Assemble the ObjectClass
-                    const objClassComponents: LdapTypes.LdapKeyValuePair[] = [
-                        new LdapTypes.ObjectClassPart(entry.object.objectClass[0]),
-                        new LdapTypes.ObjectClassPart(entry.object.objectClass[1]),
-                        new LdapTypes.ObjectClassPart(entry.object.objectClass[2])
-                    ];
-
-
-                    loadedDN = new LdapTypes.DistinguishedName(ret);
-                    loadedObjClass = new LdapTypes.ObjectClass(objClassComponents);
-                    loadedUid = new LdapTypes.UserID(entry.object.uid);
-                    loadedCN = new LdapTypes.CommonName(entry.object.cn);
-                    loadedGidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
-                    loadedUidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
-                    loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
-                    loadedSN = new LdapTypes.Surname(entry.object.sn);
-                    loadedUserPassword = new LdapTypes.UserPassword("wordpass");
-
-                    /*
-                    console.log(distinguishedName.toString());
-                    console.log(uid.toString());
-                    console.log(cn.toString());
-                    console.log(gidNumber.toNumber());
-                    console.log(uidNum.toNumber());
-                    console.log(homeDir.toString());
-                    console.log(surname.toString());
-                    */
-
-                    loadedUser = new User(loadedDN, loadedCN, loadedGidNumber, loadedHomeDir,
-                        loadedObjClass, loadedUid, loadedUidNum, loadedSN, loadedUserPassword, inDBflag);
-                    return Promise.resolve(loadedUser);
-                    // callback(loadedUser);
-
-                    /* To ask Dr. Quack
-                    *  1. Callback/return loadedUser DONE
-                    *  2. Controls in entry.object DONE
-                    *  3. Set-up exception for ObjectClass LDAP elements
-                    *  4. How to integrate Billy & Ian w Michael & Dan
-                    *  5. Set-up UID using Maybes
-                    */
-                   /* To ask Dr. Quack #2
-                   //ADD PASSWORD
-                   * 1. Add maybe uidnumber (prints: type:#) look at maybe documentation -make function, join maybes, bind to function
-                   * 2. Is DN modifiable - for now don't care
-                   * 3. How to delete users without deleting (should they still show in search) - think about later
-                   * 4. CAN WE HAVE A MODIFY FUNCTION instead of modify in save function -add setters (call in main)
-                   * 5. If we create a user then try to save (already in DB), do we modify or error -error in save
-                   */
-                });
+                }
+                // Assemble the ObjectClass
+                const objClassComponents: LdapTypes.LdapKeyValuePair[] = [
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[0]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[1]),
+                    new LdapTypes.ObjectClassPart(entry.object.objectClass[2])
+                ];
+                loadedDN = new LdapTypes.DistinguishedName(ret);
+                loadedObjClass = new LdapTypes.ObjectClass(objClassComponents);
+                loadedUid = new LdapTypes.UserID(entry.object.uid);
+                loadedCN = new LdapTypes.CommonName(entry.object.cn);
+                loadedGidNumber = new LdapTypes.GroupIDNumber(entry.object.gidNumber);
+                loadedUidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
+                loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
+                loadedSN = new LdapTypes.Surname(entry.object.sn);
+                loadedUserPassword = new LdapTypes.UserPassword("wordpass");
+                return Promise.resolve(new User(loadedDN,loadedCN,loadedGidNumber,loadedHomeDir,loadedObjClass,loadedUid,loadedUidNum,loadedSN,loadedUserPassword,inDBflag));
             });
-            return Promise.resolve(loadedUser);
-            // return loadedUser;
+    }
+    public static async searchOnce(dn:string){
+        return client.searchAsync(dn)
+        .then(async(entry:any)=>{
+            const [val] = await once(entry, 'searchEntry');
+            return Promise.resolve(val);
+        });
     }
 }

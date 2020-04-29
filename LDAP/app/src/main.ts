@@ -64,7 +64,7 @@ const entry1:any = {
     uidNumber: 4500,// this.uidNumber, // this.uidNumber Ask Richard  types:#
     userPassword: "pass"
   };
-const client:any = ldap.createClient({
+const client = ldap.createClient({
     url: 'ldap://openldap'
 });
 
@@ -85,14 +85,11 @@ add().then((res:any)=>{
 function doSearch(data){
     client.searchAsync()
 }*/
+
 client.bindAsync('cn=admin,dc=linuxlab,dc=salisbury,dc=edu', 'password')
     .then((res:any)=>client.addAsync("uid=dweitman24,ou=people,dc=linuxlab,dc=salisbury,dc=edu",entry1))
-    .then((res:any)=>client.searchAsync("uid=dweitman24,ou=people,dc=linuxlab,dc=salisbury,dc=edu"))
-    // .then((data:any, data1:any, data2:any)=>{return data.onAsync()})
-    .then(async(entry:any)=>{
-        const [val] = await once(entry, 'searchEntry');
-        console.log(val);
-    })
+    // .then(User.searchOnce("uid=dweitman24,ou=people,dc=linuxlab,dc=salisbury,dc=edu"))
+    .then((res:any)=>User.loadUser("uid=dweitman24,ou=people,dc=linuxlab,dc=salisbury,dc=edu"))
     .then(console.log)
     .catch((err:any)=>{
         console.log("error3: " + err);
