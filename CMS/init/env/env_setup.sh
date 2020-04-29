@@ -29,7 +29,7 @@ then
 	return 4
 fi
 
-if [! -f $migsc ]
+if [ ! -f $migsc ]
 then
 	echo "env_setup.sh: migration environment file \'migsc\' not found."
 	return 5
