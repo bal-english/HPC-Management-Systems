@@ -95,7 +95,7 @@ const updateUsergroup = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).send(`Usergroup with ID: ${results.rows[0].id} updated with name: ${results.rows[0].name\n`);
+		res.status(200).send(`Usergroup with ID: ${results.rows[0].id} updated with name: ${results.rows[0].name}\n`);
 	})
 }
 

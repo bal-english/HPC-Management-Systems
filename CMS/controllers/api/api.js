@@ -6,13 +6,6 @@ const db = require('./queries');
 //const Pool = require('pg').Pool;
 //const pool2 = Pool
 
-router.use(bodyParser.json());
-router.use(
-	bodyParser.urlencoded({
-		extended: true,
-	})
-);
-
 router.get('/', (req, res) => {
 	res.json({info: 'Node.js, Express, and Postgres API' });
 })

@@ -1,7 +1,7 @@
 const port = 35000;
 var express = require('express');
 var app = express();
-var api = require('api/api.js');
+var api = require('./api/api.js');
 
 app.set('view engine','ejs');
 
