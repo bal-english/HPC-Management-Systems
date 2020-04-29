@@ -25,3 +25,7 @@ router.put('/groups/blog', db.updateBloggroup)
 router.post('/blogs', db.createBlog)
 
 router.put('/blogs/group', db.groupBlog)
+
+module.exports = {
+	router
+}

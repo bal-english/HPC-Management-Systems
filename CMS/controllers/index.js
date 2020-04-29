@@ -1,11 +1,13 @@
-const port = 35000;
+const port = 3000;
 var express = require('express');
 var app = express();
 var api = require('./api/api.js');
 
 app.set('view engine','ejs');
 
-app.use('/api', api);
+app.use('/api', api.router/*, function (req, res) {
+	res.sendStatus(401);
+}*/);
 
 app.get('/', function(req, res) {
 	res.render('pages/home');
