@@ -4,3 +4,4 @@ LDAP/app/.npm
 LDAP/app/dist/*
 cms-db/docker-compose-exposed.yml.old
 node_modules/*
+cms-db/
