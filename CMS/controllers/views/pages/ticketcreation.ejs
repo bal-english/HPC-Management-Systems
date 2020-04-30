@@ -28,7 +28,7 @@
         <input type = "text" class="form-control-sm" id="user-uname" placeholder="HPCL Username">
         </div>
       <div class="form-group col-auto">
-        <input type = "text" class="form-control-sm" id="user-suid" placeholder="SU ID Number">
+        <input type = "text" class="form-control-sm" id="user-suemail" placeholder="SU Email">
       </div>
       <div class="form-group">
         <label for="ticket-info">Fill out your issue here</label>
@@ -43,3 +43,28 @@
     
 </body>
 </html>
+
+<script type = "text/javascript">
+
+  $('#createticket').click(function(){
+
+      $.ajax({
+        url: '/api/ticket',
+        type: 'POST',
+        datatype: 'json',
+        data: {
+          first_name: $('#user-fname').val(),
+          last_name: $('#user-lname').val(),
+          HPCL_user: $('#user-suemail').val(),
+          email: $('#user-suemail').val(),
+          body: $('#ticket-info').val(),
+        },
+        success: function(data){
+          displayError(data.error, 'test');
+        }
+      });
+
+    });
+
+
+</script>

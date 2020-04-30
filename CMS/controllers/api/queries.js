@@ -120,6 +120,19 @@ const groupBlog = (req, res) => {
 	})
 }
 
+//Grace's query
+
+const createTicket = (req, res) => {
+	const { creator, title, body } = req.body;
+
+	pool.query('INSERT INTO \"ticket\" (\"lastName\", \"firstName\", \"email\", \"title\", \"body\") VALUES ($1, $2, $3, $4, $5) RETURNING \"id\"', [lastName, firstName, email, title, body], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(201).send(`Ticket added with ID: ${results.rows[0].id}\n`);
+	})
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -131,5 +144,6 @@ module.exports = {
 	updateBloggroup,
 	updateUsergroup,
 	createBlog,
-	groupBlog
+	groupBlog,
+	createTicket
 }
