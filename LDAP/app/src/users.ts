@@ -52,20 +52,49 @@ export class User {
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
         const gidNumber:LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(100);
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
-        const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69);
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
         const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
         const inDBflag:boolean=false;
-        const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
-        createdUser.isInDB=false;
+        // const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
 
-        User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
-            .then(async (entry: SearchEntry) => {
-                console.log(entry.object.suseNextUniqueId);
+
+        return User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
+            .then((entry: any) => {
+                return Promise.resolve(Number(entry.object.suseNextUniqueId));
+            })
+            .then((res:number) => {
+                const next:number = res + 1;
+
+                const changes = [];
+                changes.push(new ldap.Change({
+                    operation: 'delete',
+                    modification: {
+                        suseNextUniqueId: String(res)
+                    }
+                }));
+                changes.push(new ldap.Change({
+                    operation: 'add',
+                    modification: {
+                        suseNextUniqueId: String(next)
+                    }
+                }));
+
+                return client.modifyAsync("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu", changes)
+                .then((_:any)=>{
+                    return Promise.resolve(res);
+                })
+
+            })
+            .then((res:number)=> {
+                const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(res);
+                const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, false);
+                return Promise.resolve(createdUser);
             });
 
-        return Promise.resolve(createdUser);
+
+
+            // return Promise.reject();
     }
 
     private constructor(dn:LdapTypes.DistinguishedName,
@@ -106,7 +135,7 @@ export class User {
                     objectClass: ['top', 'posixAccount', 'inetOrgPerson'],
                     sn: this.sn.toString(),
                     uid: this.uid.toString(),
-                    uidNumber: 1,
+                    uidNumber: this.uidNumber.toNumber(),
                     userPassword: this.userPassword.toString(),
                 };
                 console.log(this.dn.toString());
