@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  </head>
+
+  <body>
+
+    <h1>Hello</h1>
+
+    <h2>Create User</h2>
+    <form>
+      <input id="create_email" type="text" placeholder="Enter the Email"></input>
+      <input id="create_cn" type="text" placeholder="Enter the Common Name"></input>
+      <button id="createuser" class="btn btn-primary" type="button">Create User</button>
+    </form>
+
+    <div id="test"></div>
+
+    <h2>Modify User</h2>
+    <form>
+      <input id="modify_email" type="text" placeholder="Enter the Email"></input>
+      <input id="modify_cn" type="text" placeholder="Enter the Common Name"></input>
+      <input id="modify_homedir" type="text" placeholder="Enter the Home Directory"></input>
+      <input id="modify_gidnumb" type="text" placeholder="Enter the Group ID Number"></input>
+      <input id="modify_uid" type="text" placeholder="Enter the User ID"></input>
+      <button id="modifyuser" class="btn btn-primary" type="button">Modify User</button>
+    </form>
+
+    <h2>Delete User</h2>
+    <form>
+      <input id="delete_email" type="text" placeholder="Enter the Email"></input>
+      <button id="deleteuser" class="btn btn-primary" type="button">Delete User</button>
+    </form>
+
+  </body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+
+    $('#createuser').click(function(){
+
+      $.ajax({
+        url: '/api/user/create',
+        type: 'POST',
+        datatype: 'json',
+        data: {
+          email: $('#create_email').val(),
+          cn: $('#create_cn').val(),
+        },
+        success: function(data){
+          displayError(data.error, 'test');
+        }
+      });
+
+    });
+
+    $('#modifyuser').click(function(){
+
+      $.ajax({
+        url: '/api/user/modify',
+        type: 'POST',
+        datatype: 'json',
+        data: {
+          email: $('#modify_email').val(),
+          cn: $('#modify_cn').val(),
+        },
+        success: function(data){
+          alert(data);
+        }
+      });
+
+    });
+
+    $('#deleteuser').click(function(){
+
+      $.ajax({
+        url: '/api/user/delete',
+        type: 'POST',
+        datatype: 'json',
+        data: {
+          email: $('#modify_email').val()
+        },
+        success: function(data){
+          alert(data);
+        }
+      });
+
+    });
+
+    function displayError(msg, div){
+      var errorbox = `<div class="alert alert-danger" role="alert">` + msg + `</div>`
+      $("#" + div).append(errorbox);
+    }
+
+  </script>
+
+
+</html>
