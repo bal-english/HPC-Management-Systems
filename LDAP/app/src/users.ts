@@ -1,10 +1,9 @@
 import * as LdapTypes from "./LdapTypes/index";
-import ldap, { NoSuchObjectError, InsufficientAccessRightsError } from 'ldapjs';
+import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry } from 'ldapjs';
 import TsMonad, { Maybe } from 'tsmonad';
 import assert from 'assert';
 const { once, EventEmitter } = require('events');
 const Promises = require("bluebird");
-// const assert = require('assert').strict;
 
 const client:any = ldap.createClient({
         url: 'ldap://openldap'
@@ -53,19 +52,22 @@ export class User {
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
         const gidNumber:LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(100);
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
-        const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69); // MAYBE
+        const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(69);
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
         const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
         const inDBflag:boolean=false;
         const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
-        createdUser.isInDB=false; // come back to when making save
+        createdUser.isInDB=false;
+
+        User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
+            .then(async (entry: SearchEntry) => {
+                console.log(entry.object.suseNextUniqueId);
+            });
 
         return Promise.resolve(createdUser);
-
     }
 
-    // every item as parameter
     private constructor(dn:LdapTypes.DistinguishedName,
         cn:LdapTypes.CommonName,
         gidNumber:LdapTypes.GroupIDNumber,
@@ -93,92 +95,69 @@ export class User {
         // -If already in, then throw error
         // -If not already in, add based on user object
         //    --Based on modify or create
-        client.searchAsync(this.dn.toString(), (err:any, res:any)=>{
-            assert.ifError(err);
-            res.on('error', (error:any)=> { // Catches Error
-                if(error.name==="NoSuchObjectError")
-                {
-                    if(this.isInDB)
-                    {
-                        // error
+
+
+            // Add to DB
+            if(!this.isInDB){
+                const entry:any = {
+                    cn: this.cn.toString(),
+                    gidNumber: this.gidNumber.toNumber(),
+                    homeDirectory: this.homeDirectory.toString(),
+                    objectClass: ['top', 'posixAccount', 'inetOrgPerson'],
+                    sn: this.sn.toString(),
+                    uid: this.uid.toString(),
+                    uidNumber: 1,
+                    userPassword: this.userPassword.toString(),
+                };
+                console.log(this.dn.toString());
+                console.log(`cn: ${JSON.stringify(entry.cn)}`);
+                console.log(`gidNum: ${JSON.stringify(entry.gidNumber)}`);
+                console.log(`HD: ${JSON.stringify(entry.homeDirectory)}`);
+                console.log(`sn: ${JSON.stringify(entry.sn)}`);
+                console.log(`uid: ${JSON.stringify(entry.uid)}`);
+                console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`);
+                console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
+
+                return client.addAsync(this.dn.toString(), entry)
+                .then((res:any)=>{return this.setInDB(true)});
+
+            } else {
+
+                const changes = [];
+                changes.push(new ldap.Change({
+                    operation: 'replace',
+                    modification: {
+                        cn: this.cn.toString()
                     }
-                    else
-                    {
-                        // Add to DB
-                        const entry:any = {
-                            cn: this.cn.toString(),
-                            gidNumber: this.gidNumber.toNumber(),
-                            homeDirectory: this.homeDirectory.toString(),
-                            // objectClass: 'top',
-                            // objectClass: 'posixAccount',
-                            objectClass: ['top', 'posixAccount', 'inetOrgPerson'], // Ask Richard about bag + exception -return string array
-                            sn: this.sn.toString(),
-                            uid: this.uid.toString(),
-                            uidNumber: 1,// this.uidNumber, // this.uidNumber Ask Richard  types:#
-                            userPassword: this.userPassword.toString(),
-                          };
-                          console.log(this.dn.toString());
-                          console.log(`cn: ${JSON.stringify(entry.cn)}`);
-                          console.log(`gidNum: ${JSON.stringify(entry.gidNumber)}`);
-                          console.log(`HD: ${JSON.stringify(entry.homeDirectory)}`);
-                          console.log(`sn: ${JSON.stringify(entry.sn)}`);
-                          console.log(`uid: ${JSON.stringify(entry.uid)}`);
-                          console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`); // Ask Richard about maybe print out
-                          console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
-                          client.addAsync(this.dn.toString(),entry,(errorAdd:any)=>{
-                            assert.ifError(errorAdd);
-                            if(errorAdd)
-                            {
-                                console.log(errorAdd);
-                            }
-                          });
+                }));
+
+                changes.push(new ldap.Change({
+                    operation: 'replace',
+                    modification: {
+                        gidNumber: this.gidNumber.toNumber()
                     }
-                }
-                else
-                {
-                    console.error('error: ' + error.message);
-                }
-            });
-            res.on('searchEntry', (entry: any) => {
-                // modify if isInDB=true
-                // error if isInDB=false
-                if(this.isInDB)
-                {
-                    // modify
-
-                    // const change:ldap.Change[] = [];
-
-
-                    const change = new ldap.Change({
-                        operation: 'replace',
-                        modification: {
-                          cn: this.cn,
-
-                        }
-                      });
-
-                      // change[0].push(changeCN);
+                }));
+                changes.push(new ldap.Change({
+                    operation: 'replace',
+                    modification: {
+                        homeDirectory: this.homeDirectory.toString()
+                    }
+                }));
+                changes.push(new ldap.Change({
+                    operation: 'replace',
+                    modification: {
+                        userPassword: this.userPassword.toString()
+                    }
+                }));
 
 
-                    client.modifyAsync(this.dn.toString(), change, (errorModify:any)=> {
-                        assert.ifError(errorModify);
-                        if(errorModify)
-                        {
-                            console.log(errorModify);
-                        }
-                      });
-                      // Check if sn is the same as uid, if not fix
 
-                }
-                else
-                {
-                    // error
-                }
-            });
-            return Promise.resolve(this);
-        });
+                return client.modifyAsync(this.dn.toString(), changes)
+                .then((res:any)=>{return Promise.resolve(this)});
 
-        return Promise.resolve(this);
+            }
+
+        return Promise.reject();
     }
     // static loadUser(dn: string, callback: (retUser:User)=> void):void{
         static async loadUser(dn: string):Promise<User>{
@@ -243,4 +222,31 @@ export class User {
             return Promise.resolve(val);
         });
     }
+
+    private async setInDB(isInDB:boolean):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.isInDB = isInDB;
+            return res;
+        });
+    }
+
+    public async setCommonName(cn:string):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.cn = new LdapTypes.CommonName(cn);
+            return res;
+        });
+    }
+
+    /*public async setGIDNumber():string):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.cn = new LdapTypes.CommonName(cn);
+            return res;
+        });
+    }*/
+
+
+
 }

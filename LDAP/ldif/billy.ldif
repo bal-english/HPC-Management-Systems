@@ -18,8 +18,7 @@ objectClass: top
 objectClass: suseModuleConfiguration
 objectClass: suseUserConfiguration
 suseDefaultBase: ou=people,dc=linuxlab,dc=salisbury,dc=edu
-suseDefaultTemplate: cn=usertemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,
- dc=edu
+suseDefaultTemplate: cn=usertemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
 suseMaxPasswordLength: 8
 suseMaxUniqueId: 60000
 suseMinPasswordLength: 5
@@ -28,6 +27,7 @@ susePasswordHash: SSHA
 suseSearchFilter: objectClass=posixAccount
 suseSkelDir: /etc/skel
 cn: userconfiguration
+suseNextUniqueId: 1764
 
 dn: cn=groupconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
 objectClass: top
