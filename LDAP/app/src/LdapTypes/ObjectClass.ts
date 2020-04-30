@@ -8,7 +8,7 @@ export default class ObjectClass extends LdapKeyValuePairBag
         }
         public toString():string{
             // return this.bag.map((value:LdapKeyValuePair)=>value.ldapKVString()).join(",");
-            // Exception
+            // Exception make string array
             return "";
         }
     }

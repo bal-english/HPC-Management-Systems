@@ -9,4 +9,5 @@ export default class CommonName extends LdapKeyValuePair
         public toString():string{
             return this.value;
         }
+
     }
