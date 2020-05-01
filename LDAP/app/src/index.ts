@@ -17,9 +17,7 @@ app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 
 app.get('/', (request, response) => {
-  console.log("asdf");
-  //response.sendFile(__dirname + '/views/pages/index.html');
-
+  // response.sendFile(__dirname + '/views/pages/index.html');
   response.render('pages/index', {
     test: "Welcome Back... Richard"
   });
@@ -39,7 +37,7 @@ app.get('/api/user/:id', (request, response) => {
 
 app.post('/api/user/create', (request, response) => {
   console.log(request.body);
-  var email = request.body.email, cn = request.body.cn;
+  let email = request.body.email, cn = request.body.cn;
   response.send({
     error: 'this is an error'
   });
