@@ -268,13 +268,32 @@ export class User {
         });
     }
 
-    /*public async setGIDNumber():string):Promise<User>{
+
+    public async setGIDNumber(gidNumber:number):Promise<User>{
         return Promise.resolve(this)
         .then((res:User)=>{
-            res.cn = new LdapTypes.CommonName(cn);
+            res.gidNumber = new LdapTypes.GroupIDNumber(gidNumber);
             return res;
         });
-    }*/
+    }
+
+    public async setHomeDirectory(homeDirectory:string):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.homeDirectory = new LdapTypes.HomeDirectory(homeDirectory);
+            return res;
+        });
+    }
+
+    public async setUserPassword(userPassword:string):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.userPassword = new LdapTypes.UserPassword(userPassword);
+            return res;
+        });
+    }
+
+    
 
 
 
