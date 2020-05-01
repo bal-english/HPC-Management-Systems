@@ -13,7 +13,7 @@ app.use(bodyparser.json());
 app.get('/', (request:Request, response:Response) => {
   // response.sendFile(__dirname + '/views/pages/index.html');
   response.render('pages/index', {
-    test: "Welcome Back... Richard"
+    test: "HPCL UMS Test"
   });
 });
 
@@ -45,15 +45,35 @@ app.post('/api/user/create', async (request:Request, response:Response) => {
       error: err.toString(),
     });
   }
-  // .then((res:any)=> {return User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu")})
-
-  response.send({
-    error: 'this is an error'
-  });
 });
 
-app.post('/api/user/modify', (request:Request, response:Response) => {
+app.post('/api/user/modify', async (request:Request, response:Response) => {
   console.log(request.body);
+  const dn:string = request.body.dn;
+  const cn:string = request.body.cn;
+  const gidNumber:number = request.body.gidNumber;
+  const userPassword:string = request.body.userPassword;
+  const homeDirectory:string = request.body.homeDirectory;
+  try {
+    let res = await User.loadUser(dn);
+    if(cn.length!==0)
+      res = await res.setCommonName(cn);
+    if(gidNumber!==100)
+      res = await res.setGIDNumber(gidNumber);
+    if(userPassword.length!==0)
+      res = await res.setUserPassword(userPassword);
+    if(homeDirectory.length!==0)
+      res = await res.setHomeDirectory(homeDirectory);
+    const ressave = await res.save();
+    response.send({
+      success: ressave,
+    });
+  }
+  catch (err) {
+    response.send({
+      error: err.toString(),
+    });
+  }
 });
 
 app.post('/api/user/delete',(request:Request, response:Response) => {
