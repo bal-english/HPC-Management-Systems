@@ -6,3 +6,4 @@ cms-db/docker-compose-exposed.yml.old
 node_modules/*
 .DS_Store
 LDAP/app/npm-debug.log
+node_modules/

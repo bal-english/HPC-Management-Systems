@@ -9,7 +9,4 @@ export default class UserIDNumber extends LdapKeyValuePairNum
             return this.value;
         }
 
-        public setUIDNum(uidNum:number):void{
-            this.value = uidNum;
-        }
     }

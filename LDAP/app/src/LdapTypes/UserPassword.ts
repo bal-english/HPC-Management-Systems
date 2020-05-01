@@ -9,7 +9,4 @@ export default class UserPassword extends LdapKeyValuePair
             return this.value;
         }
 
-        public setPassword(password:string):void{
-            this.value = password;
-        }
     }

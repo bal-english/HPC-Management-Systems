@@ -9,7 +9,4 @@ export default class HomeDirectory extends LdapKeyValuePair
             return this.value;
         }
 
-        public setHomeDirectory(home:string):void{
-            this.value = home;
-        }
     }
