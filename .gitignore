@@ -4,3 +4,4 @@ LDAP/app/.npm
 LDAP/app/dist/*
 .DS_Store
 LDAP/app/npm-debug.log
+node_modules/
