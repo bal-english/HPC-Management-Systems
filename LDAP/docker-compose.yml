@@ -32,7 +32,9 @@ services:
       - network1
   node:
     image: cosc425/node:1.0.1
-    hostname: cosc425/node
+    hostname: "node"
+    ports:
+      - "8080:80"
     volumes:
       - ./app:/app
     container_name: ${COMPOSE_PROJECT_NAME}_nodejs

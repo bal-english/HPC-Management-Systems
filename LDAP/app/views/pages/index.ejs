@@ -110,7 +110,32 @@
           cn: $('#create_cn').val(),
         },
         success: function(data){
-          displayError(data.error, 'test');
+          if(data.error)
+          {
+            displayError(data.error, 'test');
+          }
+          else
+          {
+            var usr = 
+            "cn: " + data.success.cn.value +
+            "<br/>" +
+            "dn: " + 
+            data.success.dn.bag.map((res)=>{return res.key+"="+res.value}).join(',') +
+            "<br/>" +
+            "gidNumber: " + data.success.gidNumber.value +
+            "<br/>" +
+            "hd: " + data.success.homeDirectory.value +
+            "<br/>" +
+            "uid: " + data.success.uid.value +
+            "<br/>" +
+            "uidNumber: " + data.success.uidNumber.value +
+            "<br/>" +
+            "sn: " + data.success.sn.value +
+            "<br/>" +
+            "userPassword: " + data.success.userPassword.value;
+            displaySuccess('User added <br/> ' + usr, "test");
+            console.log(data)
+          }
         }
       });
 
@@ -127,13 +152,13 @@
           cn: $('#modify_cn').val(),
         },
         success: function(data){
-          alert(data);
+          
         }
       });
 
     });
 
-    $('#deleteuser').click(function(){
+    /*$('#deleteuser').click(function(){
 
       $.ajax({
         url: '/api/user/delete',
@@ -147,11 +172,16 @@
         }
       });
 
-    });
+    });*/
 
     function displayError(msg, div){
       var errorbox = `<div class="alert alert-danger" role="alert">` + msg + `</div>`
       $("#" + div).append(errorbox);
+      
+    }
+    function displaySuccess(msg, div){
+      var successbox = `<div class="alert alert-success" role="alert">` + msg + `</div>`
+      $("#" + div).append(successbox);
     }
 
   </script>
