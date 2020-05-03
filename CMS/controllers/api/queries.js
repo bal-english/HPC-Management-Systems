@@ -20,6 +20,16 @@ const getUserById = (req, res) => {
 		res.status(200).json(results.rows);
 	})
 }
+const getUsersById = (req, res) => {
+	const { min, max} = req.body;
+
+	pool.query('SELECT * FROM \"user\" WHERE id > $1 AND id < $2', [min, max], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
 
 const createUser = (req, res) => {
 	const { lastName, firstName, email } = req.body;
