@@ -30,6 +30,8 @@ router.put('/blogs/group', db.groupBlog)
 //grace's route
 router.post('/ticket', db.createTicket)
 
+router.get('/ticket/:id', db.getTicketById)
+
 module.exports = {
 	router
 }
