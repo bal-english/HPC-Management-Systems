@@ -26,6 +26,9 @@ router.post('/blogs', db.createBlog)
 
 router.put('/blogs/group', db.groupBlog)
 
+//grace's route
+router.post('/ticket', db.createTicket)
+
 module.exports = {
 	router
 }
