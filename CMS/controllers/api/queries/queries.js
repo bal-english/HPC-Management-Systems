@@ -146,6 +146,7 @@ const createTicket = (req, res) => {
 module.exports = {
 	getUsers,
 	getUserById,
+	getUsersById,
 	createUser,
 	updateUser,
 	deleteUser,

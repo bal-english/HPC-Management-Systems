@@ -12,6 +12,7 @@ router.get('/', (req, res) => {
 
 router.get('/users', db.getUsers)
 router.get('/users/:id', db.getUserById)
+router.get('/users/:min/:max', db.getUsersById);
 router.post('/users', db.createUser)
 router.put('/users/:id', db.updateUser)
 router.delete('/users/:id', db.deleteUser)
