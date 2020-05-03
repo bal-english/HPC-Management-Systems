@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html>
 
-<% include(../templates/header); %>
+<%- include ('../templates/header') -%>
 
-<% include(../templates/nav); %>
+<%- include ('../templates/nav') -%>
 
 
 <body class = "text-center">
   <br> <br>
-<h3> High Performance Computing Lab </h3>
-<br>
-
-  <div class = "card">
+  <div class = "col">
+  <div class = "card" style="width:500px;">
     <div class = "bg-light border-bottom-1 card-header" style="padding: 1rem 1rem">
     <h5> Create a ticket below </h5>
   </div>
@@ -39,11 +37,15 @@
 
     </form>
  </div>
-
+</div>
+<br>
+<br>
+<br>
     
 </body>
 </html>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script type = "text/javascript">
 
   $('#createticket').click(function(){

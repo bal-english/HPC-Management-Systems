@@ -18,18 +18,18 @@ app.get('/tickets', function(req, res) {
 	res.render('pages/ticketlist', {tickets: list});
 });
 
-// app.get('/blog', function(req, res){
-// 	res.render('views/bloghome');
-// });
+app.get('/blog', function(req, res){
+	res.render('pages/bloghome');
+});
 
-// app.get('/admin', function(req, res){
-// 	res.render('views/admin');
-// 	});
+app.get('/admin', function(req, res){
+	res.render('pages/ticketadmin');
+	});
 
 
-// app.get('/ticket/create', function(req, res){
-// 	res.render('views/ticketcreate');
-// });
+app.get('/ticket/create', function(req, res){
+	res.render('pages/ticketcreation');
+});
 
 
 
