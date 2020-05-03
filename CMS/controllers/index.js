@@ -19,10 +19,12 @@ app.get('/tickets', function(req, res) {
 });
 
 app.get('/blog', function(req, res){
-	res.render('pages/bloghome');
+	//this for blog gen from db
+	res.render('pages/bloghome', {blog: list});
 });
 
 app.get('/admin', function(req, res){
+	//retrieve user from db
 	res.render('pages/ticketadmin');
 	});
 
