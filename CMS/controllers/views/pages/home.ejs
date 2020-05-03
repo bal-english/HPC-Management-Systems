@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 
-<% include(../templates/header); %>
+<%- include ('../templates/header') -%>
 
-<% include(../templates/nav); %>
+<%- include ('../templates/nav') -%>
 
-<body class = "text-center">
+
+<body class = "text-center bg-light">
 
  <div class="header-row" id="header-row" style="padding: 0px; overflow:hidden; height:400px;">
    <div class="container-fluid" style="padding: 0px;">
       <div class="row"> 
          <div class="col-12"> 
             <a class="navbar-brand logo" href="home.html">
-               <img src= "henson2.png" style="width: 100%;">
+               <img src= "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gannett-cdn.com%2F-mm-%2Faaf304838131cf1cf7a400ea8eb1d2568dbabf79%2Fc%3D0-282-2749-1835%2Flocal%2F-%2Fmedia%2F2016%2F10%2F27%2FSalisbury%2FSalisbury%2F636131661173183358-20161027rm-Holloway-Hall.jpg%3Fwidth%3D3200%26height%3D1680%26fit%3Dcrop&f=1&nofb=1" style="width: 100%;">
             </a> 
          </div>     
       </div>
@@ -25,11 +26,10 @@
 <div class="container">
   <div class="row">
       <div class="col-6">
-        <img src= "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Falifeofproductivity.com%2Fwp-content%2Fuploads%2F2013%2F02%2FMed-Grey-Square-495x404-495x428.jpg&f=1&nofb=1" class = "rounded float-left"  style = "display: inline; width: 100%; height: auto;">
+        <img src= "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fen%2Fa%2Fa6%2FHensonHall_Salisbury.jpg&f=1&nofb=1" class = "rounded float-left"  style = "display: inline; width: 100%; height: auto;">
       </div>
-    <div class="col-6" style="vertical-align: middle; text-align:center;">
-      <p> The Henson High Performance Computing Lab is a Beowulf cluster designed for both classroom instruction as well as a research cluster. During the day, it is used in the instruction of high performance computing, scientific computing, computer graphics, and general Linux instruction. In the off-hours, the cluster software is activated to research jobs to run either overnight or during the weekend. The Henson HPCL furthermore acts as the administrative unit for all Linux support and Linux resources for the Henson School.
-
+    <div class="col-6 rounded align-self-center">
+      <p style="font-family: 'Open-Sans', sans-serif; padding: 10px; margin: 0px;"> The Henson High Performance Computing Lab is a Beowulf cluster designed for both classroom instruction as well as a research cluster. During the day, it is used in the instruction of high performance computing, scientific computing, computer graphics, and general Linux instruction. In the off-hours, the cluster software is activated to research jobs to run either overnight or during the weekend. The Henson HPCL furthermore acts as the administrative unit for all Linux support and Linux resources for the Henson School.
       </p>
     </div>
 </div>
@@ -39,29 +39,31 @@
 <div class = "container-fluid" style="padding-left: 100px;">
   <div class = "row" style = "padding-bottom: 100px;">
     <div class = "col-4">
-      <img src= "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Falifeofproductivity.com%2Fwp-content%2Fuploads%2F2013%2F02%2FMed-Grey-Square-495x404-495x428.jpg&f=1&nofb=1" class = "rounded float-left" style = "display: inline; width: 100%; height: auto;">
+      <img src= "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fb%2Fb6%2FPuTTY_Ubuntu.png&f=1&nofb=1" class = "rounded float-left" style = "display: inline; width: 100%; height: auto;">
     </div>
-     <div class="col-6 text-left"><span class="align-middle">
+     <div class="col-6 rounded align-self-center">
+       <p style="font-family: 'Open-Sans', sans-serif; padding: 10px; margin: 0px;">
       The primary way of interfacing with the cluster is secure shell (SSH) via the login server ssh://hslinux.salisbury.edu. Users on Windows should use the  PuTTY tool to SSH into the login server, whereas users on Linux should use the ssh terminal command. This login server is only accessible on the Henson LAN, and is restricted to Students and Faculty granted Linux access with Henson Linux accounts. 
-    </span>
+    </p>
     </div>
   </div>
   <div class= "row" style = "margin-bottom: 100px;">
     <div class = "col-4">
-      <img src= "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Falifeofproductivity.com%2Fwp-content%2Fuploads%2F2013%2F02%2FMed-Grey-Square-495x404-495x428.jpg&f=1&nofb=1" class = "rounded float-left" style =  "display: inline; width: 100%; height: auto;">
+      <img src= "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsbybiz.org%2Fapp%2Fuploads%2F2019%2F02%2FComputer-Science-SU-2019-1024x887.jpg&f=1&nofb=1" class = "rounded float-left" style =  "display: inline; width: 100%; height: auto;">
     </div>
-     <div class="col-6 text-left"><span class="align-middle">
-      The Henson HPC cluster uses the SchedMD Slurm program to manage resources and execute programs across the cluster. It is recommended to run programs that are  Open MPI aware to perform computation across the system, using the sbatch or srun utility supplied by Slurm. Faculty and students (with faculty permission) may request access to both the Linux system and the Slurm Scheduler by submitting a ticket.
-    </span>
+     <div class="col-6 rounded align-self-center">
+      <p style="font-family: 'Open-Sans', sans-serif; padding: 10px; margin: 0px;">      The Henson HPC cluster uses the SchedMD Slurm program to manage resources and execute programs across the cluster. It is recommended to run programs that are Open MPI aware to perform computation across the system, using the sbatch or srun utility supplied by Slurm. Faculty and students (with faculty permission) may request access to both the Linux system and the Slurm Scheduler by submitting a ticket.
+    </p>
   </div>
 </div>
   <div class= "row" style = "margin-bottom: 100px;">
     <div class = "col-4">
-      <img src= "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Falifeofproductivity.com%2Fwp-content%2Fuploads%2F2013%2F02%2FMed-Grey-Square-495x404-495x428.jpg&f=1&nofb=1" class = "rounded float-left" style =  "display: inline; width: 100%; height: auto;">
+      <img src= "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.onedayonejob.com%2Fwp-content%2Fuploads%2Ffuture-computer-science-career.jpg&f=1&nofb=1" style =  "display: inline; width: 100%; height: auto;">
     </div>
-      <div class="col-6 text-left"><span class="align-middle">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla rutrum feugiat nunc at vestibulum. In sollicitudin ante et lectus ullamcorper consequat. Nunc laoreet viverra ante placerat posuere. Integer ac diam nisi. Fusce tristique elementum nulla, nec ultrices nisi sagittis gravida. Suspendisse ultrices justo in velit ornare iaculis. Suspendisse neque turpis, convallis at leo ut, ultricies accumsan lorem.
-      </span>
+      <div class="col-6 rounded align-self-center">
+        <p style="font-family: 'Open-Sans', sans-serif; padding: 10px;  margin: 0px;">
+        SU hosts an annual Student Research Conference where research results are presented to faculty and peers. We also send students to the National Conference on Undergraduate Research, which SU has twice hosted. Many mathematics students choose to engage in projects with faculty, some of which have led to student or student/faculty publications in journals and presentations at professional meetings.
+      </p>
     </div>
   </div> 
 
@@ -71,6 +73,6 @@
 <br>
 <br>
 
-<% include(../templates/footer); %>
+<%- include ('../templates/footer') -%>
 </body>
 </html>
