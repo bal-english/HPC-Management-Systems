@@ -5,10 +5,10 @@ MAINTAINER TH2 Alex
 WORKDIR /home/app/cms/
 
 RUN apt-get update
-RUN apt-get install -y postgresql
+#RUN apt-get install -y postgresql
 RUN apt-get install -y nodejs
 RUN apt-get install -y npm
-RUN apt-get install -y iputils-ping
+#RUN apt-get install -y iputils-ping
 
 RUN npm update
 RUN npm init --yes

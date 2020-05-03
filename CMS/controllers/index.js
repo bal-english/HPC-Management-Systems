@@ -2,6 +2,7 @@ const port = 3000;
 var express = require('express');
 var app = express();
 var api = require('./api/api.js');
+var fetch = require('node-fetch');
 
 app.set('view engine','ejs');
 
@@ -15,7 +16,9 @@ app.get('/', function(req, res) {
 
 app.get('/tickets', function(req, res) {
 	list = [{id: 7, creator: 0, title: "This is a test title for tickets"},{id: 8, creator: 1, title: "This is a second test title for tickets"}];
-	res.render('pages/ticketlist', {tickets: list});
+	//list = [];
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
+
 });
 
 app.get('/blog', function(req, res){
@@ -24,13 +27,13 @@ app.get('/blog', function(req, res){
 });
 
 app.get('/admin', function(req, res){
-	//retrieve user from db
-	res.render('pages/ticketadmin');
-	});
+	
+	res.render('pages/adminhome');
+});
 
 
 app.get('/ticket/create', function(req, res){
-	res.render('pages/ticketcreation');
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketcreation', {tickets: qres}));
 });
 
 

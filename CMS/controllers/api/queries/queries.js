@@ -143,11 +143,21 @@ const createTicket = (req, res) => {
 	})
 }
 
+const getTickets = (req, res) => {
+	
+	pool.query('SELECT * FROM \"ticket\"', [], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).send(results.rows);
+	})
+}
+
 const getTicketById = (req, res) => {
 	const id = parseInt(req.params.id);
 
 	pool.query('SELECT * FROM \"ticket\" WHERE id = $1', [id], (error, results) => {
-		if(error)
+		if(error) {
 			throw error;
 		}
 		res.status(200).send(results.rows);
@@ -168,5 +178,6 @@ module.exports = {
 	createBlog,
 	groupBlog,
 	createTicket,
+	getTickets,
 	getTicketById
 }
