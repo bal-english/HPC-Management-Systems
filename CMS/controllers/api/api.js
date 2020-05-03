@@ -1,7 +1,7 @@
 
 var express = require('express');
 var router = express.Router();
-const db = require('./queries');
+const db = require('./queries/queries');
 
 //const Pool = require('pg').Pool;
 //const pool2 = Pool
