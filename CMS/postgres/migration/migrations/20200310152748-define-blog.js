@@ -23,7 +23,8 @@ exports.up = function(db, callback) {
     },
     posttime: {
       type: 'timestamp',
-      notNull: true
+      notNull: false,//true	// TODO: Make This null
+      defaultValue: '2004-10-19 10:23:54'
     },
     title: {
       type: 'text',
@@ -59,7 +60,7 @@ exports.up = function(db, callback) {
       type: 'text',
       notNull: 'true'
     }
-  }, callback);
+  }, callback());
 };
 
 exports.down = function(db, callback) {
