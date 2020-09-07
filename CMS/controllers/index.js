@@ -26,6 +26,22 @@ app.get('/blog', function(req, res){
 	res.render('pages/bloghome', {blog: list});
 });
 
+app.get('/blog/:categoryName', function (req, res) {
+	var blogs = [
+		// API here for retrieving blogs by category
+	];
+	
+	res.render("category", {blogs: blogs});
+});
+
+app.get('/blog/:categoryName/:blogId', function (req, res){
+	var categoryName = req.params.categoryName;
+	var blogId = req.params.blogId;
+
+	res.render("singleBlog", {category: categoryName, blog: blogId});
+	console.log("sent successfully");
+});
+
 app.get('/admin', function(req, res){
 	
 	res.render('pages/adminhome');
