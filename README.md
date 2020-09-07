@@ -5,19 +5,17 @@ A study of classical and object‑oriented software engineering principles and m
 
 ### HPCL Website and User Management System
 
-Goals for Spring 2020
-- Create skeleton for User Management System
-- Create skeleton for CMS
+Goals for Fall 2020
 
-#### CMS (Content Management System)
-##### webdb
-- [x] DB Schema
-  - [x] Migrations 
-- [ ] Users & User roles
+Postgres Database
+- [ ] Complete REST API
+  - information here
+- [ ] User roles
+  
+Web routing
+- [ ] Move static to dynamic routing 
+- [ ] Embellish on original webpages
+- [ ] Admin pages
 
-##### CMSweb
-- [x] Routing
-- [ ] Dynamic Routing
-  - [x] Group routes
-  - [ ] Middleware to log requests (tickets?)
-- [ ] Support Ticket Page (ticketing page, needs to be BEEF'D)
+Ticketing system
+- [ ] fully automated/dynamic creation

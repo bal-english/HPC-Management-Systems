@@ -66,6 +66,25 @@ const deleteUser = (req, res) => {
 	})
 }
 
+const getBloggroups = (req, res) => {
+	pool.query('SELECT * FROM \"bloggroup\"', (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
+const getBloggroupById = (req, res) => {
+	const id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"bloggroup\" WHERE id = $1', [id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
 const createUsergroup = (req, res) => {
 	const { name } = req.body;
 	pool.query('INSERT INTO \"usergroup\" (\"name\") VALUES ($1)', [name], (error, results) => {
@@ -99,6 +118,26 @@ const updateBloggroup = (req, res) => {
 //const updateBloggroupName
 //const updateBloggroupParent
 
+const getUsergroups = (req, res) => {
+	pool.query('SELECT * FROM \"usergroup\"', (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
+const getUsergroupById = (req, res) => {
+	const id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"usergroup\" WHERE id = $1', [id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
+
 const updateUsergroup = (req, res) => {
 	const { id, name } = req.body;
 	pool.query("UPDATE \"usergroup\" SET \"name\"=$2 WHERE \"id\"=$1", [id, name], (error, results) => {
@@ -130,8 +169,6 @@ const groupBlog = (req, res) => {
 	})
 }
 
-//Grace's query
-
 const createTicket = (req, res) => {
 	const { creator, title, body } = req.body;
 
@@ -149,7 +186,7 @@ const getTickets = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).send(results.rows);
+		res.status(200).json(results.rows);
 	})
 }
 
@@ -160,10 +197,29 @@ const getTicketById = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).send(results.rows);
+		res.status(200).json(results.rows);
 	})
 }
 
+const getPermissions = (req, res) => {
+	pool.query('SELECT * FROM \"permission\"', [], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.row);
+	})
+}
+
+const getPermissionById = (req, res) => {
+	const id = parseInt(req.params.id);
+
+	pool.query('SELECT * FROM \"permission\" WHERE id = $1', [id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
 module.exports = {
 	getUsers,
 	getUserById,
@@ -171,6 +227,10 @@ module.exports = {
 	createUser,
 	updateUser,
 	deleteUser,
+	getBloggroups,
+	getBloggroupById,
+	getUsergroups,
+	getUsergroupById,
 	createUsergroup,
 	createBloggroup,
 	updateBloggroup,
@@ -179,5 +239,7 @@ module.exports = {
 	groupBlog,
 	createTicket,
 	getTickets,
-	getTicketById
+	getTicketById,
+	getPermissions,
+	getPermissionById
 }

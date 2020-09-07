@@ -23,7 +23,7 @@ app.get('/tickets', function(req, res) {
 
 app.get('/blog', function(req, res){
 	//this for blog gen from db
-	res.render('pages/bloghome', {blog: list});
+	res.render('pages/bloghome');
 });
 
 app.get('/blog/:categoryName', function (req, res) {
@@ -43,8 +43,7 @@ app.get('/blog/:categoryName/:blogId', function (req, res){
 });
 
 app.get('/admin', function(req, res){
-	
-	res.render('pages/adminhome');
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {recentTicketList: qres}));
 });
 
 
