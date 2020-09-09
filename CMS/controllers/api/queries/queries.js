@@ -46,7 +46,7 @@ const updateUser = (req, res) => {
 	const id = parseInt(req.params.id);
 	const { lastName, firstName, email } = req.body;
 	
-	pool.query('UPDATE \"user\" SET \"lastName\" = $1, \"firstName\" = $2, \"email\" = $3 WHERE id = $4', [lastName, firstName, email], (error, results) => {
+	pool.query('UPDATE \"user\" SET \"lastName\" = $2, \"firstName\" = $3, \"email\" = $4 WHERE id = $1', [id, lastName, firstName, email], (error, results) => {
 		if(error) {
 			throw error;
 		}
@@ -154,7 +154,7 @@ const createBlog = (req, res) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).send(`Blog created with ID: ${results.rows[0].id}\n`);
+		res.status(201).send(`Blog created with ID: ${results.rows[0].id}\n`);
 	})
 }
 
@@ -202,11 +202,11 @@ const getTicketById = (req, res) => {
 }
 
 const getPermissions = (req, res) => {
-	pool.query('SELECT * FROM \"permission\"', [], (error, results) => {
+	pool.query('SELECT * FROM \"permission\"', (error, results) => {
 		if(error) {
 			throw error;
 		}
-		res.status(200).json(results.row);
+		res.status(200).json(results.rows);
 	})
 }
 
@@ -220,6 +220,30 @@ const getPermissionById = (req, res) => {
 		res.status(200).json(results.rows);
 	})
 }
+
+const updatePermission = (req, res) => {
+	const id = parseInt(req.params.id);
+	const { name } = req.body;
+	
+	pool.query('UPDATE \"permission\" SET \"name\" = $2 WHERE id = $1', [id, name], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).send(`Permission modified with ID: ${id}\n`);
+	})
+}
+
+const createPermission = (req, res) => {
+	const { name } = req.body;
+	pool.query('INSERT INTO \"permission\" (\"name\") VALUES ($1)' [name], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(201).send(`Permission created with ID: ${results.rows[0].id}\n`);
+	})
+}
+
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -241,5 +265,7 @@ module.exports = {
 	getTickets,
 	getTicketById,
 	getPermissions,
-	getPermissionById
+	getPermissionById,
+	updatePermission,
+	createPermission
 }

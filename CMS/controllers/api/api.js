@@ -39,6 +39,8 @@ router.get('/ticket/:id', db.getTicketById)
 
 router.get('/permission', db.getPermissions)
 router.get('/permission/:id', db.getPermissionById)
+router.patch('/permission/:id/:name', db.updatePermission)
+router.post('/permission/:name', db.createPermission)
 
 module.exports = {
 	router
