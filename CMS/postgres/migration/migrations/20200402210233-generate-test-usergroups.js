@@ -15,6 +15,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
+	/*
 	db.insert('usergroup', ['name'], ['superuser']);
 	db.insert('usergroup', ['name'], ['db_admin']);
 	db.insert('usergroup', ['name'], ['ticket_admin']);
@@ -24,6 +25,8 @@ exports.up = function(db, callback) {
 	db.insert('usergroup', ['name'], ['su_faculty']);
 	db.insert('usergroup', ['name'], ['su_student']);
 	return db.insert('usergroup', ['name'], ['su_alumnus'], callback);
+	*/
+	return null;
 };
 
 exports.down = function(db, callback) {

@@ -15,7 +15,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-	db.insert('usergroup-permission', ['group_id', 'perm_id'], [1, 1]);
+	/*db.insert('usergroup-permission', ['group_id', 'perm_id'], [1, 1]);
 	db.insert('usergroup-permission', ['group_id', 'perm_id'], [2, 2]);
 	db.insert('usergroup-permission', ['group_id', 'perm_id'], [3, 4]);
 	db.insert('usergroup-permission', ['group_id', 'perm_id'], [3, 6]);
@@ -41,6 +41,8 @@ exports.up = function(db, callback) {
 		
 	db.insert('user-usergroup', ['user_id', 'group_id'], [5, 1]);
 	return db.insert('user-usergroup', ['user_id', 'group_id'], [5, 9], callback);
+	*/
+	return null;
 };
 
 exports.down = function(db, callback) {
