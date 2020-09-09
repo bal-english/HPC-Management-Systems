@@ -12,9 +12,12 @@ const client = ldap.createClient({
 Promises.promisifyAll(client);
 
 User.createUser("William Wolf", "wwolf1@gulls.salisbury.edu")
-.then((res:User)=>res.save())
-.then((res:any)=> {return User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu")})
-.then((res:any)=>{return res.disableUser()})
-.then((res:any)=>res.save())
+// .then((res:User)=>res.save())
+.then((res:any)=> {return User.loadUser("uid=mmandulak1,ou=people,dc=linuxlab,dc=salisbury,dc=edu")})
+// .then((res:any)=>{return res.disableUser()})
+// .then((res:any)=>res.save())
+// .then((res:any)=>res.deleteUser())
+// .then((res:any)=>{res.setInDB(true)})
+// .then((res:any)=>res.deleteUser())
 .then(console.log);
 

@@ -127,9 +127,15 @@ export class User {
             this.loginShell = new LdapTypes.LoginShell("/sbin/nologin");
             return Promise.resolve(this);
         }
-        /*async deleteUser():Promise<User>{
 
-        }*/
+        async deleteUser():Promise<User>{
+            if(this.isInDB)
+            {
+                return client.delAsync(this.dn.toString())
+                .then((res:any)=>{return this.setInDB(false)})
+            }
+            return Promise.resolve(this);
+        }
     // save():User{
         async save():Promise<User>{
         // Checks if user is in db by DN
@@ -271,8 +277,8 @@ export class User {
             return Promise.resolve(val);
         });
     }
-
-    private async setInDB(isInDB:boolean):Promise<User>{
+    // change back to private after test
+    public async setInDB(isInDB:boolean):Promise<User>{
         return Promise.resolve(this)
         .then((res:User)=>{
             res.isInDB = isInDB;
