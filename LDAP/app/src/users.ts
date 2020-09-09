@@ -26,6 +26,7 @@ export class User {
     uid:LdapTypes.UserID;
     uidNumber:LdapTypes.UserIDNumber;
     userPassword:LdapTypes.UserPassword;
+    loginShell:LdapTypes.LoginShell;
     isInDB: boolean;
 
 
@@ -55,6 +56,7 @@ export class User {
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
         const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
+        const loginShell:LdapTypes.LoginShell = new LdapTypes.LoginShell("/bin/bash");
         const inDBflag:boolean=false;
         // const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
 
@@ -88,7 +90,7 @@ export class User {
             })
             .then((res:number)=> {
                 const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(res);
-                const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, false);
+                const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, loginShell, false);
                 return Promise.resolve(createdUser);
             });
 
@@ -106,6 +108,7 @@ export class User {
         uidNumber:LdapTypes.UserIDNumber,
         sn:LdapTypes.Surname,
         userPassword:LdapTypes.UserPassword,
+        loginShell:LdapTypes.LoginShell,
         isInDB:boolean){
             this.isInDB=isInDB;
             this.cn=cn;
@@ -117,7 +120,16 @@ export class User {
             this.uidNumber=uidNumber;
             this.sn=sn;
             this.userPassword=userPassword;
+            this.loginShell=loginShell;
     }
+
+        async disableUser():Promise<User>{
+            this.loginShell = new LdapTypes.LoginShell("/sbin/nologin");
+            return Promise.resolve(this);
+        }
+        /*async deleteUser():Promise<User>{
+
+        }*/
     // save():User{
         async save():Promise<User>{
         // Checks if user is in db by DN
@@ -137,6 +149,7 @@ export class User {
                     uid: this.uid.toString(),
                     uidNumber: this.uidNumber.toNumber(),
                     userPassword: this.userPassword.toString(),
+                    loginShell: this.loginShell.toString(),
                 };
                 console.log(this.dn.toString());
                 console.log(`cn: ${JSON.stringify(entry.cn)}`);
@@ -146,6 +159,7 @@ export class User {
                 console.log(`uid: ${JSON.stringify(entry.uid)}`);
                 console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`);
                 console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
+                console.log(`loginShell: ${JSON.stringify(entry.loginShell)}`);
 
                 return client.addAsync(this.dn.toString(), entry)
                 .then((res:any)=>{return this.setInDB(true)});
@@ -178,8 +192,12 @@ export class User {
                         userPassword: this.userPassword.toString()
                     }
                 }));
-
-
+                changes.push(new ldap.Change({
+                    operation: 'replace',
+                    modification: {
+                        loginShell: this.loginShell.toString()
+                    }
+                }));
 
                 return client.modifyAsync(this.dn.toString(), changes)
                 .then((res:any)=>{return Promise.resolve(this)});
@@ -204,6 +222,7 @@ export class User {
         let loadedUid: LdapTypes.UserID;
         let loadedUidNum: LdapTypes.UserIDNumber; // MAYBE
         let loadedUserPassword: LdapTypes.UserPassword;
+        let loadedLoginShell: LdapTypes.LoginShell;
         const inDBflag: boolean = true;
 
         return User.searchOnce(dn)
@@ -241,7 +260,8 @@ export class User {
                 loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
                 loadedSN = new LdapTypes.Surname(entry.object.sn);
                 loadedUserPassword = new LdapTypes.UserPassword("wordpass");
-                return Promise.resolve(new User(loadedDN,loadedCN,loadedGidNumber,loadedHomeDir,loadedObjClass,loadedUid,loadedUidNum,loadedSN,loadedUserPassword,inDBflag));
+                loadedLoginShell = new LdapTypes.LoginShell(entry.object.loginShell);
+                return Promise.resolve(new User(loadedDN,loadedCN,loadedGidNumber,loadedHomeDir,loadedObjClass,loadedUid,loadedUidNum,loadedSN,loadedUserPassword,loadedLoginShell,inDBflag));
             });
     }
     public static async searchOnce(dn:string){
@@ -289,6 +309,13 @@ export class User {
         return Promise.resolve(this)
         .then((res:User)=>{
             res.userPassword = new LdapTypes.UserPassword(userPassword);
+            return res;
+        });
+    }
+    public async setLoginShell(loginShell:string):Promise<User>{
+        return Promise.resolve(this)
+        .then((res:User)=>{
+            res.loginShell = new LdapTypes.LoginShell(loginShell);
             return res;
         });
     }

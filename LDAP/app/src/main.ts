@@ -14,5 +14,7 @@ Promises.promisifyAll(client);
 User.createUser("William Wolf", "wwolf1@gulls.salisbury.edu")
 .then((res:User)=>res.save())
 .then((res:any)=> {return User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu")})
+.then((res:any)=>{return res.disableUser()})
+.then((res:any)=>res.save())
 .then(console.log);
 

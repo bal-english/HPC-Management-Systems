@@ -70,6 +70,7 @@ sn: dummyaccount
 uid: dummyaccount
 uidNumber: 999999
 userPassword:: e3xzaGF9xll6TxtUSxVxRGFMxVJ1cGxxWkdUWxNxenlxVVMxxxxxxxxx
+loginShell: /bin/bash
 
 dn: cn=students,ou=group,dc=linuxlab,dc=salisbury,dc=edu
 cn: students
