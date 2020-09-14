@@ -4,6 +4,7 @@ var app = express();
 var api = require('./api/api.js');
 var fetch = require('node-fetch');
 
+app.set('views', '../views')
 app.set('view engine','ejs');
 
 app.use('/api', api.router/*, function (req, res) {
