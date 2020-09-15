@@ -22,7 +22,7 @@ app.get('/tickets', function(req, res) {
 
 });
 
-app.get('/blog', function(req, res){
+app.get('/blogs', function(req, res){
 	//this for blog gen from db
 	res.render('pages/bloghome');
 });

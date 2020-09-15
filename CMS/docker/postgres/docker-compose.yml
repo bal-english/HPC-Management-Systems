@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.5'
 
 services:
 
@@ -12,14 +12,25 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-cms}
     networks:
-      - default
+      cms:
+        ipv4_address: 172.24.0.2
+        aliases:
+          - database
+          - postgres
+          - pg-cont
+          - pg
 
   adminer:
     image: adminer
     container_name: ${SERVNAME_ADMINER:-adminer-cont}
     restart: always
+    depends_on:
+      - "postgres"
     networks:
-      - default
+      cms:
+        ipv4_address: 172.24.0.3
+        aliases:
+          - adminer
     ports:
       - "${ADMINER_PORT_EXT:-35000}:${ADMINER_PORT_INT:-8080}"
 
@@ -27,14 +38,27 @@ services:
     image: dpage/pgadmin4
     container_name: ${SERVNAME_PGADMIN:-pgadmin-cont}
     restart: always
+    depends_on:
+      - "postgres"
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-password}
     networks:
-      - default
+      cms:
+        ipv4_address: 172.24.0.4
+        aliases:
+          - pgadmin
+          - pgadmin4
     ports:
       - "${PGADMIN_PORT_EXT:-35001}:${PGADMIN_PORT_INT:-80}"
       
 networks:
-  default:
+  cms:
     driver: bridge
+    name: cms
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.24.0.0/16
+          gateway: 172.24.0.1

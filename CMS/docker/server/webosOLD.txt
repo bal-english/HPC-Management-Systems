@@ -1,0 +1,22 @@
+FROM ubuntu
+MAINTAINER TH2 Alex
+
+WORKDIR /home/app/
+
+RUN apt-get update
+#RUN apt-get install -y postgresql
+RUN apt-get install -y nodejs
+RUN apt-get install -y npm
+#RUN apt-get install -y iputils-ping
+
+RUN npm update
+RUN npm init --yes
+RUN bash -c "npm install -y --save pg"
+RUN bash -c "npm install -y --save -g express"
+RUN bash -c "npm install -y --save node-fetch"
+
+ADD controllers/ /home/app/controllers/
+ADD tmp/views/ /home/app/views/
+ADD tmp/init/env/ /home/app/init/env
+RUN bash -c "cd init/env/ && source env_setup.sh"
+#CMD ["/bin/echo", "test"]
