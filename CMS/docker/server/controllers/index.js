@@ -16,7 +16,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/tickets', function(req, res) {
-	list = [{id: 7, creator: 0, title: "This is a test title for tickets"},{id: 8, creator: 1, title: "This is a second test title for tickets"}];
+	//list = [{id: 7, creator: 0, title: "This is a test title for tickets"},{id: 8, creator: 1, title: "This is a second test title for tickets"}];
 	//list = [];
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
@@ -25,6 +25,12 @@ app.get('/tickets', function(req, res) {
 app.get('/blogs', function(req, res){
 	//this for blog gen from db
 	res.render('pages/bloghome');
+});
+
+app.get('/newblogs', function(req, res){
+	//this for blog gen from db
+	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/newbloghome', {blogs: qres}));
+	//res.render('pages/newbloghome');
 });
 
 app.get('/blog/:categoryName', function (req, res) {

@@ -1,0 +1,19 @@
+<!-- view\templates\newbloghome.ejs -->
+<html>
+
+<%- include ('../templates/header') -%>
+<%- include ('../templates/nav') -%>
+
+<br>
+<br>
+
+<body class = "text-center bg-light">
+	<%- include('blogset', {blogs: blogs}); %>
+</body>
+
+
+<br>
+<br>
+<%- include ('../templates/footer') -%>
+</body>
+</html>
