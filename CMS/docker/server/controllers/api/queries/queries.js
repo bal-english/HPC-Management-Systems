@@ -158,6 +158,14 @@ const createBlog = (req, res) => {
 	})
 }
 
+const getBlogs = (req, res) => {
+	pool.query('SELECT * FROM \"blog\"', [], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
 
 const groupBlog = (req, res) => {
 	const { blog_id, group_id } = req.body;
@@ -259,6 +267,7 @@ module.exports = {
 	createBloggroup,
 	updateBloggroup,
 	updateUsergroup,
+	getBlogs,
 	createBlog,
 	groupBlog,
 	createTicket,
