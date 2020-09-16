@@ -18,7 +18,6 @@ RUN npm install --save -g db-migrate -g db-migrate-pg
 
 ADD migration/database.json /home/app/cms/database.json
 ADD migration/migrations/ /home/app/cms/migrations/
-ADD init/env/ /home/app/cms/init/env
 
 #ADD routing/ /home/app/cms/routing
 #CMD ["/bin/echo", "test"]

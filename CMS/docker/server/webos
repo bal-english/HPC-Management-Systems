@@ -6,7 +6,6 @@ WORKDIR /home/app/
 RUN npm update
 COPY controllers/ /home/app/controllers/
 COPY tmp/views/ /home/app/views/
-COPY tmp/init/env/ /home/app/init/env
 
 RUN bash -c "cd init/env/ && source env_setup.sh && echo $PGHOST"
 
