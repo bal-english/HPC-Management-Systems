@@ -22,7 +22,17 @@ app.get('/tickets', function(req, res) {
 
 });
 
-app.get('/blogs', function(req, res){
+app.get('/admin/ticket/:categoryName', function(req, res){
+
+	var tickets = [
+		//API here for retrieving tickets by category
+	];
+	
+	res.render("ticketCategory", {tickets:tickets});
+
+});
+
+app.get('/blog', function(req, res){
 	//this for blog gen from db
 	res.render('pages/bloghome');
 });

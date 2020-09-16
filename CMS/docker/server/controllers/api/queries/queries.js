@@ -21,7 +21,7 @@ const getUserById = (req, res) => {
 	})
 }
 const getUsersById = (req, res) => {
-	const { min, max} = req.body;
+	const { min, max } = req.body;
 
 	pool.query('SELECT * FROM \"user\" WHERE id > $1 AND id < $2', [min, max], (error, results) => {
 		if(error) {
