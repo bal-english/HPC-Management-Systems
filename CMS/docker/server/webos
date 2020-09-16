@@ -7,7 +7,7 @@ RUN npm update
 COPY controllers/ /home/app/controllers/
 COPY tmp/views/ /home/app/views/
 
-RUN bash -c "cd init/env/ && source env_setup.sh && echo $PGHOST"
+#RUN bash -c "cd init/env/ && source env_setup.sh && echo $PGHOST"
 
 #RUN bash -c "echo $PGHOST"
 
@@ -17,4 +17,5 @@ RUN npm install
 
 EXPOSE 8080
 EXPOSE 3000
+
 CMD ["node", "index.js"]
