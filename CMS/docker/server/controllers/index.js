@@ -32,7 +32,7 @@ app.get('/admin/ticket/:categoryName', function(req, res){
 
 });
 
-app.get('/blogs', function(req, res){
+app.get('/blog', function(req, res){
 	//this for blog gen from db
 	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
 	//res.render('pages/newbloghome');
