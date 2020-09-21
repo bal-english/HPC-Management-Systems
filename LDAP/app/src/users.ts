@@ -2,6 +2,7 @@ import * as LdapTypes from "./LdapTypes/index";
 import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry } from 'ldapjs';
 import TsMonad, { Maybe } from 'tsmonad';
 import assert from 'assert';
+import {validateUserPass} from "./validateUser"
 const { once, EventEmitter } = require('events');
 const Promises = require("bluebird");
 
@@ -29,7 +30,7 @@ export class User {
     isInDB: boolean;
 
 
-    static async createUser(comName:string, email:string):Promise<User>
+    static async createUser(comName:string, email:string, pw:string):Promise<User>
     {
         const emailComponents:string[] = email.split("@",2);
         const dc:LdapTypes.LdapKeyValuePair[] = [
@@ -54,7 +55,7 @@ export class User {
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
-        const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
+        const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword(pw);
         const inDBflag:boolean=false;
         // const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
 

@@ -11,7 +11,7 @@ const client = ldap.createClient({
 
 Promises.promisifyAll(client);
 
-User.createUser("William Wolf", "wwolf1@gulls.salisbury.edu")
+User.createUser("William Wolf", "wwolf1@gulls.salisbury.edu", "Password")
 .then((res:User)=>res.save())
 .then((res:any)=> {return User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu")})
 .then(console.log);

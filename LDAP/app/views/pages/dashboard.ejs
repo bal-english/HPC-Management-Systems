@@ -23,14 +23,20 @@
 
     <h2>Create User</h2>
     <form>
-      <div class="row">
-        <div class="col">
+        <div class="row">
+          <label for="create_email">Enter the Email:</label></label>
           <input id="create_email" class="form-control" type="text" placeholder="Enter the Email"></input>
         </div>
-        <div class="col">
+        <span style="display:block; height: 20px;"></span>
+        <div class="row">
+          <label for="create_cn">Enter the Common Name:</label></label>
           <input id="create_cn" class="form-control" type="text" placeholder="Enter the Common Name"></input>
         </div>
-      </div>
+        <span style="display:block; height: 20px;"></span>
+        <div class="row">
+          <label for="create_pw">Enter the Password:</label></label>
+          <input id="create_pw" class="form-control" type="password" placeholder="Enter the Password"></input>
+        </div>
       <span style="display:block; height: 20px;"></span>
     </form>
 
@@ -42,41 +48,42 @@
     <div id="test"></div>
 
     <h2>Modify User</h2>
-    <form>
-      <div class="row">
-        <div class="col">
-          <input id="modify_dn" type="text" class="form-control" placeholder="Enter the DN"></input>
+    <form></form>
+        <div class="row">
+          <label for="modify_dn">Enter the Common Name:</label></label>
+          <input id="modify_dn" type="text" class="form-control" placeholder="Enter the Common Name"></input>
         </div>
-      </div>
-      <div class="row">
-        <div class="col">
+        <!--<div class="row">
           <input id="modify_cn" type="text" class="form-control" placeholder="Enter the Common Name"></input>
         </div>
-        <div class="col">
+        <div class="row">
           <input id="modify_password" type="password" class="form-control" placeholder="Enter the Password"></input>
         </div>
-      </div>
       <span style="display:block; height: 10px;"></span>
-      <div class="row">
-        <div class="col">
+        <div class="row">
           <input id="modify_homedir" type="text" class="form-control" placeholder="Enter the Home Directory"></input>
         </div>
-        <div class="col">
+        <div class="row">
           <input id="modify_gidnumb" type="number" class="form-control" placeholder="Enter the Group ID Number" value="100"></input>
+        </div>-->
+        <span style="display:block; height: 20px;"></span>
+        <div class="row">
+          <label for="modify_password">Enter the Password:</label></label>
+          <input id="modify_password" type="password" class="form-control" placeholder="Enter the Password"></input>
         </div>
-      </div>
       <span style="display:block; height: 10px;"></span>
-    </form>
-    <!--<p style="text-align: center; margin: 0 auto">-->
+      </form>
+    <p style="text-align: center; margin: 0 auto">
     <button id="modifyuser" style="text-align: center;" class="btn btn-primary" type="button">Modify User</button>
     <hr>
     <span style="display:block; height: 20px;"></span>
     <div id="test2"></div>
 
-    <!--<h2>Delete User</h2>
+    <h2>Delete User</h2>
     <form>
       <div class="row">
         <div class="col">
+          <label for="delete_email">Enter the Email:</label></label>
           <input id="delete_email" class="form-control" type="text" placeholder="Enter the Email"></input>
         </div>
         <div class="col"></div>
@@ -86,7 +93,7 @@
     <span style="display:block; height: 20px;"></span>
     <button id="deleteuser" class="btn btn-primary" type="button">Delete User</button>
 
-  </div> -->
+  </div>
 
   </body>
 
@@ -104,6 +111,7 @@
         data: {
           email: $('#create_email').val(),
           cn: $('#create_cn').val(),
+          pw: $('#create_pw').val()
         },
         success: function(data){
           if(data.error)
@@ -153,7 +161,7 @@
         success: function(data){
           if(data.error)
           {
-            displayError(data.error, 'test');
+            displayError(data.error, 'test2');
           }
           else
           {

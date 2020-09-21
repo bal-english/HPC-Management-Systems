@@ -2,21 +2,38 @@ import express from 'express';
 import * as bodyparser from 'body-parser';
 import { Request, Response } from 'express';
 import { User } from "./users";
-
+import {validateUserPass} from "./validateUser"
+import {authenticateUser} from "./authentication"
+import paseto from 'paseto'
+import path from 'path'
+import { each } from 'bluebird';
+const {V2} = paseto
 const app = express();
+(async () => {
+const key = await V2.generateKey('public')
+app.set('key', key);
+})()
+
 app.set('view engine', 'ejs');
 app.engine('ejs', require('ejs').renderFile);
 
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 
-app.get('/', (request:Request, response:Response) => {
-  // response.sendFile(__dirname + '/views/pages/index.html');
-  response.render('pages/index', {
+const auth = require('./authentication');
+
+app.get('/', auth.authenticateUser ,(request:Request, response:Response) => {
+  response.render('pages/login', {
     test: "HPCL UMS Test"
   });
+  // response.sendFile(path.join(__dirname + '/../views/pages/index.html'));
 });
-
+app.get('/dashboard', auth.authenticateUser ,(request:Request, response:Response) => {
+  response.render('pages/dashboard', {
+    test: "HPCL UMS Test2"
+  });
+  // response.sendFile(path.join(__dirname + '/../views/pages/index.html'));
+});
 /*
 TODO:
   -add error checking, user friendly format
@@ -29,12 +46,17 @@ app.get('/api/user/:id', (request:Request, response:Response) => {
 
 });
 
+
 app.post('/api/user/create', async (request:Request, response:Response) => {
   console.log(request.body);
   const email:string = request.body.email;
   const cn:string = request.body.cn;
+  const pw:string = request.body.pw;
   try {
-    const res = await User.createUser(cn, email);
+
+    if (!validateUserPass(pw))
+      throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+    const res = await User.createUser(cn, email, pw);
     const res1 = await res.save();
     response.send({
       success: res1,
@@ -56,15 +78,18 @@ app.post('/api/user/modify', async (request:Request, response:Response) => {
   const homeDirectory:string = request.body.homeDirectory;
   try {
     let res = await User.loadUser(dn);
-    if(cn.length!==0)
+    /*if(cn.length!==0)
       res = await res.setCommonName(cn);
     if(gidNumber!==100)
       res = await res.setGIDNumber(gidNumber);
-    if(userPassword.length!==0)
+    */if(validateUserPass(userPassword)){
       res = await res.setUserPassword(userPassword);
-    if(homeDirectory.length!==0)
+    }else{
+      throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+    }
+    /*if(homeDirectory.length!==0)
       res = await res.setHomeDirectory(homeDirectory);
-    const ressave = await res.save();
+    */const ressave = await res.save();
     response.send({
       success: ressave,
     });
@@ -79,5 +104,17 @@ app.post('/api/user/modify', async (request:Request, response:Response) => {
 app.post('/api/user/delete',(request:Request, response:Response) => {
   console.log(request.body);
 });
+
+
+app.post('/api/user/login', auth.authenticateUser, async (request:Request, response:Response) => {
+  const email = request.body.email
+  const password = request.body.password
+  const key = app.get("key");
+  const { V2 : {sign} } = paseto
+  const token = await sign( {modPass: true}, key)
+  console.log(request.body);
+  response.send(token);
+});
+
 
 app.listen(80, 'node');
