@@ -8,7 +8,11 @@
 				<%= blog.title %>
 			</div>
 			<div class = "card-body">
-				<%= blog.body %>
+				<% if (blog.body.length > 384) { %>
+					<%= blog.body.substring(0, 384) + "..." %>
+				<% } else { %>
+					<%= blog.body %>
+				<% } %>
 			</div>
 		</div>
 	</div>
