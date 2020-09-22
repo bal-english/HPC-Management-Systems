@@ -3,16 +3,19 @@
 		<img src="https://www.salisbury.edu/_images/headshots/su-seal.jpg" class = "rounded" style = "width: 175; height: auto;"> 
 	</div>
 	<div class = "col-10">
-		<div class = "card">
+		<div class = "card" style="text-align:left">
 			<div class = "card-header">
-				<%= blog.title %>
 			</div>
 			<div class = "card-body">
+				<h4 class="card-title"> 
+					<%= blog.title %>
+				</h4>
 				<% if (blog.body.length > 384) { %>
 					<%= blog.body.substring(0, 384) + "..." %>
 				<% } else { %>
 					<%= blog.body %>
 				<% } %>
+			<a href="https://youtu.be/dQw4w9WgXcQ" class="stretched-link"></a>
 			</div>
 		</div>
 	</div>
