@@ -46,13 +46,15 @@ app.get('/blog/:categoryName', function (req, res) {
 	res.render("category", {blogs: blogs});
 });
 
-app.get('/blog/:categoryName/:blogId', function (req, res){
-	var categoryName = req.params.categoryName;
-	var blogId = req.params.blogId;
+//TODO: API for retrieving blog by category
+//-----------------------------------------
+// app.get('/blog/:categoryName/:blogId', function (req, res){
+// 	var categoryName = req.params.categoryName;
+// 	var blogId = req.params.blogId;
 
-	res.render("singleBlog", {category: categoryName, blog: blogId});
-	console.log("sent successfully");
-});
+// 	res.render("singleBlog", {category: categoryName, blog: blogId});
+// 	console.log("sent successfully");
+// });
 
 app.get('/admin', function(req, res){
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {recentTicketList: qres}));
@@ -61,6 +63,10 @@ app.get('/admin', function(req, res){
 
 app.get('/ticket/create', function(req, res){
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketcreation', {tickets: qres}));
+});
+
+app.get('/users/:id', function(req, res){
+	fetch('http://localhost:3000/api/users/:id').then(qres => qres.json()).then(qres => res.render('pages/singleuser', {users: qres}));
 });
 
 
