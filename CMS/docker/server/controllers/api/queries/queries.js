@@ -20,6 +20,7 @@ const getUserById = (req, res) => {
 		res.status(200).json(results.rows);
 	})
 }
+
 const getUsersById = (req, res) => {
 	const { min, max } = req.body;
 
