@@ -84,6 +84,18 @@ const getBloggroupById = (req, res) => {
 		res.status(200).json(results.rows);
 	})
 }
+const getBloggroupByName = (req, res) => {
+	const name = req.params.name;
+	pool.query('SELECT * FROM \"bloggroup\" WHERE name = $1', [name], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		//if(results.rows.length == 0){
+		//
+		//}
+		res.status(200).json(results.rows[0]);
+	})
+}
 
 const createUsergroup = (req, res) => {
 	const { name } = req.body;
@@ -261,6 +273,7 @@ module.exports = {
 	deleteUser,
 	getBloggroups,
 	getBloggroupById,
+	getBloggroupByName,
 	getUsergroups,
 	getUsergroupById,
 	createUsergroup,
