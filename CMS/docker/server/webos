@@ -1,4 +1,4 @@
-FROM node:6.17.1
+FROM node:14
 MAINTAINER TH2 Alex
 
 WORKDIR /home/app/
@@ -11,7 +11,7 @@ COPY tmp/views/ /home/app/views/
 
 #RUN bash -c "echo $PGHOST"
 
-WORKDIR controllers/
+WORKDIR /home/app/controllers/
 
 RUN npm install
 
