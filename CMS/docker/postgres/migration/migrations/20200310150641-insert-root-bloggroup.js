@@ -15,7 +15,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  return db.insert('bloggroup', ['id', 'name', 'parent'], [0, 'root', 0], callback);
+  return db.insert('bloggroup', ['id', 'name', 'parent'], [0, 'all', 0], callback);
 };
 
 exports.down = function(db, callback) {
