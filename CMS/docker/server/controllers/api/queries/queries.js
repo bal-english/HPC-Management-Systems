@@ -88,6 +88,7 @@ const getBloggroupById = (req, res) => {
 }
 const getBloggroupByName = (req, res) => {
 	const name = req.params.name;
+	console.log(name);
 	pool.query('SELECT * FROM \"bloggroup\" WHERE name = $1', [name], (error, results) => {
 		if(error) {
 			throw error;

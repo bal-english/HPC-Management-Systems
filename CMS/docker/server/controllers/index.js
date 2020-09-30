@@ -43,7 +43,7 @@ app.get('/b/:categoryName', function (req, res) {
 	var blogs = [
 		// API here for retrieving blogs by category
 	];
-	
+	//fetch('http://localhost:3000/api/blo
 	res.render("category", {blogs: blogs});
 });
 

@@ -25,7 +25,7 @@ router.put('/groups/user', db.updateUsergroup)
 
 router.get('/groups/blog', db.getBloggroups)
 router.get('/groups/blog/:id([0-9]+)', db.getBloggroupById)
-router.get('/groups/blog/name/:name', db.getBloggroupByName)
+router.get('/groups/blog/:name([A-Za-z0-9]{0,}[A-Za-z]+[A-Za-z0-9]{0,})', db.getBloggroupByName)
 router.post('/groups/blog', db.createBloggroup)
 router.put('/groups/blog', db.updateBloggroup)
 
