@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<%- include ('../templates/head') -%>
+<%- include('../templates/adminnav') -%>
+
+
+<br>
+<br>
+
+<body>
+
+ <div class = "container">
+  <div class = "content">
+    <%- include('../templates/singleuser', {user: user}); %>
+  </div>
+</div>
+ 
+<%- include ('../templates/footer') -%>
+</body>
