@@ -11,19 +11,19 @@ router.get('/', (req, res) => {
 })
 
 router.get('/users', db.getUsers)
-router.get('/users/:id', db.getUserById)
+router.get('/users/:id([0-9]+)', db.getUserById)
 router.get('/users/:min/:max', db.getUsersById);
 router.post('/users', db.createUser)
-router.put('/users/:id', db.updateUser)
-router.delete('/users/:id', db.deleteUser)
+router.put('/users/:id([0-9]+)', db.updateUser)
+router.delete('/users/:id([0-9]+)', db.deleteUser)
 
 router.get('/groups/user', db.getUsergroups)
-router.get('/groups/user/:id', db.getUsergroupById)
+router.get('/groups/user/:id([0-9]+)', db.getUsergroupById)
 router.post('/groups/user', db.createUsergroup)
 router.put('/groups/user', db.updateUsergroup)
 
 router.get('/groups/blog', db.getBloggroups)
-router.get('/groups/blog/:id', db.getBloggroupById)
+router.get('/groups/blog/:id([0-9]+)', db.getBloggroupById)
 router.get('/groups/blog/name/:name', db.getBloggroupByName)
 router.post('/groups/blog', db.createBloggroup)
 router.put('/groups/blog', db.updateBloggroup)
