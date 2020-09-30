@@ -15,73 +15,24 @@
     
   <div class = "card">
     <div class = "bg-light border-bottom-1 card-header">
-      <h5 class = "mb-0"> Activity Log </h5>
+      <h3 class = "card-title"> Activity Log </h3>
     </div>
-      <div class = "fs--1 p-0 border-2 card-body">
-        <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-        <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
+    <div class = "row align-items-center">
+        <div class = "col-sm">
+          User
         </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-         <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
+        <div class = "col-sm">
+          Ticket Status
         </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-        <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-         <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-         <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-         <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-        <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-       <a class = "notification border-x-0 border-bottom-0 border-300 rounded-0">
-          <div class="notification-body"> <p class = "mb-0">
-            <strong>//user</strong> //ticket-short-desc</p>
-        </div>
-        <span class ="notification-time"> //time stamp
-        </span>
-        </a>
-
-      </div>
-</div>
-
+    </div>
+    <% tickets.forEach(function(ticket){ %>
+      <% console.log(ticket); %>
+        <%- include('../templates/blogset/singleticket', {ticket: ticket, users: users}); %>
+    <% }); %>
+  </div>
 
 </div>
 </div>
  
-<%- include ('../templates/footer') -%>
 </body>
-
+<%- include ('../templates/footer') -%>

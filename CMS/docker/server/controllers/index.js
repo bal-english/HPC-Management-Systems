@@ -16,8 +16,6 @@ app.get('/', function(req, res) {
 });
 
 app.get('/tickets', function(req, res) {
-	//list = [{id: 7, creator: 0, title: "This is a test title for tickets"},{id: 8, creator: 1, title: "This is a second test title for tickets"}];
-	//list = [];
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
 });
@@ -57,16 +55,30 @@ app.get('/blog/:categoryName', function (req, res) {
 // });
 
 app.get('/admin', function(req, res){
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {recentTicketList: qres}));
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
 });
 
+app.get('/admin/tickets', async function(req, res){
+	var x = await fetch('http://localhost:3000/api/tickets');
+	var y = await fetch('http://localhost:3000/api/users');
 
-app.get('/ticket/create', function(req, res){
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketcreation', {tickets: qres}));
+	x = await x.json();
+	y = await y.json();
+
+	// console.log(x);
+	// await console.log(y);
+
+	res.render('pages/adminhome', {tickets: x, users: y})
 });
+
+// app.get('/ticket/create', function(req, res){
+// 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
+// });
 
 app.get('/users/:id', function(req, res){
-	fetch('http://localhost:3000/api/users/:id').then(qres => qres.json()).then(qres => res.render('pages/singleuser', {users: qres}));
+	id = req.params.id;
+	console.log(id);
+	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
 });
 
 
