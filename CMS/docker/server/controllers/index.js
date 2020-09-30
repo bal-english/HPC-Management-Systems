@@ -41,7 +41,7 @@ app.get('/blogs', function(req, res){
 	//res.render('pages/newbloghome');
 });
 
-app.get('/blog/:categoryName', function (req, res) {
+app.get('/b/:categoryName', function (req, res) {
 	var blogs = [
 		// API here for retrieving blogs by category
 	];
