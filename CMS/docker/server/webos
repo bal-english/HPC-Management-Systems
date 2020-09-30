@@ -21,4 +21,6 @@ COPY controllers/index.js /home/app/controllers/index.js
 EXPOSE 8080
 EXPOSE 3000
 
+WORKDIR /home/app/controllers/
+
 CMD ["node", "index.js"]
