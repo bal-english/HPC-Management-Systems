@@ -40,6 +40,7 @@ suseMaxUniqueId: 60000
 suseMinUniqueId: 1000
 suseSearchFilter: objectClass=posixGroup
 cn: groupconfiguration
+suseNextUniqueId: 1002
 
 dn: cn=usertemplate,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu
 objectClass: top

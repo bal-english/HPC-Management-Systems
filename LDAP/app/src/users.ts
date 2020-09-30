@@ -1,8 +1,9 @@
 import * as LdapTypes from "./LdapTypes/index";
+import { UserGroups } from "./UserGroups";
 import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry } from 'ldapjs';
-import TsMonad, { Maybe } from 'tsmonad';
-import assert from 'assert';
-const { once, EventEmitter } = require('events');
+import { EventEmitter } from 'events'
+import { Group } from "./groups";
+const { once } = require('events');
 const Promises = require("bluebird");
 
 const client:any = ldap.createClient({
@@ -24,13 +25,14 @@ export class User {
     objectClass:LdapTypes.ObjectClass;
     sn:LdapTypes.Surname;
     uid:LdapTypes.UserID;
-    uidNumber:LdapTypes.UserIDNumber;
+    uidNumber:LdapTypes.UserIDNumber | undefined;
     userPassword:LdapTypes.UserPassword;
     loginShell:LdapTypes.LoginShell;
     isInDB: boolean;
 
 
-    static async createUser(comName:string, email:string):Promise<User>
+
+    static async createUserFromEmail(comName:string, email:string):Promise<User>
     {
         const emailComponents:string[] = email.split("@",2);
         const dc:LdapTypes.LdapKeyValuePair[] = [
@@ -58,54 +60,19 @@ export class User {
         const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
         const loginShell:LdapTypes.LoginShell = new LdapTypes.LoginShell("/bin/bash");
         const inDBflag:boolean=false;
-        // const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, inDBflag);
 
+        const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, null, surname, userPassword, loginShell, false);
 
-        return User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
-            .then((entry: any) => {
-                return Promise.resolve(Number(entry.object.suseNextUniqueId));
-            })
-            .then((res:number) => {
-                const next:number = res + 1;
-
-                const changes = [];
-                changes.push(new ldap.Change({
-                    operation: 'delete',
-                    modification: {
-                        suseNextUniqueId: String(res)
-                    }
-                }));
-                changes.push(new ldap.Change({
-                    operation: 'add',
-                    modification: {
-                        suseNextUniqueId: String(next)
-                    }
-                }));
-
-                return client.modifyAsync("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu", changes)
-                .then((_:any)=>{
-                    return Promise.resolve(res);
-                })
-
-            })
-            .then((res:number)=> {
-                const uidNum: LdapTypes.UserIDNumber = new LdapTypes.UserIDNumber(res);
-                const createdUser = new User(dn, cn, gidNumber, homeDir, objClass, uid, uidNum, surname, userPassword, loginShell, false);
-                return Promise.resolve(createdUser);
-            });
-
-
-
-            // return Promise.reject();
+        return Promise.resolve(createdUser);
     }
 
-    private constructor(dn:LdapTypes.DistinguishedName,
+    public constructor(dn:LdapTypes.DistinguishedName,
         cn:LdapTypes.CommonName,
         gidNumber:LdapTypes.GroupIDNumber,
         homeDirectory:LdapTypes.HomeDirectory,
         objectClass:LdapTypes.ObjectClass,
         uid:LdapTypes.UserID,
-        uidNumber:LdapTypes.UserIDNumber,
+        uidNumber:LdapTypes.UserIDNumber | undefined,
         sn:LdapTypes.Surname,
         userPassword:LdapTypes.UserPassword,
         loginShell:LdapTypes.LoginShell,
@@ -136,6 +103,80 @@ export class User {
             }
             return Promise.resolve(this);
         }
+
+        static async getNextAndIncrementUserIDNumber():Promise<number>{
+
+            const entry = await User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
+
+            const res = Number(entry.object.suseNextUniqueId);
+
+            const next:number = res + 1;
+
+            const changes = [];
+
+            changes.push(new ldap.Change({
+                operation: 'delete',
+                modification: {
+                    suseNextUniqueId: String(res)
+                }
+            }));
+            changes.push(new ldap.Change({
+                operation: 'add',
+                modification: {
+                    suseNextUniqueId: String(next)
+                }
+            }));
+
+            await client.modifyAsync("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu", changes)
+
+            return Promise.resolve(res);
+
+
+
+        }
+
+        async listGroups():Promise<any>{
+
+
+            const opts = {
+                filter: '(objectClass=*)',
+                attributes: ['dn', 'member'],
+                scope: 'one'
+
+              };
+
+            const emitter:EventEmitter = await client.searchAsync("ou=group,dc=linuxlab,dc=salisbury,dc=edu", opts)
+            let done:boolean = false;
+            let arr:any = [];
+            emitter.on('end', ()=> {
+
+                done = true
+            });
+            emitter.on('searchEntry', (res:any)=> {
+                arr.push(res);
+
+
+            });
+
+            function delay(ms: number) {
+                return new Promise( resolve => setTimeout(resolve, ms) );
+            }
+            let totalTime = 0;
+            while(!done && totalTime <= 50){
+                await delay(10);
+                totalTime += 10;
+            }
+            arr = await Promise.all(arr.map((res:any)=>res.objectName).map(Group.loadGroup))// TODO: res.listMembers is not a function, loadGroup is not returning something correctly
+            arr = await Promise.all(arr.map((res:Group)=>res.listMembers()))
+            arr = arr.flat()
+            arr = arr.filter((res:UserGroups)=>res.getUserDn() === this.dn.toString())
+            return arr
+
+
+
+
+        }
+
     // save():User{
         async save():Promise<User>{
         // Checks if user is in db by DN
@@ -143,35 +184,38 @@ export class User {
         // -If not already in, add based on user object
         //    --Based on modify or create
 
-
+            console.log(this.isInDB + "hhhhhhuhuhuhiuhuhuhuh" + this.dn.toString())
             // Add to DB
             if(!this.isInDB){
-                const entry:any = {
-                    cn: this.cn.toString(),
-                    gidNumber: this.gidNumber.toNumber(),
-                    homeDirectory: this.homeDirectory.toString(),
-                    objectClass: ['top', 'posixAccount', 'inetOrgPerson'],
-                    sn: this.sn.toString(),
-                    uid: this.uid.toString(),
-                    uidNumber: this.uidNumber.toNumber(),
-                    userPassword: this.userPassword.toString(),
-                    loginShell: this.loginShell.toString(),
-                };
-                console.log(this.dn.toString());
-                console.log(`cn: ${JSON.stringify(entry.cn)}`);
-                console.log(`gidNum: ${JSON.stringify(entry.gidNumber)}`);
-                console.log(`HD: ${JSON.stringify(entry.homeDirectory)}`);
-                console.log(`sn: ${JSON.stringify(entry.sn)}`);
-                console.log(`uid: ${JSON.stringify(entry.uid)}`);
-                console.log(`uidNumber: ${JSON.stringify(entry.uidNumber)}`);
-                console.log(`Password: ${JSON.stringify(entry.userPassword)}`);
-                console.log(`loginShell: ${JSON.stringify(entry.loginShell)}`);
 
-                return client.addAsync(this.dn.toString(), entry)
+                if(!this.uidNumber){
+
+                    this.uidNumber = new LdapTypes.UserIDNumber(await User.getNextAndIncrementUserIDNumber());
+                    console.log("UuuuuIID" + this.uidNumber.toNumber())
+                }
+
+                // return Promise.resolve((res:number)=>{
+                    const entry:any = {
+                        cn: this.cn.toString(),
+                        gidNumber: this.gidNumber.toNumber(),
+                        homeDirectory: this.homeDirectory.toString(),
+                        objectClass: ['top', 'posixAccount', 'inetOrgPerson'],
+                        sn: this.sn.toString(),
+                        uid: this.uid.toString(),
+                        uidNumber: this.uidNumber.toNumber(),
+                        userPassword: this.userPassword.toString(),
+                        loginShell: this.loginShell.toString(),
+                    };
+                    console.log(entry);
+
+                    return client.addAsync(this.dn.toString(), entry)
+                // })
                 .then((res:any)=>{return this.setInDB(true)});
 
             } else {
-
+                if(!(this.uidNumber)){
+                    throw new Error("Tried to save User with undefined UID");
+                }
                 const changes = [];
                 changes.push(new ldap.Change({
                     operation: 'replace',

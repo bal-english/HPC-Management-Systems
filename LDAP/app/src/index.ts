@@ -34,7 +34,7 @@ app.post('/api/user/create', async (request:Request, response:Response) => {
   const email:string = request.body.email;
   const cn:string = request.body.cn;
   try {
-    const res = await User.createUser(cn, email);
+    const res = await User.createUserFromEmail(cn, email);
     const res1 = await res.save();
     response.send({
       success: res1,
