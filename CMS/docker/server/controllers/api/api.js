@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 
 router.get('/users', db.getUsers)
 router.get('/users/:id([0-9]+)', db.getUserById)
-router.get('/users/:min/:max', db.getUsersById);
+router.get('/users/:min([0-9]+)/:max([0-9]+)', db.getUsersById);
 router.post('/users', db.createUser)
 router.put('/users/:id([0-9]+)', db.updateUser)
 router.delete('/users/:id([0-9]+)', db.deleteUser)

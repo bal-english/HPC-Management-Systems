@@ -16,7 +16,7 @@ WORKDIR /home/app/
 COPY tmp/views/ /home/app/views/
 
 COPY controllers/api/ /home/app/controllers/api/
-COPY controllers/index.js /home/app/controllers/index.json
+COPY controllers/index.js /home/app/controllers/index.js
 
 EXPOSE 8080
 EXPOSE 3000
