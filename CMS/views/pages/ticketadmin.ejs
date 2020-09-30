@@ -17,24 +17,17 @@
         <div class = "row"> 
           <div class = "col">
             <h5 class = "mb-2">
-              //Client name here
-              <a href =""> //Email here</a>
+              <!-- user's id is found on the page... we don't want to pass the entire list of users here -->
+              <%= ticket.creator %>
+              <!-- need to add individual ids -->
+              <a href ="/admin/users/"> //ticket creator SUemail here<!-- <%= ticket.creator.email %> --></a>
             </h5>
-            <button class = "btn btn-sm">
+            <!-- <button class = "btn btn-sm">
               //Add note to ticket
-            </button>
+            </button> -->
           </div>
         </div>
       </div>
-      <div class = "border-top card-body">
-        <div class = "media-body">
-          <p class = "text-300">//customer history, 
-          // ticket #, time ticket uploaded, time ticket finished
-        </p>
-        </div>
-      </div>
-    </div>
-
     <div class = "mb-3 card">
       <div class = "bg-light card-header">
         <div class = "align-items-center row">
@@ -44,16 +37,14 @@
             </h5>
           </div>
           <div class = "text-right col-auto">
-            <a class ="btn btn-sm"> Customer details</a>
+            <!-- links to ticket creator's page -->
+            <div class ="btn btn-sm"> Customer details </a> 
           </div>
         </div>
       </div>
       <div class = "row"> 
         <div class = "col-xxl-5 col-lg">
           <br>
-          <h5 class = "font-weight-semi-bold ls mb-3" style=""> 
-            Account Information
-          </h6>
           <div class = "col-5 col-sm-4">
             <p class = "font-weight-semi-bold mb-1"> SU ID </p>
           </div>
@@ -73,59 +64,29 @@
     <div class = "card">
       <div class = "bg-light card-header">
          <h5 class = "mb-0">
-          Ticket information (\/ Below should auto fill)
+          Ticket information 
          </h5>
+         <br>
+         <!-- forEach passed from api's getTicketsByUserId -->
          <div class = "border-top p-0 card-body">
           <div class="align-items-center border-bottom ppy-2 px-3 no-gutters row">
             <div class = "pr-3 col-md-auto">
-              <span class = "badge badge-soft-success-badge-pill">//update value ex) 404
+              <span class = "badge badge-soft-success-badge-pill"> <%= ticket.id %>
               </span>
             </div>
             <div class = "mt-1 mt-md-0 col-md">
               <code>
-                Ticket value
+                <%= ticket.title =>
               </code>
             </div>
             <div class = "col-md-auto">
               <p class = "mb-0">
+                <!-- When ticket is created -->
                 time stamp
               </p>
             </div>
           </div>
          </div>
-          <div class="align-items-center border-bottom ppy-2 px-3 no-gutters row">
-            <div class = "pr-3 col-md-auto">
-              <span class = "badge badge-soft-success-badge-pill">//update value ex) 404
-              </span>
-            </div>
-            <div class = "mt-1 mt-md-0 col-md">
-              <code>
-                Ticket value
-              </code>
-            </div>
-            <div class = "col-md-auto">
-              <p class = "mb-0">
-                time stamp
-              </p>
-            </div>
-          </div>
-           <div class="align-items-center border-bottom ppy-2 px-3 no-gutters row">
-            <div class = "pr-3 col-md-auto">
-              <span class = "badge">//update value ex) 404
-              </span>
-            </div>
-            <div class = "mt-1 mt-md-0 col-md">
-              <code>
-                Ticket value
-              </code>
-            </div>
-            <div class = "col-md-auto">
-              <p class = "mb-0">
-                time stamp
-              </p>
-            </div>
-          </div>
-
           <div class = "bg-light py-2 card-footer">
             <a class = "btn btn-link btn-block" href=""> View more logs
             </a>

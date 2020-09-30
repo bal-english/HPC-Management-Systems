@@ -74,11 +74,17 @@ app.get('/admin/tickets', async function(req, res){
 	res.render('pages/adminhome', {tickets: x, users: y})
 });
 
+app.get('/admin/tickets/:id', function(req, res){
+	id = req.params.id;
+	console.log(id);
+	fetch('http://localhost:3000/api/ticket/' + id).then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {ticket: qres}));
+});
+
 // app.get('/ticket/create', function(req, res){
 // 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
 // });
 
-app.get('/users/:id', function(req, res){
+app.get('/admin/users/:id', function(req, res){
 	id = req.params.id;
 	console.log(id);
 	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
