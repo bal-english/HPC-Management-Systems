@@ -4,16 +4,19 @@ MAINTAINER TH2 Alex
 WORKDIR /home/app/
 
 RUN npm update
-COPY controllers/ /home/app/controllers/
-COPY tmp/views/ /home/app/views/
-
-#RUN bash -c "cd init/env/ && source env_setup.sh && echo $PGHOST"
-
-#RUN bash -c "echo $PGHOST"
+COPY controllers/package.json /home/app/controllers/package.json
+COPY controllers/package-lock.json /home/app/controllers/package-lock.json
 
 WORKDIR /home/app/controllers/
 
 RUN npm install
+
+WORKDIR /home/app/
+
+COPY tmp/views/ /home/app/views/
+
+COPY controllers/api/ /home/app/controllers/api/
+COPY controllers/index.js /home/app/controllers/index.json
 
 EXPOSE 8080
 EXPOSE 3000
