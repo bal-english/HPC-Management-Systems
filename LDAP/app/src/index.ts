@@ -54,7 +54,7 @@ app.post('/api/user/create', async (request:Request, response:Response) => {
 
     if (!validateUserPass(pw))
       throw new Error("Password Error: must be composed of either letters, numbers or symbols and at least 4 characters");
-    const res = await User.createUser(cn, email, pw);
+    const res = await User.createUserFromEmail(cn, email); //TODO push password into user
     const res1 = await res.save();
     response.send({
       success: res1,

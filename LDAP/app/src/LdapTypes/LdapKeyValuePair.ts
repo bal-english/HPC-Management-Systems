@@ -11,4 +11,16 @@ export default class LdapKeyValuePair
             this.key=key;
             this.value=value;
         }
+
+        public getKey():string{
+            return this.key;
+        }
+
+        public getValue():string{
+            return this.value;
+        }
+
+
+
+
     }

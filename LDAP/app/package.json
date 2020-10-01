@@ -4,9 +4,9 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start3": "node dist/main.js",
+    "start": "node --trace-warnings dist/main.js",
     "start2": "node dist/users.js",
-    "start": "node dist/index.js",
+    "start3": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
