@@ -26,13 +26,11 @@ app.get('/', auth.authenticateUser ,(request:Request, response:Response) => {
   response.render('pages/login', {
     test: "HPCL UMS Test"
   });
-  // response.sendFile(path.join(__dirname + '/../views/pages/index.html'));
 });
 app.get('/dashboard', auth.authenticateUser ,(request:Request, response:Response) => {
   response.render('pages/dashboard', {
     test: "HPCL UMS Test2"
   });
-  // response.sendFile(path.join(__dirname + '/../views/pages/index.html'));
 });
 /*
 TODO:
@@ -55,7 +53,7 @@ app.post('/api/user/create', async (request:Request, response:Response) => {
   try {
 
     if (!validateUserPass(pw))
-      throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+      throw new Error("Password Error: must be composed of either letters, numbers or symbols and at least 4 characters");
     const res = await User.createUser(cn, email, pw);
     const res1 = await res.save();
     response.send({
