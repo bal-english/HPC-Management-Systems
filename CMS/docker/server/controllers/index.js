@@ -40,9 +40,8 @@ app.get('/blogs', function(req, res){
 });
 
 app.get('/b/:bg', function (req, res) {
-	group = req.body.bg;
-	fetch('http://localhost:3000/api/groups/blog/' + bg)
-	res.render("category", {blogs: blogs});
+	group = req.params.bg;
+	fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => qres["id"]).then(qres => fetch('http://localhost:3000/api/blogs/' + qres + "/-1")).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
 });
 
 //TODO: API for retrieving blog by category
