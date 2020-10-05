@@ -30,6 +30,10 @@ router.post('/groups/blog', db.createBloggroup)
 router.put('/groups/blog', db.updateBloggroup)
 
 router.get('/blogs', db.getBlogs)
+router.get('/blogs/:after', db.getBlogsAfterBlogId)
+//router.get('/blogs/:group', db.
+router.get('/blogs/:gid/:date/:time', db.getBlogsByGroupIdAfterTime)
+router.get('/blogs/:gid/:after', db.getBlogsByGroupIdAfterBlogId)
 router.post('/blogs', db.createBlog)
 
 router.put('/blogs/group', db.groupBlog)

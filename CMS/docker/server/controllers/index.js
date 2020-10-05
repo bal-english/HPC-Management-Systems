@@ -39,11 +39,9 @@ app.get('/blogs', function(req, res){
 	//res.render('pages/newbloghome');
 });
 
-app.get('/b/:categoryName', function (req, res) {
-	var blogs = [
-		// API here for retrieving blogs by category
-	];
-	//fetch('http://localhost:3000/api/blo
+app.get('/b/:bg', function (req, res) {
+	group = req.body.bg;
+	fetch('http://localhost:3000/api/groups/blog/' + bg)
 	res.render("category", {blogs: blogs});
 });
 

@@ -174,13 +174,67 @@ const createBlog = (req, res) => {
 }
 
 const getBlogs = (req, res) => {
-	pool.query('SELECT * FROM \"blog\"', [], (error, results) => {
+	pool.query('SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC', [], (error, results) => {
 		if(error) {
 			throw error;
 		}
 		res.status(200).json(results.rows)
 	})
 }
+
+const getBlogsAfterTime = (req, res) => {
+	const ts = req.params.date + " " + req.params.time;
+	pool.query('SELECT * FROM \"blog\" WHERE \"posttime\">=to_timestamp($1, \'yyyy-mm-dd hh24:mi:ss\') ORDER BY \"posttime\" DESC', [ts], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
+const getBlogsAfterBlogId = (req, res) => {
+	const after_blog = parseInt(req.params.after);
+	pool.query('SELECT * FROM \"blog\" WHERE \"id\">$1 ORDER BY \"posttime\" DESC' , [after_blog], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
+const getBlogsByGroupId = (req, res) => {
+	const group_id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"blog\" WHERE \"group\" = $1', [group_id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
+const getBlogsByGroupIdAfterTime = (req, res) => {
+	const ts = req.params.date + " " + req.params.time;
+	const group_id = parseInt(req.params.gid);
+	pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 AND \"posttime\">to_timestamp($2, \'yyyy-mm-dd hh24:mi:ss\') ORDER BY \"posttime\" DESC' , [group_id, ts], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
+const getBlogsByGroupIdAfterBlogId = (req, res) => {
+	const after_blog = parseInt(req.params.after);
+	const group_id = parseInt(req.params.gid);
+	pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 AND \"id\">$2 ORDER BY \"posttime\" DESC' , [group_id, after_blog], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
+
 
 const groupBlog = (req, res) => {
 	const { blog_id, group_id } = req.body;
@@ -284,6 +338,10 @@ module.exports = {
 	updateBloggroup,
 	updateUsergroup,
 	getBlogs,
+	getBlogsAfterTime,
+	getBlogsAfterBlogId,
+	getBlogsByGroupIdAfterTime,
+	getBlogsByGroupIdAfterBlogId,
 	createBlog,
 	groupBlog,
 	createTicket,
