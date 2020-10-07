@@ -1,0 +1,21 @@
+FROM node:6.17.1
+MAINTAINER TH2 Alex
+
+WORKDIR /home/app/
+
+RUN npm update
+COPY controllers/ /home/app/controllers/
+COPY tmp/views/ /home/app/views/
+
+#RUN bash -c "cd init/env/ && source env_setup.sh && echo $PGHOST"
+
+#RUN bash -c "echo $PGHOST"
+
+WORKDIR controllers/
+
+RUN npm install
+
+EXPOSE 8080
+EXPOSE 3000
+
+CMD ["node", "index.js"]
