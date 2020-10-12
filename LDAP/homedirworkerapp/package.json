@@ -4,10 +4,7 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start4": "node dist/homedirectory.js",
-    "start2": "node dist/users.js",
-    "start3": "node dist/index.js",
-    "start": "node --trace-warnings dist/main.js",
+    "start": "node dist/homedirectory.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

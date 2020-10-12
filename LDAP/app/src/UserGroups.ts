@@ -15,12 +15,10 @@ export class UserGroups{
 
     public async getUser():Promise<User>{
         return User.loadUser(this.userDn);
-
     }
 
     public async getGroup():Promise<Group>{
         return Group.loadGroup(this.groupDn);
-
     }
 
     public getUserDn():string{

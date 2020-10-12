@@ -39,7 +39,22 @@ services:
       - ./app:/app
     container_name: ${COMPOSE_PROJECT_NAME}_nodejs
     networks:
-      - network1    
+      - network1
+  homedirworker:
+    image: cosc425/node:1.0.1
+    hostname: "homedirworker"
+    environment:
+      UMS_HOSTNAME: "node"
+      WORKER_EXTERNAL_ADDRESS: "homedirworker:8081"
+    ports:
+      - "8081:80"
+    volumes:
+      - ./homedirworkerapp:/app
+      - ./node/TempCPtest:/mnt/home
+      - ./node/TempSkel:/mnt/skel
+    container_name: ${COMPOSE_PROJECT_NAME}_homedirworker
+    networks:
+      - network1
 networks:
   network1:
     name: network1
