@@ -223,10 +223,10 @@ const getBlogsByGroupIdAfterTime = (req, res) => {
 	})
 }
 
-const getBlogsByGroupIdAfterBlogId = (req, res) => {
-	const after_blog = parseInt(req.params.after);
+const getBlogsByGroupIdOffsetBy = (req, res) => {
+	const offset = parseInt(req.params.offset);
 	const group_id = parseInt(req.params.gid);
-	pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 AND \"id\">$2 ORDER BY \"posttime\" DESC' , [group_id, after_blog], (error, results) => {
+	pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC OFFSET $2 LIMIT 3', [group_id, offset], (error, results) => {
 		if(error) {
 			throw error;
 		}
@@ -234,6 +234,16 @@ const getBlogsByGroupIdAfterBlogId = (req, res) => {
 	})
 }
 
+const getBlogsByGroupIdOffsetBy_COUNT = (req, res) => {
+	const offset = parseInt(req.params.offset);
+	const group_id = parseInt(req.params.gid);
+	pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC OFFSET $2) AS \"table\"' , [group_id, offset], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows[0])
+	})
+}
 
 
 const groupBlog = (req, res) => {
@@ -341,7 +351,8 @@ module.exports = {
 	getBlogsAfterTime,
 	getBlogsAfterBlogId,
 	getBlogsByGroupIdAfterTime,
-	getBlogsByGroupIdAfterBlogId,
+	getBlogsByGroupIdOffsetBy,
+	getBlogsByGroupIdOffsetBy_COUNT,
 	createBlog,
 	groupBlog,
 	createTicket,

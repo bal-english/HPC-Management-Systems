@@ -1,6 +1,5 @@
 <div class = "container">
 	<% blogs.forEach(function(blog){ %>
-		<% console.log(blog); %>
 		<tr>
 			<%- include('singleblog', {blog: blog}); %>
 		</tr>

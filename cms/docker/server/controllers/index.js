@@ -1,4 +1,5 @@
 const port = 3000;
+const def_blogs_per_page = 3;
 var express = require('express');
 var app = express();
 var api = require('./api/api.js');
@@ -39,10 +40,36 @@ app.get('/blogs', function(req, res){
 	//res.render('pages/newbloghome');
 });
 
-app.get('/b/:bg', function (req, res) {
-	group = req.params.bg;
-	fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => qres["id"]).then(qres => fetch('http://localhost:3000/api/blogs/' + qres + "/-1")).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
+app.get('/blogs/:bg', function(req, res) {
+	res.redirect('/b/' + req.params.bg);
 });
+
+app.get('/b/:bg', async function (req, res) {
+	p = parseInt(req.query.page)
+	if(isNaN(p)) {
+		p = 0;
+	}
+	origin = parseInt(req.query.origin)
+	if(isNaN(origin)) {
+		origin = (p*def_blogs_per_page)
+	}
+	
+	group = req.params.bg;
+	group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
+	
+	total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
+	
+	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
+	fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
+});
+
+/*app.get('/b/:bg', function(req, res) {
+	p = parseInt(req.query.page);
+	if(isNaN(p)) {
+		res.redirect('/b/' + req.params.bg);
+	}
+}*/
+	
 
 //TODO: API for retrieving blog by category
 //-----------------------------------------
