@@ -73,6 +73,19 @@ uidNumber: 999999
 userPassword:: e3xzaGF9xll6TxtUSxVxRGFMxVJ1cGxxWkdUWxNxenlxVVMxxxxxxxxx
 loginShell: /bin/bash
 
+dn: uid=dummyaccount2,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+cn: Dummy Account
+gidNumber: 100
+homeDirectory: /home/dummyaccount
+objectClass: top
+objectClass: posixAccount
+objectClass: inetOrgPerson
+sn: dummyaccount2
+uid: dummyaccount2
+uidNumber: 999998
+userPassword:: e3xzaGF9xll6TxtUSxVxRGFMxVJ1cGxxWkdUWxNxenlxVVMxxxxxxxxx
+loginShell: /bin/bash
+
 dn: cn=students,ou=group,dc=linuxlab,dc=salisbury,dc=edu
 cn: students
 gidNumber: 1001
@@ -88,3 +101,10 @@ member: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
 objectClass: groupOfNames
 objectClass: top
 objectClass: posixGroup
+
+dn: cn=umsqueue,dc=linuxlab,dc=salisbury,dc=edu
+cn: umsqueue
+hdQueueEntry: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+hdQueueEntry: uid=dummyaccount2,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: umsQueue
+objectClass: top

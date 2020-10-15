@@ -20,6 +20,8 @@ services:
     hostname: "openldap"
     networks:
       - network1
+    ports:
+      - "5000:389"
   phpldapadmin:
     image: osixia/phpldapadmin:latest
     #container_name: ${COMPOSE_PROJECT_NAME}_phpldapadmin

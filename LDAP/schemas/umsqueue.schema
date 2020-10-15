@@ -1,0 +1,10 @@
+attributetype ( 2.1337 NAME 'hdQueueEntry'
+	DESC 'homedirectory queue for worker to work on'
+	SUP distinguishedName
+	USAGE userApplications )
+objectclass ( 2.133 NAME 'umsQueue'
+	DESC 'Queue for worker to handle'
+	SUP top
+	STRUCTURAL
+	MUST cn
+	MAY hdQueueEntry )
