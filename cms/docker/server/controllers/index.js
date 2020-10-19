@@ -4,16 +4,41 @@ var express = require('express');
 var app = express();
 var api = require('./api/api.js');
 var fetch = require('node-fetch');
+var cookieParser = require('cookie-parser');
+const paseto = require('paseto');
+const {V2} = paseto;
+
+(async () => {
+	const privateKey = await V2.generateKey('public');
+	app.set('key', privateKey);
+})()
 
 app.set('views', '../views')
 app.set('view engine','ejs');
+
 
 app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
 }*/);
 
+app.use(cookieParser());
+
 app.get('/', function(req, res) {
+	//res.cookie('name', 'express').set('cookie set');
+	//console.log('test2: ' + toString(req.cookies));
+	console.log('test2: ' + req.cookies.token);
 	res.render('pages/home');
+});
+
+app.get('/auth', function(req, res) {
+
+	if(req.query.token === undefined) {
+		res.redirect('/');
+	} else {
+		const token = req.query.token
+		res.cookie('token', token).set('cookie set');
+		res.redirect('/')
+	}
 });
 
 app.get('/tickets', function(req, res) {
