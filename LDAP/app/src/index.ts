@@ -2,6 +2,7 @@ import express from 'express';
 import * as bodyparser from 'body-parser';
 import { Request, Response } from 'express';
 import { User } from "./users";
+import { UmsQueue } from "./UmsQueue";
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -27,6 +28,38 @@ TODO:
 
 app.get('/api/user/:id', (request:Request, response:Response) => {
 
+});
+
+app.get('/api/homeDirQueue/delete', async (request:Request, response:Response) => {
+  const dn = request.body.dn;
+  const currUser = await User.loadUser(dn);
+  await UmsQueue.removeByDn(currUser)
+  .catch((err:any)=>
+  {
+    console.log("ERROR: Tried to remove a user (" + dn + ") from the home directory creation queue (" + request.originalUrl + ")");
+    console.log(err);
+    console.log(JSON.stringify(request));
+    response.send({
+      error: true,
+    });
+  })
+});
+
+app.post('/api/homeDirQueue/query', async (request:Request, response:Response) => {
+  await new Promise<any>(async ()=>{
+    const hdQueue = await UmsQueue.getQueue();
+    response.send({
+      success: hdQueue,
+    }); 
+  })
+  .catch((err:any)=>{
+    console.log("ERROR: Tried to retrieve the home directory creation queue (" + request.originalUrl + ")");
+    console.log(err);
+    console.log(JSON.stringify(request));
+    response.send({
+      error: true,
+    })
+  });
 });
 
 app.post('/api/user/create', async (request:Request, response:Response) => {

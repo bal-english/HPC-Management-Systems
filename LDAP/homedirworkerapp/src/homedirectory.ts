@@ -1,9 +1,15 @@
-import express from 'express';
-import * as bodyparser from 'body-parser';
-import { Request, Response } from 'express';
+const http = require('http');
 const fs = require('fs');
 const ncp = require('ncp').ncp;
 
+if(process.env.UMS_HOSTNAME === undefined || process.env.UMS_HOSTNAME)
+{
+    console.log("ERROR: ")
+}
+http.get({
+    hostname: process.env.UMS_HOSTNAME,
+
+})
 
 const testUsername = "mmandulak1";
 ncp("../mnt/skel","../mnt/home/" + testUsername, (err:any)=>
