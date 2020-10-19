@@ -30,7 +30,7 @@ isInDB:boolean;
 
 static async createGroup(comName:string):Promise<Group>{
 
-    return Promise.resolve(Group.searchOnce("cn=groupconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
+    return Promise.resolve(LdapUtils.searchOnce("cn=groupconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
         .then((entry: any) => {
             return Promise.resolve(Number(entry.object.suseNextUniqueId));
         })
@@ -212,7 +212,7 @@ private constructor(dn:LdapTypes.DistinguishedName,
     let loadedMember: LdapTypes.MemberBag;
     const inDBflag: boolean = true;
 
-    return Group.searchOnce(dn)
+    return LdapUtils.searchOnce(dn)
         .then(async (entry: any) => {
         // console.log('entry: ' + JSON.stringify(entry.object));
             const dnComponents: string[] = dn.split(",");
@@ -259,13 +259,6 @@ private constructor(dn:LdapTypes.DistinguishedName,
             return Promise.resolve(new Group(loadedDN,loadedCN,loadedGidNumber,loadedObjClass,loadedMember, inDBflag));
         });
 }
-public static async searchOnce(dn:string){
-    return client.searchAsync(dn)
-    .then(async(entry:any):Promise<ldap.SearchEntry>=>{
-        const [val] = await once(entry, 'searchEntry');
-        return Promise.resolve(val);
-    });
-}
 
 private async modifyMember(user:User, ldapOperation:string){
     /*if(!(ldapOperation in ['add', 'delete'])){
@@ -275,7 +268,7 @@ private async modifyMember(user:User, ldapOperation:string){
     if(ldapOperation !== 'add' && ldapOperation !== 'delete'){
         throw Error("operation not supported: " + ldapOperation);
     }
-    User.searchOnce(user.dn.toString())
+    LdapUtils.searchOnce(user.dn.toString())
     .then(async (entry: any) => {
         const changes = [];
              changes.push(new ldap.Change({
@@ -302,7 +295,7 @@ async removeMember(user:User){
 
 async listMembers():Promise<UserGroups[]>{
 
-    return Group.searchOnce(this.dn.toString())
+    return LdapUtils.searchOnce(this.dn.toString())
     .then(async(res:any)=>{
         res = LdapUtils.normalizeGroupQuery(res);
 

@@ -104,7 +104,5 @@ objectClass: posixGroup
 
 dn: cn=umsqueue,dc=linuxlab,dc=salisbury,dc=edu
 cn: umsqueue
-hdQueueEntry: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
-hdQueueEntry: uid=dummyaccount2,ou=people,dc=linuxlab,dc=salisbury,dc=edu
 objectClass: umsQueue
 objectClass: top

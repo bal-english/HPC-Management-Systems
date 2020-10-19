@@ -1,5 +1,6 @@
 import { User } from "./users";
 import { Group } from "./groups";
+import {UmsQueue } from "./UmsQueue";
 import { reduce } from "bluebird";
 const ldap = require("ldapjs");
 const assert= require('assert');
@@ -17,7 +18,20 @@ Group.createGroup("TravisScottBurger")
 .then((res:Group)=>res.save())
 
 .then(()=>User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu"))
-.then((res:User)=>res.save())
+.then((res:User)=> res.save())
+.then((res:User)=>{
+    UmsQueue.getQueue();
+    return res;
+})
+.then((res:User)=> UmsQueue.removeByDn(res))
+.then((res:User)=> UmsQueue.push(res))
+.then((res:User)=> UmsQueue.push(res))
+.then((res:User)=>{
+    UmsQueue.getQueue();
+    return res;
+})
+.then((res:User)=> UmsQueue.removeByDn(res))
+.then((res:User)=> UmsQueue.removeByDn(res))
 .then((res:any)=>{
     res.listGroups();
     return Promise.all([User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu"),

@@ -3,6 +3,7 @@ import { UserGroups } from "./UserGroups";
 import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry } from 'ldapjs';
 import { EventEmitter } from 'events'
 import { Group } from "./groups";
+import LdapUtils from "./LdapUtils";
 const { once } = require('events');
 const Promises = require("bluebird");
 
@@ -106,7 +107,7 @@ export class User {
 
         static async getNextAndIncrementUserIDNumber():Promise<number>{
 
-            const entry = await User.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
+            const entry = await LdapUtils.searchOnce("cn=userconfiguration,ou=ldapconfig,dc=linuxlab,dc=salisbury,dc=edu")
 
             const res = Number(entry.object.suseNextUniqueId);
 
@@ -131,12 +132,9 @@ export class User {
 
             return Promise.resolve(res);
 
-
-
         }
 
         async listGroups():Promise<any>{
-
 
             const opts = {
                 filter: '(objectClass=*)',
@@ -149,13 +147,10 @@ export class User {
             let done:boolean = false;
             let arr:any = [];
             emitter.on('end', ()=> {
-
                 done = true
             });
             emitter.on('searchEntry', (res:any)=> {
                 arr.push(res);
-
-
             });
 
             function delay(ms: number) {
@@ -184,14 +179,13 @@ export class User {
         // -If not already in, add based on user object
         //    --Based on modify or create
 
-            console.log(this.isInDB + "hhhhhhuhuhuhiuhuhuhuh" + this.dn.toString())
             // Add to DB
             if(!this.isInDB){
 
                 if(!this.uidNumber){
 
                     this.uidNumber = new LdapTypes.UserIDNumber(await User.getNextAndIncrementUserIDNumber());
-                    console.log("UuuuuIID" + this.uidNumber.toNumber())
+
                 }
 
                 // return Promise.resolve((res:number)=>{
@@ -275,7 +269,7 @@ export class User {
         let loadedLoginShell: LdapTypes.LoginShell;
         const inDBflag: boolean = true;
 
-        return User.searchOnce(dn)
+        return LdapUtils.searchOnce(dn)
             .then(async (entry: any) => {
             // console.log('entry: ' + JSON.stringify(entry.object));
                 const dnComponents: string[] = dn.split(",");
@@ -314,13 +308,7 @@ export class User {
                 return Promise.resolve(new User(loadedDN,loadedCN,loadedGidNumber,loadedHomeDir,loadedObjClass,loadedUid,loadedUidNum,loadedSN,loadedUserPassword,loadedLoginShell,inDBflag));
             });
     }
-    public static async searchOnce(dn:string){
-        return client.searchAsync(dn)
-        .then(async(entry:any)=>{
-            const [val] = await once(entry, 'searchEntry');
-            return Promise.resolve(val);
-        });
-    }
+
     // change back to private after test
     public async setInDB(isInDB:boolean):Promise<User>{
         return Promise.resolve(this)
