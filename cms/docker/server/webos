@@ -1,6 +1,9 @@
 FROM node:14
 MAINTAINER TH2 Alex
 
+EXPOSE 8080
+EXPOSE 3000
+
 WORKDIR /home/app/
 
 RUN npm update
@@ -15,11 +18,10 @@ WORKDIR /home/app/
 
 COPY tmp/views/ /home/app/views/
 
+
 COPY controllers/api/ /home/app/controllers/api/
 COPY controllers/index.js /home/app/controllers/index.js
-
-EXPOSE 8080
-EXPOSE 3000
+COPY controllers/auth/ /home/app/controllers/auth/
 
 WORKDIR /home/app/controllers/
 

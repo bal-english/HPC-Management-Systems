@@ -6,6 +6,7 @@ var api = require('./api/api.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 const paseto = require('paseto');
+const plman = require('./auth/payloadmanager.js');
 const {V2} = paseto;
 
 (async () => {
@@ -23,10 +24,36 @@ app.use('/api', api.router/*, function (req, res) {
 
 app.use(cookieParser());
 
+
+var stdin = process.openStdin();
+
+stdin.addListener("data", async function(d) {
+    console.log("input: " + d.toString().trim());
+
+	(async () => {
+		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var key = await app.get('key');
+		console.log(plman.tokenize(data, key));
+		x = await plman.construct("benglish4@gulls.salisbury.edu", "reg_auth", 1440, []);
+		console.log(x);
+	})()
+	
+});
+
+function one(req, res, next) {
+	console.log("first");
+	next();
+}
+function two(req, res, next) {
+	console.log("second");
+	next();
+}
+
+app.get('/mwtest', [one, two], function(req, res, next) {
+	console.log("--- Middleware Test ---");
+});
+
 app.get('/', function(req, res) {
-	//res.cookie('name', 'express').set('cookie set');
-	//console.log('test2: ' + toString(req.cookies));
-	console.log('test2: ' + req.cookies.token);
 	res.render('pages/home');
 });
 

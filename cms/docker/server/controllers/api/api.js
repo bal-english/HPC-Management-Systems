@@ -2,6 +2,8 @@
 var express = require('express');
 var router = express.Router();
 const db = require('./queries/queries');
+const db_exis = require('./queries/existential');
+const db_qual = require('./queries/qualitative');
 
 //const Pool = require('pg').Pool;
 //const pool2 = Pool
@@ -9,6 +11,8 @@ const db = require('./queries/queries');
 router.get('/', (req, res) => {
 	res.json({info: 'Node.js, Express, and Postgres API' });
 })
+
+router.get('/user/email/:email', db_exis.checkUserExistsByEmail);
 
 router.get('/users', db.getUsers)
 router.get('/users/:id([0-9]+)', db.getUserById)
