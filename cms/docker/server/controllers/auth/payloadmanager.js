@@ -42,7 +42,14 @@ const tokenize = async (payload, key) => {
 	return token;
 };
 
+const validate = async (token, key) => {
+	const payload = await V2.verify(token, key)
+	console.log("Payload: " + payload);
+	return payload;
+}
+
 module.exports = {
 	construct,
-	tokenize
+	tokenize,
+	validate
 };
