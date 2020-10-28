@@ -1,21 +1,46 @@
-# COSC 425 Software Engineering
-A study of classical and object‑oriented software engineering principles and methods.  Topics include software processes, requirements analysis, design, testing and maintenance, project management and software metrics, process improvement. Agile software development and open-source software development are also covered.
+# <p align=center> Management Systems for the High Performance Computing Lab at Salisbury University <br> <sub>Team TH2 - Salisbury University Software Engineering </p>
 
-## Project: HPCL User Management System & Website Development
+## Project Overview
+Universal Systems:
+ * Docker
 
-### HPCL Website and User Management System
+## Content Management System
+### Docker Images
+- <b>Postgres</b>		(Database)
+- <b>Ubuntu</b>			(Database Initialization)
+- <b>Adminer</b>		(Database Admin)
+- <b>Pgadmin4</b>		(Database Admin)
+- <b>Node</b>			(Web Server)
 
-Goals for Fall 2020
+### Database Features
+* Objects
+	* Users
+	* Usergroups
+	* Permissions
+		* Assignable to Users and Usergroups
+* Content-Based Objects
+	* Blogs
+	* Bloggroups
+		* Category classification
+* Support-Based Objects
+	* Tickets
 
-Postgres Database
-- [ ] Complete REST API
-  - information here
-- [ ] User roles
-  
-Web routing
-- [ ] Move static to dynamic routing 
-- [ ] Embellish on original webpages
-- [ ] Admin pages
+### Web Server Features
+#### Node Packages
+* Base:
+	* express
+	* pg
+	* ejs
+	* node-fetch
+	* paseto
+* Other
+	* cookie-parser
+	* crypto
 
-Ticketing system
-- [ ] fully automated/dynamic creation
+#### Components
+* REST API - For querying the database or statistics about it.
+* EJS Templating - For populating and sending website content.
+* PASETO Authorization - For user authorization systems.
+
+## User Management System
+<em> Coming Soon </em>
