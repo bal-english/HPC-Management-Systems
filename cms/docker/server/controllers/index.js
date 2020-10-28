@@ -18,17 +18,21 @@ app.set('views', '../views')
 app.set('view engine','ejs');
 
 
+
+
 app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
 }*/);
 
 app.use(cookieParser());
 
+app.locals.banner = "none";//"auth/user_login/success-default";
 
 var stdin = process.openStdin();
 
 stdin.addListener("data", async function(d) {
-    console.log("input: " + d.toString().trim());
+	const input = d.toString().trim();
+    console.log("input: " + input);
 
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
@@ -40,33 +44,28 @@ stdin.addListener("data", async function(d) {
 	
 });
 
-function one(req, res, next) {
-	console.log("first");
-	next();
-}
-function two(req, res, next) {
-	console.log("second");
-	next();
-}
-
-app.get('/mwtest', [one, two], function(req, res, next) {
-	console.log("--- Middleware Test ---");
-});
-
-app.get('/', function(req, res) {
+app.get('/', function(req, res, next) {
 	res.render('pages/home');
 });
 
-app.get('/auth', function(req, res) {
+app.get('/cc', function(req, res) {
+	res.clearCookie('token');
+	res.render('pages/home');
+});
 
-	if(req.query.token === undefined) {
+app.get('/auth', async function(req, res) {
+
+	const token = req.query.token
+	if(token === undefined) {
 		res.redirect('/');
 	} else {
-		const token = req.query.token
+		var key = await app.get('key');
+		console.log(plman.validate(token, key));
 		res.cookie('token', token).set('cookie set');
 		res.redirect('/')
 	}
 });
+
 
 app.get('/tickets', function(req, res) {
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));

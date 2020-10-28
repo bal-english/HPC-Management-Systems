@@ -1,0 +1,6 @@
+<% if(banner == '') { %>
+<% } else { %> 
+	<% path = '../alert/' + banner; %>
+	<%# include (path, {message: message}); %>
+	<%- include (path); %>
+<% } %>
