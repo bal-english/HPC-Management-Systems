@@ -1,6 +1,7 @@
 const port = 3000;
 const def_blogs_per_page = 3;
 var express = require('express');
+var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
 var fetch = require('node-fetch');
@@ -10,14 +11,14 @@ const plman = require('./auth/payloadmanager.js');
 const {V2} = paseto;
 
 (async () => {
-	const privateKey = await V2.generateKey('public');
-	app.set('key', privateKey);
+	const key = await V2.generateKey('local')
+	app.set('key', key);
 })()
+
+console.log(V2);
 
 app.set('views', '../views')
 app.set('view engine','ejs');
-
-
 
 
 app.use('/api', api.router/*, function (req, res) {
@@ -26,7 +27,12 @@ app.use('/api', api.router/*, function (req, res) {
 
 app.use(cookieParser());
 
-app.locals.banner = "none";//"auth/user_login/success-default";
+app.use('/', function(req, res, next) {
+	console.log(req.cookies);
+	next();
+});
+
+app.locals.banner = 'none';//"auth/user_login/success_default";
 
 var stdin = process.openStdin();
 
@@ -44,27 +50,57 @@ stdin.addListener("data", async function(d) {
 	
 });
 
-app.get('/', function(req, res, next) {
-	res.render('pages/home');
+
+
+/*
+app.use('/', function(req, res, next) {
+	delete req.cookies.banner
+	console.log(req.cookies);
+	next();
+});
+*/
+app.get('/tt', function(req, res, next) {
+	(async () => {
+		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var key = await app.get('key');
+		x = await plman.tokenize(plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []),key);
+		console.log(x);
+		res.cookie('token', x).set('cookie set');
+		res.redirect('/');
+	})()
 });
 
 app.get('/cc', function(req, res) {
 	res.clearCookie('token');
+	res.clearCookie('banner');
 	res.render('pages/home');
 });
 
+
+// TODO: Create a router for middleware separation
 app.get('/auth', async function(req, res) {
 
-	const token = req.query.token
+	const token = req.cookies.token
 	if(token === undefined) {
 		res.redirect('/');
 	} else {
 		var key = await app.get('key');
-		console.log(plman.validate(token, key));
-		res.cookie('token', token).set('cookie set');
-		res.redirect('/')
+		try {
+			payload = await plman.validate(token, key);
+			console.log(payload);
+		} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/failure_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+		}
+		//res.cookie('token', token).set('cookie set');
+		res.cookie('banner','auth/user_login/success_default');
+		res.redirect('/');
 	}
 });
+
+
 
 
 app.get('/tickets', function(req, res) {
@@ -165,76 +201,29 @@ app.get('/admin/users/:id', function(req, res){
 	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
 });
 
+app.use('/', function(req, res, next) {
+	try {
+		ejs.render('templates/alert/' + req.cookies.banner)
+	} catch(err) {
+		res.locals.banner = 'auth/failure_default';
+		next();
+	}
+	res.locals.banner = req.cookies.banner;
+	next();
+});
 
+app.use('/', function(req, res, next) {
+	res.cookie('banner', 'none').set('cookie set');
+	console.log(req.cookies);
+	next();
+});
 
-//********dynamic routing*********
-
-// ````````````EXAMPLES: 
-
-		//Main example for loading a page dynamically:
-			// app.get('/:id', function(req, res){
-			//    res.send('The id you specified is ' + req.params.id);
-			// });
-
-		//Route parameters are named URL segments that are used to capture the values specified at their position in the URL. 
-		//The captured values are populated in the req.params object, with the name of the route parameter specified in the path as their respective keys.
-
-			// Route path: /users/:userId/books/:bookId
-			// Request URL: http://localhost:3000/users/34/books/8989
-			// req.params: { "userId": "34", "bookId": "8989" }
-
-		// To define routes with route parameters, simply specify the route parameters in the path of the route as shown below.
-
-			// app.get('/users/:userId/books/:bookId', function (req, res) {
-			//   res.send(req.params)
-			// })
-
-		//To have more control over the exact string that can be matched by a route parameter, you can append a regular expression in parentheses (()):
-
-			// Route path: /user/:userId(\d+)
-			// Request URL: http://localhost:3000/user/42
-			// req.params: {"userId": "42"}
-
-// ````````````
-
-
-
-	//**** BLOG GROUPING ****
-
-	// //any page the user searches for manually in URL with "blog" literal will show main page (for now)
-	// app.get(/blog/, function (req, res) {
- //  		res.sendFile(path.join(__dirname + '/views/bloghome.html'));
-	// });
-
-		//id can only be 5 digits from 0-9
-		//for blog posts
-		//Should connect to Postgres & return data
-	// app.get('/blog/:id([0-9]{5})', function(req, res){
-	//    res.send("TODO: Blog individual page goes here");
-	//    res.send('id: ' + req.params.id);
-	// });
-
-
-
-//**** TICKET GROUPING ****
-
-	// 	//id can only be 5 digits from 0-9
-	// 	//for tickets
-	// 	//Should connect to Postgres & return data
-	// app.get('/ticket/:id([0-9]{5})', function(req, res){
-	//    res.send("TODO: Ticket individual page goes here");
-	//    res.send('id: ' + req.params.id);
-	// });
-
-
-//***** OTHER ROUTES *****
-
-	/*app.get('*', function(req, res){
-	   res.sendFile(path.join(__dirname + '/views/error.html'));
-	});
-*/
-
-
+// TODO:	setup a login route that makes a banner cookie and redirects here.
+//			make a middleware to handle and reset it here it
+app.get('/', function(req, res, next) {
+	res.render('pages/home');
+	next();
+});
 
 
 app.listen(port, () => {

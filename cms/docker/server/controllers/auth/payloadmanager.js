@@ -37,13 +37,13 @@ const tokenize = async (payload, key) => {
 	//console.log('Tokenizing Payload:');
 	//console.log(payload);
 	//console.log("with key: " + key);
-	const token = await V2.sign(payload, key)
+	const token = await V2.encrypt(payload, key)
 	console.log("Token: " + token);
 	return token;
 };
 
 const validate = async (token, key) => {
-	const payload = await V2.verify(token, key)
+	const payload = await V2.decrypt(token, key)
 	console.log("Payload: " + payload);
 	return payload;
 }
