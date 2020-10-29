@@ -4,7 +4,7 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node dist/homedirectory.js",
+    "start": "bash /app/wait-for-it/wait-for-it.sh $UMS_HOSTNAME:80 && node dist/homedirectory.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

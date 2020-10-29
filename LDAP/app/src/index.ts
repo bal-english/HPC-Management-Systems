@@ -30,7 +30,7 @@ app.get('/api/user/:id', (request:Request, response:Response) => {
 
 });
 
-app.get('/api/homeDirQueue/delete', async (request:Request, response:Response) => {
+app.post('/api/homeDirQueue/delete', async (request:Request, response:Response) => {
   const dn = request.body.dn;
   const currUser = await User.loadUser(dn);
   await UmsQueue.removeByDn(currUser)
@@ -45,12 +45,21 @@ app.get('/api/homeDirQueue/delete', async (request:Request, response:Response) =
   })
 });
 
-app.post('/api/homeDirQueue/query', async (request:Request, response:Response) => {
+app.get('/api/homeDirQueue/query', async (request:Request, response:Response) => {
   await new Promise<any>(async ()=>{
     const hdQueue = await UmsQueue.getQueue();
+    if(hdQueue.length === 0){
+      response.send({
+        empty: true
+      });
+      return;
+    }
+    const currUser = await User.loadUser(hdQueue[0]);
     response.send({
-      success: hdQueue,
-    }); 
+      empty: false,
+      dn: hdQueue[0],
+      uidNum: currUser.uidNumber.toNumber()
+    });
   })
   .catch((err:any)=>{
     console.log("ERROR: Tried to retrieve the home directory creation queue (" + request.originalUrl + ")");
@@ -69,6 +78,7 @@ app.post('/api/user/create', async (request:Request, response:Response) => {
   try {
     const res = await User.createUserFromEmail(cn, email);
     const res1 = await res.save();
+    await UmsQueue.push(res);
     response.send({
       success: res1,
     });
