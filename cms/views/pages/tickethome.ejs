@@ -21,14 +21,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<%# include('../templates/ticketing/user/ticketset', {tickets: tickets}) %>
-				<% tickets.forEach(function(ticket) { %>
-					<tr>
-						<td> <%= ticket.title %> </td>
-						<td> <%= ticket.id %> </td>
-						<td> <%= ticket.status %> </td>
-					</tr>
-				<% }) %>
+				<%- include('../templates/ticketing/user/ticketset', {tickets: tickets}) %>
 			</tbody>
 		</table>
 	</div>
