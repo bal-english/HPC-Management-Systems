@@ -4,6 +4,7 @@ var express = require('express');
 var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
+var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 const paseto = require('paseto');
@@ -24,6 +25,29 @@ app.set('view engine','ejs');
 app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
 }*/);
+
+async function revalidate_login(req, res, next) {
+	const token = req.cookies.token
+	if(token === undefined) {
+		next();
+	} else {
+		var key = await app.get('key');
+		try {
+			payload = await plman.validate(token, key);
+			console.log(payload);
+		} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.clearCookie('token');
+			res.redirect('/');
+		}
+		//res.cookie('banner','auth/user_login/success_default').set('cookie set');
+		//res.redirect('/');
+		next();
+	}
+}
+
+//app.use('/auth', auth.router);
 
 app.use(cookieParser());
 
@@ -50,20 +74,44 @@ stdin.addListener("data", async function(d) {
 	
 });
 
-app.get('/b', function(req, res) {
+// TODO: Create a router for middleware separation
+app.get('/auth', async function(req, res) {
+
+	const token = req.cookies.token
+	if(token === undefined) {
+		res.redirect('/');
+	} else {
+		var key = await app.get('key');
+		try {
+			payload = await plman.validate(token, key);
+			console.log(payload);
+		} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/failure_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+		}
+		//res.cookie('token', token).set('cookie set');
+		res.cookie('banner','auth/user_login/success_default');
+		res.redirect('/');
+	}
+});
+
+
+app.get('/b', [revalidate_login], function(req, res) {
 	res.redirect('/blogs');
 });
-app.get('/blogs', function(req, res){
+app.get('/blogs', [revalidate_login], function(req, res){
 	//this for blog gen from db
 	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
 	//res.render('pages/newbloghome');
 });
 
-app.get('/blogs/:bg', function(req, res) {
+app.get('/blogs/:bg', [revalidate_login], function(req, res) {
 	res.redirect('/b/' + req.params.bg);
 });
 
-app.get('/b/:bg', async function (req, res) {
+app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	p = parseInt(req.query.page)
 	if(isNaN(p)) {
 		p = 0;
@@ -97,49 +145,33 @@ app.get('/tt', function(req, res, next) {
 		x = await plman.tokenize(plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []),key);
 		console.log(x);
 		res.cookie('token', x).set('cookie set');
-		res.redirect('/');
+		res.redirect('/auth');
+	})()
+});
+
+app.get('/tt2', function(req, res, next) {
+	(async () => {
+		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var key = await app.get('key');
+		x = "badtokentest"
+		console.log(x);
+		res.cookie('token', x).set('cookie set');
+		res.redirect('/auth');
 	})()
 });
 
 app.get('/cc', function(req, res) {
 	res.clearCookie('token');
-	res.clearCookie('banner');
 	res.render('pages/home');
 });
 
 
-// TODO: Create a router for middleware separation
-app.get('/auth', async function(req, res) {
-
-	const token = req.cookies.token
-	if(token === undefined) {
-		res.redirect('/');
-	} else {
-		var key = await app.get('key');
-		try {
-			payload = await plman.validate(token, key);
-			console.log(payload);
-		} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/failure_default').set('cookie set');
-			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-		}
-		//res.cookie('token', token).set('cookie set');
-		res.cookie('banner','auth/user_login/success_default');
-		res.redirect('/');
-	}
-});
-
-
-
-
-app.get('/tickets', function(req, res) {
+app.get('/tickets', [revalidate_login], function(req, res) {
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
 });
 
-app.get('/admin/ticket/:categoryName', function(req, res){
+app.get('/admin/ticket/:categoryName', [revalidate_login], function(req, res){
 
 	var tickets = [
 		//API here for retrieving tickets by category
@@ -160,11 +192,11 @@ app.get('/admin/ticket/:categoryName', function(req, res){
 // 	console.log("sent successfully");
 // });
 
-app.get('/admin', function(req, res){
+app.get('/admin', [revalidate_login], function(req, res){
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
 });
 
-app.get('/admin/tickets', async function(req, res){
+app.get('/admin/tickets', [revalidate_login], async function(req, res){
 	var x = await fetch('http://localhost:3000/api/tickets');
 	var y = await fetch('http://localhost:3000/api/users');
 
@@ -177,7 +209,7 @@ app.get('/admin/tickets', async function(req, res){
 	res.render('pages/adminhome', {tickets: x, users: y})
 });
 
-app.get('/admin/tickets/:id', function(req, res){
+app.get('/admin/tickets/:id', [revalidate_login], function(req, res){
 	id = req.params.id;
 	console.log(id);
 	fetch('http://localhost:3000/api/ticket/' + id).then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {ticket: qres}));
@@ -187,7 +219,7 @@ app.get('/admin/tickets/:id', function(req, res){
 // 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
 // });
 
-app.get('/admin/users/:id', function(req, res){
+app.get('/admin/users/:id', [revalidate_login], function(req, res){
 	id = req.params.id;
 	console.log(id);
 	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
@@ -212,7 +244,7 @@ app.use('/', function(req, res, next) {
 
 // TODO:	setup a login route that makes a banner cookie and redirects here.
 //			make a middleware to handle and reset it here it
-app.get('/', function(req, res, next) {
+app.get('/', [revalidate_login], function(req, res, next) {
 	res.render('pages/home');
 	next();
 });
