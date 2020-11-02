@@ -44,21 +44,52 @@ stdin.addListener("data", async function(d) {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
 		var key = await app.get('key');
 		console.log(plman.tokenize(data, key));
-		x = await plman.construct("benglish4@gulls.salisbury.edu", "reg_auth", 1440, []);
+		x = await plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []);
 		console.log(x);
 	})()
 	
 });
 
-
-
-/*
-app.use('/', function(req, res, next) {
-	delete req.cookies.banner
-	console.log(req.cookies);
-	next();
+app.get('/b', function(req, res) {
+	res.redirect('/blogs');
 });
-*/
+app.get('/blogs', function(req, res){
+	//this for blog gen from db
+	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
+	//res.render('pages/newbloghome');
+});
+
+app.get('/blogs/:bg', function(req, res) {
+	res.redirect('/b/' + req.params.bg);
+});
+
+app.get('/b/:bg', async function (req, res) {
+	p = parseInt(req.query.page)
+	if(isNaN(p)) {
+		p = 0;
+	}
+	origin = parseInt(req.query.origin)
+	if(isNaN(origin)) {
+		origin = (p*def_blogs_per_page)
+	}
+	
+	group = req.params.bg;
+	group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
+	
+	total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
+	
+	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
+	fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
+});
+
+/*app.get('/b/:bg', function(req, res) {
+	p = parseInt(req.query.page);
+	if(isNaN(p)) {
+		res.redirect('/b/' + req.params.bg);
+	}
+}*/
+
+
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
@@ -117,45 +148,6 @@ app.get('/admin/ticket/:categoryName', function(req, res){
 	res.render("ticketCategory", {tickets:tickets});
 
 });
-
-app.get('/b', function(req, res) {
-	res.redirect('/blogs');
-});
-app.get('/blogs', function(req, res){
-	//this for blog gen from db
-	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
-	//res.render('pages/newbloghome');
-});
-
-app.get('/blogs/:bg', function(req, res) {
-	res.redirect('/b/' + req.params.bg);
-});
-
-app.get('/b/:bg', async function (req, res) {
-	p = parseInt(req.query.page)
-	if(isNaN(p)) {
-		p = 0;
-	}
-	origin = parseInt(req.query.origin)
-	if(isNaN(origin)) {
-		origin = (p*def_blogs_per_page)
-	}
-	
-	group = req.params.bg;
-	group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
-	
-	total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
-	
-	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
-	fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
-});
-
-/*app.get('/b/:bg', function(req, res) {
-	p = parseInt(req.query.page);
-	if(isNaN(p)) {
-		res.redirect('/b/' + req.params.bg);
-	}
-}*/
 	
 
 //TODO: API for retrieving blog by category
