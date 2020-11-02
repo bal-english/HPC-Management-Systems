@@ -4,7 +4,6 @@ var express = require('express');
 var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
-var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 const paseto = require('paseto');
@@ -43,6 +42,7 @@ async function revalidate_login(req, res, next) {
 		}
 		//res.cookie('banner','auth/user_login/success_default').set('cookie set');
 		//res.redirect('/');
+		res.locals.authed = true;
 		next();
 	}
 }
@@ -57,7 +57,7 @@ app.use('/', function(req, res, next) {
 });
 
 app.locals.banner = 'none';//"auth/user_login/success_default";
-
+app.locals.authed = false;
 var stdin = process.openStdin();
 
 stdin.addListener("data", async function(d) {
@@ -65,7 +65,7 @@ stdin.addListener("data", async function(d) {
     console.log("input: " + input);
 
 	(async () => {
-		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await fetch('http://localhost:3000/api/users/1');
 		var key = await app.get('key');
 		console.log(plman.tokenize(data, key));
 		x = await plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []);
@@ -169,6 +169,24 @@ app.get('/cc', function(req, res) {
 app.get('/tickets', [revalidate_login], function(req, res) {
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
+});
+
+app.get('/mytickets', [revalidate_login], async function(req, res) {
+	const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email = payload.email;
+	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	id = email_query.id;
+	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickethome', {tickets: qres}));
 });
 
 app.get('/admin/ticket/:categoryName', [revalidate_login], function(req, res){

@@ -1,0 +1,42 @@
+<!-- view\templates\newbloghome.ejs -->
+<html>
+
+<%- include ('../templates/heading/htmlhead') -%>
+<%- include ('../templates/heading/alertmanager') -%>
+<%- include ('../templates/heading/standard_header') -%>
+<%- include ('../templates/nav') -%>
+
+<br>
+<br>
+
+<body>
+	<div class="container">
+		<h2> My Tickets </h2>
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th> Subject </th>
+					<th> Ticket ID </th>
+					<th> Status </th>
+				</tr>
+			</thead>
+			<tbody>
+				<%# include('../templates/ticketing/user/ticketset', {tickets: tickets}) %>
+				<% tickets.forEach(function(ticket) { %>
+					<tr>
+						<td> <%= ticket.title %> </td>
+						<td> <%= ticket.id %> </td>
+						<td> <%= ticket.status %> </td>
+					</tr>
+				<% }) %>
+			</tbody>
+		</table>
+	</div>
+</body>
+
+
+<br>
+<br>
+<%- include ('../templates/footer') -%>
+</body>
+</html>

@@ -2,7 +2,9 @@ const Pool = require('pg').Pool;
 const pool = new Pool();
 
 const checkUserExistsByEmail = (req, res) => {
-	email = req.params.email;
+	const email = req.params.email;
+	//const email = req.params.local + "@" + req.params.domain;
+	//console.log(email);
 	pool.query('SELECT * FROM \"user\" WHERE email=$1', [email], (error, results) => {
 		if(error) {
 			throw error;

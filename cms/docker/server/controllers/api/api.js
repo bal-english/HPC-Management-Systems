@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 	res.json({info: 'Node.js, Express, and Postgres API' });
 })
 
-router.get('/user/email/:email', db_exis.checkUserExistsByEmail);
+router.get('/user/email/:email'/*:local/:domain'*/, db_exis.checkUserExistsByEmail);
 
 router.get('/users', db.getUsers)
 router.get('/users/:id([0-9]+)', db.getUserById)
@@ -46,6 +46,7 @@ router.put('/blogs/group', db.groupBlog)
 router.post('/ticket', db.createTicket)
 
 router.get('/tickets', db.getTickets)
+router.get('/tickets/user/:id([0-9]+)', db.getTicketsForUser)
 router.get('/ticket/:id', db.getTicketById)
 
 router.get('/permission', db.getPermissions)

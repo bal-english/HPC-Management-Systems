@@ -277,6 +277,16 @@ const getTickets = (req, res) => {
 	})
 }
 
+const getTicketsForUser = (req, res) => {
+	const user_id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"ticket\" WHERE creator = $1', [user_id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
 const getTicketById = (req, res) => {
 	const id = parseInt(req.params.id);
 
@@ -357,6 +367,7 @@ module.exports = {
 	groupBlog,
 	createTicket,
 	getTickets,
+	getTicketsForUser,
 	getTicketById,
 	getPermissions,
 	getPermissionById,
