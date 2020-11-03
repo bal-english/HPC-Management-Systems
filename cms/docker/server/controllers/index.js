@@ -4,11 +4,13 @@ var express = require('express');
 var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
+// var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 const paseto = require('paseto');
 const plman = require('./auth/payloadmanager.js');
 const {V2} = paseto;
+var bodyParser = require('body-parser');
 
 (async () => {
 	const key = await V2.generateKey('local')
@@ -50,7 +52,7 @@ async function revalidate_login(req, res, next) {
 //app.use('/auth', auth.router);
 
 app.use(cookieParser());
-
+app.use(bodyParser.json());
 app.use('/', function(req, res, next) {
 	console.log(req.cookies);
 	next();
@@ -95,6 +97,20 @@ app.get('/auth', async function(req, res) {
 		res.cookie('banner','auth/user_login/success_default');
 		res.redirect('/');
 	}
+});
+
+app.get('/login', function(req, res){
+ 	res.render('pages/login');
+});
+
+app.post('/login', function(req, res){
+	
+	console.log(req.body);
+	console.log(req.body.email);
+	//req.body is JSON object 
+
+	res.end();
+	//redirect to auth information here @ Alex
 });
 
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<%- include ('../templates/heading/htmlhead') -%>
+<%- include ('../templates/heading/alertmanager') -%>
+<%- include ('../templates/heading/standard_header') -%>
+
+<style>
+
+* {box-sizing: border-box;}
+
+.form-inline {  
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+}
+
+.form-inline label {
+  margin: 5px 10px 5px 0;
+}
+
+.form-inline input {
+  vertical-align: middle;
+  margin: 5px 10px 5px 0;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.form-inline button {
+  padding: 10px 20px;
+  background-color: dodgerblue;
+  border: 1px solid #ddd;
+  color: white;
+  cursor: pointer;
+}
+
+.form-inline button:hover {
+  background-color: royalblue;
+}
+
+@media (max-width: 800px) {
+  .form-inline input {
+    margin: 10px 0;
+  }
+  
+  .form-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+</style> 
+
+<br>
+<br>
+
+<body>
+
+ <div class = "container">
+  <div class = "content">
+    
+  <div class = "card">
+    <div class = "bg-light border-bottom-1 card-header">
+      <h3 class = "card-title"> Register </h3>
+    </div>
+    <form class = "form-inline" action="/login" method="post">
+      <label for="email"> SU Email: </label>
+      <input id="login_email" class="form-control" type="text" placeholder=" Enter SU email here "> </input>
+      <label for="password"> Password: </label>
+      <input id="login_pass" class="form-control" type="text" placeholder=" Enter password here "> </input>
+      <label for="fname"> First Name: </label>
+      <input id="fname" class="form-control" type="text" placeholder=" Enter First Name here "> </input>
+      <label for="lname"> First Name: </label>
+      <input id="lname" class="form-control" type="text" placeholder=" Enter Last Name here "> </input>
+      <label for="su_id"> SU ID #: </label>
+      <input id="su_id" class="form-control" type="text" placeholder=" Enter SU id here "> </input>
+
+      <br>
+      <br>
+      
+      <button type="submit" id="submit" value="accept">Submit</button>
+    </form>
+
+</div>
+</div>
+ 
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+<script>
+jQuery(document).ready(function($){ 
+
+  jQuery('#submit').click(function() {
+
+    var formData = {
+        email: jQuery('#login_email').val(),
+        password: jQuery('#login_pass').val(),
+        first_name: jQuery('#fname').val(),
+        last_name: jQuery('#lname').val(),
+        su_id: jQuery('#su_id').val()
+      }
+
+    console.log(formData);
+
+    jQuery.ajax({
+
+      url: '/login',
+      type: 'POST',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(formData),
+      success: function(data) {
+        console.log(data);
+        console.log('POST sucess');
+      },
+      error: function(req, err) {
+        console.log('POST error');
+        console.log(err);
+      }
+
+    });
+
+  })
+
+});
+
+</script>
+
+<%- include ('../templates/footer') -%>
