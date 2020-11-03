@@ -27,6 +27,23 @@ app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
 }*/);
 
+function validateBanner(req, res, next) {
+	try {
+		ejs.render('templates/alert/' + req.cookies.banner)
+	} catch(err) {
+		res.locals.banner = 'auth/failure_default';
+		next();
+	}
+	res.locals.banner = req.cookies.banner;
+	next();
+}
+
+function clearBanner(req, res, next) {
+	res.cookie('banner', 'none').set('cookie set');
+	console.log(req.cookies);
+	next();
+}
+
 async function revalidate_login(req, res, next) {
 	const token = req.cookies.token
 	if(token === undefined) {
@@ -212,7 +229,7 @@ app.get('/tickets', [revalidate_login], function(req, res) {
 
 });
 
-app.get('/mytickets', [revalidate_login], async function(req, res) {
+app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
 	const token = req.cookies.token
 	var key = await app.get('key');
 	try {
@@ -227,7 +244,32 @@ app.get('/mytickets', [revalidate_login], async function(req, res) {
 	email = payload.email;
 	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
 	id = email_query.id;
-	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickethome', {tickets: qres}));
+	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
+});
+
+app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
+	const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email = payload.email;
+	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	id = email_query.id;
+	ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
+	console.log(ticket_query);
+	if(id != ticket_query.creator) {
+		res.cookie('banner','error/unauthorized').set('cookie set');
+		res.redirect('/mytickets');
+	} else {
+		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+	}
 });
 
 //G: TODO 11/3: display tickets page for categories (using admin main page prolly)
@@ -270,30 +312,17 @@ app.get('/admin/users/:id', [revalidate_login], function(req, res){
 	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
 });
 
-app.use('/', function(req, res, next) {
-	try {
-		ejs.render('templates/alert/' + req.cookies.banner)
-	} catch(err) {
-		res.locals.banner = 'auth/failure_default';
-		next();
-	}
-	res.locals.banner = req.cookies.banner;
-	next();
-});
 
-app.use('/', function(req, res, next) {
-	res.cookie('banner', 'none').set('cookie set');
-	console.log(req.cookies);
-	next();
-});
+//app.use('/', validateBanner);
+
+//app.use('/', clearBanner);
 
 // TODO:	setup a login route that makes a banner cookie and redirects here.
 //			make a middleware to handle and reset it here it
-app.get('/', [revalidate_login], function(req, res, next) {
+app.get('/', [validateBanner, clearBanner, revalidate_login], function(req, res, next) {
 	res.render('pages/home');
 	next();
 });
-
 
 app.listen(port, () => {
 	console.log(`App running on port ${port}`);

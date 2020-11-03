@@ -16,6 +16,8 @@ exports.setup = function(options, seedLink) {
 
 exports.up = function(db, callback) {
 	db.insert('usergroup', ['name'], ['admin']);
+	db.insert('usergroup', ['name'], ['support_admin']);
+	db.insert('usergroup', ['name'], ['support_worker']);
 	db.insert('usergroup', ['name'], ['faculty']);
 	db.insert('usergroup', ['name'], ['student']);
 	db.insert('usergroup', ['name'], ['user']);
