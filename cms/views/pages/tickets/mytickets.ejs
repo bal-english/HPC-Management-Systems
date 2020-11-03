@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<%- include ('../../templates/heading/htmlhead') -%>
+<%- include ('../../templates/heading/alertmanager') -%>
+<%- include ('../../templates/heading/standard_header') -%>
+
+<%- include ('../../templates/nav') -%>
+
+<br>
+<br>
+
+<body class="text-center bg-light">
+	<div class="container">
+		<h2> My Tickets </h2>
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th> Subject </th>
+					<th> Ticket ID </th>
+					<th> Status </th>
+				</tr>
+			</thead>
+			<tbody>
+				<%- include('../../templates/ticketing/user/ticketset', {tickets: tickets}) %>
+			</tbody>
+		</table>
+	</div>
+
+
+<br>
+<br>
+<%- include ('../../templates/footer') -%>
+</body>
+</html>
