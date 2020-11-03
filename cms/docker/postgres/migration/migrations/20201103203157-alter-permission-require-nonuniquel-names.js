@@ -15,22 +15,11 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  db.createTable('permission',
-  {
-    id: {
-      type: 'int',
-      primaryKey: true,
-      autoIncrement: true
-    },
-    name: {
-      type: 'text',
-		notNull: true
-    }
-  }, callback);
+	return db.runSql('ALTER TABLE permission ADD CONSTRAINT permission_unique_names UNIQUE (name)')
 };
 
 exports.down = function(db, callback) {
-  db.dropTable('permission', {}, callback);
+	return null;
 };
 
 exports._meta = {
