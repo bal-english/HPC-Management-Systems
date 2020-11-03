@@ -90,9 +90,9 @@
 <script>
 jQuery(document).ready(function($){ 
 
-  jQuery('#submit').click(function() {
+  jQuery('#submit').click(function() { //ajax
 
-    var formData = {
+    var user = {
         email: jQuery('#login_email').val(),
         password: jQuery('#login_pass').val(),
         first_name: jQuery('#fname').val(),
@@ -104,11 +104,11 @@ jQuery(document).ready(function($){
 
     jQuery.ajax({
 
-      url: '/login',
+      url: '/register',
       type: 'POST',
       // dataType: 'json',
       contentType: 'application/json',
-      data: JSON.stringify(formData),
+      data: JSON.stringify(user),
       success: function(data) {
         console.log(data);
         console.log('POST sucess');

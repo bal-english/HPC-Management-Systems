@@ -99,20 +99,39 @@ app.get('/auth', async function(req, res) {
 	}
 });
 
+//--- Login & Register middleware  ---
+
 app.get('/login', function(req, res){
  	res.render('pages/login');
 });
 
 app.post('/login', function(req, res){
 	
-	console.log(req.body);
+	// console.log(req.body); 	//req.body is JSON object 
 	console.log(req.body.email);
-	//req.body is JSON object 
 
+	//G: 11/3 TODO: load '/' with user credentials
+	//G: redirect to auth information here @ Alex
+		//i.e. check if they have an account, if not:
+		//res.send(one of your new alerts? "No account!")
+		//res.redirect('/register')
 	res.end();
-	//redirect to auth information here @ Alex
 });
 
+app.get('/register', function(req, res){
+	res.render('pages/login');
+});
+
+app.post('/register', function(req, res){
+	//G 11/3 TODO: should check if user has an account already -- auth @ Alex
+		//if so, res.send(new alert "User with account already made!")
+		//else
+		console.log("user's name: " req.body.fname + req.body.lname);
+		console.log("user's SU email: " + req.body.email);
+		console.log("user's password: " + req.body.password);
+
+		res.redirect('/login');
+});
 
 app.get('/b', [revalidate_login], function(req, res) {
 	res.redirect('/blogs');
@@ -153,7 +172,13 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	}
 }*/
 
+//--- Grace middleware --- 
 
+app.get('/blog/create', function(req,res){
+
+});
+
+app.post()
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
@@ -205,26 +230,12 @@ app.get('/mytickets', [revalidate_login], async function(req, res) {
 	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickethome', {tickets: qres}));
 });
 
+//G: TODO 11/3: display tickets page for categories (using admin main page prolly)
 app.get('/admin/ticket/:categoryName', [revalidate_login], function(req, res){
-
-	var tickets = [
-		//API here for retrieving tickets by category
-	];
 	
-	res.render("ticketCategory", {tickets:tickets});
+	fetch('http://localhost:3000/api/ticket/:categoryName').then(qres => qres.json()).then(qres => res.render('pages/??', {tickets: qres}));
 
 });
-	
-
-//TODO: API for retrieving blog by category
-//-----------------------------------------
-// app.get('/blog/:categoryName/:blogId', function (req, res){
-// 	var categoryName = req.params.categoryName;
-// 	var blogId = req.params.blogId;
-
-// 	res.render("singleBlog", {category: categoryName, blog: blogId});
-// 	console.log("sent successfully");
-// });
 
 app.get('/admin', [revalidate_login], function(req, res){
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));

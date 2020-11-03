@@ -48,6 +48,7 @@ router.post('/ticket', db.createTicket)
 router.get('/tickets', db.getTickets)
 router.get('/tickets/user/:id([0-9]+)', db.getTicketsForUser)
 router.get('/ticket/:id', db.getTicketById)
+router.get('/ticket/:categoryName', db.getTicketsByCategory)
 
 router.get('/permission', db.getPermissions)
 router.get('/permission/:id', db.getPermissionById)

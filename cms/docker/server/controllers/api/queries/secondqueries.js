@@ -65,11 +65,23 @@ const getUsersByEmail = (req, res) => {
 	})
 }
 
+//TODO: get tickets by category here
+const getTicketsByCategory = (req, res) => {
+	const topic = req.params.category
+	pool.query('SELECT * FROM \"ticket\" WHERE category = $1', [topic], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows);
+	})
+}
+
 module.exports = {
 	getBlogByGroup,
 	getBlogById,
 	getBlogByTitle,
 	getUsersByFirstname,
 	getUsersByLastname,
-	getUsersByEmail
+	getUsersByEmail,
+	getTicketsByCategory
 }
