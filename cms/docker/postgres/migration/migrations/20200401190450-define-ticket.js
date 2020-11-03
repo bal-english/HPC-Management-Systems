@@ -15,7 +15,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-	db.runSql("CREATE TYPE ticket_status AS ENUM ('queued', 'assigned', 'working', 'completed')");
+	db.runSql("CREATE TYPE ticket_status AS ENUM ('Queued', 'Assigned', 'Working', 'Completed', 'Rejected')");
 	db.createTable('ticket',
 	{
 		id: {
@@ -26,7 +26,7 @@ exports.up = function(db, callback) {
 		status: {
 			type: 'ticket_status',
 			notNull: true,
-			defaultValue: 'queued',
+			defaultValue: 'Queued',
 		},
 		creator: {
 			type: 'int',
