@@ -28,6 +28,7 @@ Universal Systems:
 ### Web Server Features
 #### Node Packages
 * Base:
+	* body-parser
 	* express
 	* pg
 	* ejs
@@ -42,5 +43,12 @@ Universal Systems:
 * EJS Templating - For populating and sending website content.
 * PASETO Authorization - For user authorization systems.
 
-## User Management System
-<em> Coming Soon </em>
+### TODO List (11/4): 
+- [ ] (grace) blog creation page
+	- finish ejs page
+	- finish middleware routing
+	- sent to db
+- [ ] (grace) ticketing system
+	- ticketcreation.ejs (user)
+	- editing of a ticket (admin side, on individual ticket pages)
+- [ ] (alex) //add ur stuff here
