@@ -119,8 +119,9 @@ app.get('/auth', async function(req, res) {
 //--- Login & Register middleware  ---
 
 app.get('/login', function(req, res){
- 	res.render('pages/login');
+ 	res.render('pages/user_accounts/login');
 });
+
 
 app.post('/login', function(req, res){
 	
@@ -136,16 +137,15 @@ app.post('/login', function(req, res){
 });
 
 app.get('/register', function(req, res){
-	res.render('pages/login');
+	res.render('pages/user_accounts/register');
 });
-
 app.post('/register', function(req, res){
 	//G 11/3 TODO: should check if user has an account already -- auth @ Alex
 		//if so, res.send(new alert "User with account already made!")
 		//else
-		console.log("user's name: " req.body.fname + req.body.lname);
-		console.log("user's SU email: " + req.body.email);
-		console.log("user's password: " + req.body.password);
+		console.log("user\'s name: " + req.body.fname + req.body.lname);
+		console.log("user\'s SU email: " + req.body.email);
+		console.log("user\'s password: " + req.body.password);
 
 		res.redirect('/login');
 });
@@ -195,7 +195,6 @@ app.get('/blog/create', function(req,res){
 
 });
 
-app.post()
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
