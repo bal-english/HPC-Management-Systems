@@ -182,6 +182,26 @@ const getBlogs = (req, res) => {
 	})
 }
 
+const getBlogById = (req, res) => {
+	const blog_id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"blog\" WHERE id=$1', [blog_id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows[0])
+	})
+}
+
+const getBlogsByAuthorId = (req, res) => {
+	const auth_id = parseInt(req.params.id);
+	pool.query('SELECT * FROM \"blog\" WHERE author=$1', [auth_id], (error, results) => {
+		if(error) {
+			throw error;
+		}
+		res.status(200).json(results.rows)
+	})
+}
+
 const getBlogsAfterTime = (req, res) => {
 	const ts = req.params.date + " " + req.params.time;
 	pool.query('SELECT * FROM \"blog\" WHERE \"posttime\">=to_timestamp($1, \'yyyy-mm-dd hh24:mi:ss\') ORDER BY \"posttime\" DESC', [ts], (error, results) => {
@@ -357,7 +377,9 @@ module.exports = {
 	createBloggroup,
 	updateBloggroup,
 	updateUsergroup,
+	getBlogById,
 	getBlogs,
+	getBlogsByAuthorId,
 	getBlogsAfterTime,
 	getBlogsAfterBlogId,
 	getBlogsByGroupIdAfterTime,

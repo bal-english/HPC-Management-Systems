@@ -1,0 +1,18 @@
+<div class="container">
+	<div class="card" style="text-align:left">
+		<ul class="list-group list-group-flush">
+			<% blogs.forEach(function(blog) { %>
+				<li class="list-group-item">
+					<h4> <%= blog.title %> </h4>
+					<small> <%= blog.posttime %> </small> <br>
+					<% if (blog.body.length > 384) { %>
+						<%= blog.body.substring(0, 384) + "..." %>
+					<% } else { %>
+						<%= blog.body %>
+					<% } %>
+					<a href="/blog/<%= blog.id %>" class="stretched-link"></a>
+				</li>
+			<% }); %>
+		</ul>
+	</div>
+</div>

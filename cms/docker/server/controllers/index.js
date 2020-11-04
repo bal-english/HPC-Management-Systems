@@ -191,9 +191,9 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 
 //--- Grace middleware --- 
 
-app.get('/blog/create', function(req,res){
+/*app.get('/blog/create', function(req,res){
 
-});
+});*/
 
 app.get('/tt', function(req, res, next) {
 	(async () => {
@@ -244,6 +244,51 @@ app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async fun
 	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
 	id = email_query.id;
 	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
+});
+
+app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
+	const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email = payload.email;
+	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	id = email_query.id;
+	fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+});
+
+app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
+	/*const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email = payload.email;
+	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	id = email_query.id;
+	*/
+	fetch('http://10.0.0.233:3000/api/blog/' + req.params.id).then(qres => qres.json()).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
+	console.log(ticket_query);
+	if(id != ticket_query.creator) {
+		res.cookie('banner','error/unauthorized').set('cookie set');
+		res.redirect('/mytickets');
+	} else {
+		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+	}*/
 });
 
 app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {

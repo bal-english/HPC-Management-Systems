@@ -33,7 +33,9 @@ router.get('/groups/blog/:name([A-Za-z0-9]{0,}[A-Za-z]+[A-Za-z0-9]{0,})', db.get
 router.post('/groups/blog', db.createBloggroup)
 router.put('/groups/blog', db.updateBloggroup)
 
+router.get('/blog/:id([0-9]+)', db.getBlogById)
 router.get('/blogs', db.getBlogs)
+router.get('/blogs/by:id([0-9]+)', db.getBlogsByAuthorId)
 router.get('/blogs/:after([0-9]+)', db.getBlogsAfterBlogId)
 router.get('/blogs/:gid([0-9]+)/:date([0-9]{4}-[0-9]{2}-[0-9]{2})/:time([0-9]{2}[:][0-9]{2}[:][0-9]{2})', db.getBlogsByGroupIdAfterTime)
 router.get('/blogs/:gid([0-9]+)/:offset([0-9]+)', db.getBlogsByGroupIdOffsetBy)
