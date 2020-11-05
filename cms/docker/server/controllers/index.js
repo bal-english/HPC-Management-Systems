@@ -40,7 +40,7 @@ function validateBanner(req, res, next) {
 
 function clearBanner(req, res, next) {
 	res.cookie('banner', 'none').set('cookie set');
-	console.log(req.cookies);
+	//console.log(req.cookies);
 	next();
 }
 
@@ -65,7 +65,6 @@ async function revalidate_login(req, res, next) {
 		next();
 	}
 }
-
 //app.use('/auth', auth.router);
 
 app.use(cookieParser());
@@ -95,8 +94,13 @@ stdin.addListener("data", async function(d) {
 
 // TODO: Create a router for middleware separation
 app.get('/auth', async function(req, res) {
+	if(req.query.token !== undefined) {
+		t = req.query.token;
+	} else {
+		t = req.cookies.token;
+	}
+	const token = t;
 
-	const token = req.cookies.token
 	if(token === undefined) {
 		res.redirect('/');
 	} else {
@@ -108,9 +112,9 @@ app.get('/auth', async function(req, res) {
 			console.log(err);
 			res.cookie('banner','auth/failure_default').set('cookie set');
 			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+			return;
 		}
-		//res.cookie('token', token).set('cookie set');
+		res.cookie('token', token).set('cookie set');
 		res.cookie('banner','auth/user_login/success_default');
 		res.redirect('/');
 	}
