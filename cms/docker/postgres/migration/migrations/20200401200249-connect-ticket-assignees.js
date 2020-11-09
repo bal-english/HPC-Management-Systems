@@ -5,16 +5,16 @@ var type;
 var seed;
 
 /**
-  * We receive the dbmigrate dependency from dbmigrate initially.
-  * This enables us to not have to rely on NODE_PATH.
-  */
+	* We receive the dbmigrate dependency from dbmigrate initially.
+	* This enables us to not have to rely on NODE_PATH.
+	*/
 exports.setup = function(options, seedLink) {
 	dbm = options.dbmigrate;
 	type = dbm.dataType;
 	seed = seedLink;
 };
 
-exports.up = function(db, callback) {
+exports.up = function(db) {
 	db.createTable('ticket-user_assignee',
 	{
 		ticket_id: {
@@ -44,7 +44,7 @@ exports.up = function(db, callback) {
 			}
 		}
 	});
-	db.createTable('ticket-group_assignee',
+	return db.createTable('ticket-group_assignee',
 	{
 		ticket_id: {
 			type: 'int',
@@ -72,12 +72,12 @@ exports.up = function(db, callback) {
 				mapping: 'id'
 			}
 		}
-	}, callback);
+	});
 };
 
-exports.down = function(db, callback) {
+exports.down = function(db) {
 	db.dropTable('ticket-user_assignee');
-	db.dropTable('ticket-group_assignee', {}, callback);
+	return db.dropTable('ticket-group_assignee');
 };
 
 exports._meta = {

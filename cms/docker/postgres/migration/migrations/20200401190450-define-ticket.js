@@ -14,9 +14,9 @@ exports.setup = function(options, seedLink) {
 	seed = seedLink;
 };
 
-exports.up = function(db, callback) {
+exports.up = function(db) {
 	db.runSql("CREATE TYPE ticket_status AS ENUM ('Queued', 'Assigned', 'Working', 'Completed', 'Rejected')");
-	db.createTable('ticket',
+	return db.createTable('ticket',
 	{
 		id: {
 			type: 'int',
@@ -49,12 +49,12 @@ exports.up = function(db, callback) {
 			type: 'text',
 			notNull: 'true'
 		}
-	}, callback);
+	});
 };
 
-exports.down = function(db, callback) {
+exports.down = function(db) {
 	db.dropTable('ticket', {});
-	db.runSql("DROP TYPE ticket_status", [], callback);
+	return db.runSql("DROP TYPE ticket_status", []);
 };
 
 exports._meta = {
