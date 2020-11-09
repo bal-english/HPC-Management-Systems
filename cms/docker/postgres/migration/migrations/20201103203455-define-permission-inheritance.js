@@ -47,7 +47,7 @@ exports.up = function(db) {
 };
 
 exports.down = function(db) {
-	db.dropTable('permission-inheritance');
+	return db.dropTable('permission-inheritance');
 };
 
 exports._meta = {
