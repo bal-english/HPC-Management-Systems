@@ -1,9 +1,9 @@
+<!DOCTYPE html>
 <html>
 
-<%- include ('../../templates/heading/htmlhead') -%>
-<%- include ('../../templates/heading/alertmanager') -%>
-<%- include ('../../templates/heading/standard_header') -%>
-<%- include ('../../templates/heading/nav') -%>
+<%- include ('../templates/heading/htmlhead') -%>
+<%- include ('../templates/heading/alertmanager') -%>
+<%- include ('../templates/heading/standard_header') -%>
 
 <br>
 <br>
@@ -45,7 +45,7 @@ jQuery(document).ready(function($){
 
     jQuery.ajax({
 
-      url: '/register',
+      url: '/email',
       type: 'POST',
       // dataType: 'json',
       contentType: 'application/json',
@@ -67,4 +67,4 @@ jQuery(document).ready(function($){
 
 </script>
 
-<%- include ('../../templates/footer') -%>
+<%- include ('../templates/footer') -%>

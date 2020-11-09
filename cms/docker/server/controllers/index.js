@@ -7,6 +7,8 @@ var api = require('./api/api.js');
 // var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
+var nodemailer = require('nodemailer');
+
 const paseto = require('paseto');
 const plman = require('./auth/payloadmanager.js');
 const {V2} = paseto;
@@ -92,6 +94,26 @@ stdin.addListener("data", async function(d) {
 	
 });
 
+//------------- email info here ----------------
+
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'hp000test@gmail.com',
+    pass: 'cosc426!2020'
+  }
+});
+
+transporter.sendMail(mailOptions, function(error, info){
+  if (error) {
+    console.log(error);
+  } else {
+    console.log('Email sent: ' + info.response);
+  }
+});
+
+//------------------------------------------------- 
+
 // TODO: Create a router for middleware separation
 app.get('/auth', async function(req, res) {
 	if(req.query.token !== undefined) {
@@ -129,29 +151,61 @@ app.get('/login', function(req, res){
 
 app.post('/login', function(req, res){
 	
-	// console.log(req.body); 	//req.body is JSON object 
 	console.log(req.body.email);
 
-	//G: 11/3 TODO: load '/' with user credentials
-	//G: redirect to auth information here @ Alex
-		//i.e. check if they have an account, if not:
-		//res.send(one of your new alerts? "No account!")
-		//res.redirect('/register')
+	//G: 11/9 res.render() send to home page with user creds
+	
+	//11/4: res.fetch(list of usr with req.body.email) <--- 11/9 : why? 
+
 	res.end();
 });
 
 app.get('/register', function(req, res){
 	res.render('pages/user_accounts/register');
 });
-app.post('/register', function(req, res){
-	//G 11/3 TODO: should check if user has an account already -- auth @ Alex
-		//if so, res.send(new alert "User with account already made!")
-		//else
-		console.log("user\'s name: " + req.body.fname + req.body.lname);
-		console.log("user\'s SU email: " + req.body.email);
-		console.log("user\'s password: " + req.body.password);
 
-		res.redirect('/login');
+app.post('/register', function(req, res){
+
+	//check users for validation
+	var email = await fetch('http://localhost:3000/api/user/email/' + req.query.email).then(qres => qres.json());
+
+	//if email is not in db, will return empty array
+	if email == {}:
+		x = await plman.tokenize(plman.construct(req.query.email, "reg_auth", 1440, []),key);
+		console.log(x);
+
+		var mailOptions = {
+		  from: 'hp000test@gmail.com',
+		  to: req.query.email,
+		  subject: 'HPCL Register Authenication',
+		  text: 'http://localhost:3000/regauth?token=' + x //where x is the new user's token
+		};
+
+		//send email via library system
+
+	else:
+		//banner 'user already in system' pop up here
+});
+
+app.get('/blog/create', [revalidate_login], function(req, res) {
+	res.render('pages/createblog');
+});
+
+app.post('/blog/create', function(req, res){
+
+	var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
+	//or just redirect to //tt ^^ [revalidate_login should do this on .get]
+
+	console.log(req.body.title);
+	console.log(req.body.category);
+	console.log(req.body.blog_content);
+
+	//createBlog api function here
+	//'/blogs'?
+
+	res.redirect('/');
+	res.end();
+
 });
 
 app.get('/b', [revalidate_login], function(req, res) {
@@ -193,14 +247,6 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	}
 }*/
 
-//--- Grace middleware --- 
-
-/*app.get('/blog/create', function(req,res){
-
-});*/
-
-
-
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
@@ -239,6 +285,23 @@ app.get('/cc', function(req, res) {
 	res.render('pages/home');
 });
 
+// grace middleware 
+
+app.get('/ticket/create', [revalidate_login], function(req, res) {
+
+	res.render('pages/ticketcreation');
+});
+
+app.post('/ticket/create',  function(req, res){
+
+	//retrieve user credentials?
+
+	console.log(req.body.ticket_info);
+
+	//send to postgres
+
+	res.end();
+});
 
 app.get('/tickets', [revalidate_login], function(req, res) {
 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
@@ -331,13 +394,6 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	} else {
 		res.render('pages/tickets/singleticket', {ticket: ticket_query});
 	}
-});
-
-//G: TODO 11/3: display tickets page for categories (using admin main page prolly)
-app.get('/admin/ticket/:categoryName', [revalidate_login], function(req, res){
-	
-	fetch('http://localhost:3000/api/ticket/:categoryName').then(qres => qres.json()).then(qres => res.render('pages/??', {tickets: qres}));
-
 });
 
 app.get('/admin', [revalidate_login], function(req, res){

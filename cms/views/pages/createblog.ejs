@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<%- include ('../templates/heading/htmlhead') -%>
+<%- include ('../templates/heading/alertmanager') -%>
+<%- include ('../templates/heading/standard_header') -%>
+
+<br>
+<br>
+
+<body>
+
+ <div class = "container">
+  <div class = "content">
+    
+  <div class = "card">
+	  <div class = "bg-light border-bottom-1 card-header">
+	      <h3 class = "card-title"> Create a Blog </h3> 
+	  </div>
+	      <br>
+
+	      <label for="title"> Title </label>
+	      <input id="title"> </input>
+	      <label for="category"> Category </label>
+	      <input id="category"> </input>
+	      <label for="blog_content"> </label>
+	      <textarea id="blog_content" rows="4" cols="50">
+	      	Blog content here
+	      </textarea>
+	      <br>
+	      <button id="submit" value="accept">Submit</button>
+  </div>
+
+</div>
+</div>
+ 
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+<script>
+jQuery(document).ready(function($){ 
+
+  jQuery('#submit').click(function() {
+
+    var blog = {
+        title: jQuery('#title').val(),
+        category: jQuery('#category').val(),
+        blog_content: jQuery('#blog_content').val()
+      }
+
+    console.log(blog);
+
+    jQuery.ajax({
+
+      url: '/login',
+      type: 'POST',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(blog),
+      success: function(data) {
+        console.log(data);
+        console.log('POST success');
+      },
+      error: function(req, err) {
+        console.log('POST error');
+      }
+
+    });
+
+  })
+
+});
+
+</script>
+
+<%- include ('../templates/footer') -%>

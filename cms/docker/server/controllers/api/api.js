@@ -22,8 +22,8 @@ router.get('/user/email/:email'/*:local/:domain'*/, db_exis.checkUserExistsByEma
 
 router.get('/users', db.getUsers)
 router.get('/users/:id([0-9]+)', db.getUserById)
-router.get('/users/:min([0-9]+)/:max([0-9]+)', db.getUsersById);
-router.get('/users/l:min([0-9]+)u:max([0-9]+)', db.getUsersById);
+router.get('/users/:min([0-9]+)/:max([0-9]+)', db.getUsersById)
+router.get('/users/l:min([0-9]+)u:max([0-9]+)', db.getUsersById)
 router.post('/users', db.createUser)
 router.put('/users/:id([0-9]+)', db.updateUser)
 router.delete('/users/:id([0-9]+)', db.deleteUser)
