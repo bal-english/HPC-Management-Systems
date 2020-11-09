@@ -187,6 +187,39 @@ app.post('/register', function(req, res){
 		//banner 'user already in system' pop up here
 });
 
+/*
+app.get('/regauth', async function(req, res) {
+	if(req.query.token !== undefined) {
+		t = req.query.token;
+	} else {
+		t = req.cookies.token;
+	}
+	const token = t;
+
+	if(token === undefined) {
+		res.redirect('/');
+	} else {
+		var key = await app.get('key');
+		try {
+			payload = await plman.validate(token, key);
+			console.log(payload);
+		} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/failure_default').set('cookie set');
+			res.redirect('/');
+			return;
+		}
+		
+		if(payload.type == "reg_auth") {
+			res.cookie('token', token).set('cookie set');
+			
+			res.cookie('banner','auth/user_login/success_default');
+		}
+		res.redirect('/');
+	}
+});
+*/
+
 app.get('/blog/create', [revalidate_login], function(req, res) {
 	res.render('pages/createblog');
 });

@@ -22,15 +22,14 @@ exports.up = function(db, callback) {
 	db.insert('permission', ['id', 'name'], [4, 'ticket.assign']);
 	db.insert('permission', ['id', 'name'], [5, 'ticket.process.self']);
 	db.insert('permission', ['id', 'name'], [6, 'ticket.process.others']);
-	db.insert('permission', ['id', 'name'], [7, 'ticket.manage']);
-	db.insert('permission', ['id', 'name'], [8, 'content.create']);
-	db.insert('permission', ['id', 'name'], [9, 'content.edit.self']);
-	db.insert('permission', ['id', 'name'], [10, 'content.edit.others']);	
-	db.insert('permission', ['id', 'name'], [11, 'content.hide.self']);
-	db.insert('permission', ['id', 'name'], [12, 'content.hide.others']);
-	db.insert('permission', ['id', 'name'], [13, 'content.manage']);
-	db.insert('permission', ['id', 'name'], [14, 'user.hide.self']);
-	return db.insert('permission', ['id', 'name'], [15, 'user.hide.others']);
+	db.insert('permission', ['id', 'name'], [7, 'content.create']);
+	db.insert('permission', ['id', 'name'], [8, 'content.edit.self']);
+	db.insert('permission', ['id', 'name'], [9, 'content.edit.others']);
+	db.insert('permission', ['id', 'name'], [10, 'content.publish.self']);
+	db.insert('permission', ['id', 'name'], [11, 'content.publish.others']);
+	db.insert('permission', ['id', 'name'], [12, 'content.hide']);
+	db.insert('permission', ['id', 'name'], [13, 'user.deactivate.self']);
+	return db.insert('permission', ['id', 'name'], [14, 'user.deactivate.others']);
 };
 
 exports.down = function(db, callback) {
