@@ -199,6 +199,8 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 
 });*/
 
+
+
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
@@ -218,6 +220,17 @@ app.get('/tt2', function(req, res, next) {
 		console.log(x);
 		res.cookie('token', x).set('cookie set');
 		res.redirect('/auth');
+	})()
+});
+
+app.get('/tt3', function(req, res, next) {
+	(async () => {
+		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var key = await app.get('key');
+		x = x = await plman.tokenize(plman.construct("rcquackenbush@salisbury.edu", "login_auth", 1440, []),key);
+		console.log(x);
+		res.cookie('token', x).set('cookie set');
+		res.redirect('auth');
 	})()
 });
 

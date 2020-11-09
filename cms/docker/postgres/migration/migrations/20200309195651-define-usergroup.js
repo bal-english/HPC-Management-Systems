@@ -23,7 +23,8 @@ exports.up = function(db, callback) {
       autoIncrement: true
     },
     name: {
-      type: 'text'
+		type: 'text',
+		unique: true
     }
   }, callback);
 };

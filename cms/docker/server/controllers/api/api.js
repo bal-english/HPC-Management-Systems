@@ -12,6 +12,12 @@ router.get('/', (req, res) => {
 	res.json({info: 'Node.js, Express, and Postgres API' });
 })
 
+router.get('/rel/u:user([0-9]+)/g:group([0-9]+)', db_exis.userInGroup);
+router.get('/rel/u:user([0-9]+)/p:perm([0-9]+)', db_exis.userHasPerm);
+router.get('/rel/g:group([0-9]+)/p:perm([0-9]+)', db_exis.usergroupHasPerm);
+router.get('/rel/u:user([0-9]+)/t:ticket([0-9]+)', db_exis.userIsAssignedTicket);
+router.get('/rel/g:group([0-9]+)/t:ticket([0-9]+)', db_exis.groupIsAssignedTicket);
+
 router.get('/user/email/:email'/*:local/:domain'*/, db_exis.checkUserExistsByEmail);
 
 router.get('/users', db.getUsers)
