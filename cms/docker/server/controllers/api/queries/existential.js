@@ -10,7 +10,7 @@ const checkUserExistsByEmail = (req, res) => {
 			throw error;
 		}
 		if(results.rows.length == 0) {
-			res.sendStatus(404)
+			res.status(404).json(results.rows);
 		} else if(results.rows.length == 1) {
 			res.status(200).json(results.rows[0])
 		} else {
