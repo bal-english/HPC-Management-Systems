@@ -36,7 +36,7 @@ exports.up = function(db) {
 };
 
 exports.down = function(db) {
-	return db.dropTable('hidden-user');
+	return db.dropTable('hidden-user', {"ifExists": true});
 };
 
 exports._meta = {
