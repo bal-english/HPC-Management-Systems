@@ -4,6 +4,7 @@ var express = require('express');
 var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
+//var api2 = require('./apinew/api.js');
 // var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
@@ -103,7 +104,7 @@ var transporter = nodemailer.createTransport({
     pass: 'cosc426!2020'
   }
 });
-
+/*
 transporter.sendMail(mailOptions, function(error, info){
   if (error) {
     console.log(error);
@@ -111,7 +112,7 @@ transporter.sendMail(mailOptions, function(error, info){
     console.log('Email sent: ' + info.response);
   }
 });
-
+*/
 //------------------------------------------------- 
 
 // TODO: Create a router for middleware separation
@@ -163,7 +164,7 @@ app.post('/login', function(req, res){
 app.get('/register', function(req, res){
 	res.render('pages/user_accounts/register');
 });
-
+/*
 app.post('/register', function(req, res){
 
 	//check users for validation
@@ -186,7 +187,7 @@ app.post('/register', function(req, res){
 	else:
 		//banner 'user already in system' pop up here
 });
-
+*/
 /*
 app.get('/regauth', async function(req, res) {
 	if(req.query.token !== undefined) {
@@ -224,7 +225,7 @@ app.get('/blog/create', [revalidate_login], function(req, res) {
 	res.render('pages/createblog');
 });
 
-app.post('/blog/create', function(req, res){
+app.post('/blog/create', async function(req, res){
 
 	var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
 	//or just redirect to //tt ^^ [revalidate_login should do this on .get]

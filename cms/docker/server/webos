@@ -8,8 +8,9 @@ WORKDIR /home/app/
 
 RUN npm update
 COPY controllers/package.json /home/app/controllers/package.json
-COPY controllers/package-lock.json /home/app/controllers/package-lock.json
+#COPY controllers/package-lock.json /home/app/controllers/package-lock.json
 
+RUN echo test
 WORKDIR /home/app/controllers/
 
 RUN npm install
