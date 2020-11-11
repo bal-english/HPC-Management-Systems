@@ -5,8 +5,9 @@ var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
 var db = api.db;
-var db_exis = api.db_exis;
-var db_quan = api.db_quan;
+//var db_datareq = api.db_datareq;
+//var db_exis = api.db_exis;
+//var db_quan = api.db_quan;
 // var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
@@ -88,13 +89,13 @@ stdin.addListener("data", async function(d) {
     console.log("input: " + input);
 
 	(async () => {
-		var data = db.getUserById(1);//await fetch('http://localhost:3000/api/user/1');
+		var data = db.datareq.getUserById(1);
 		var key = await app.get('key');
 		console.log(plman.tokenize(data, key));
 		x = await plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []);
 		console.log(x);
 	})()
-	
+
 });
 
 //------------- email info here ----------------
@@ -115,7 +116,7 @@ transporter.sendMail(mailOptions, function(error, info){
   }
 });
 */
-//------------------------------------------------- 
+//-------------------------------------------------
 
 // TODO: Create a router for middleware separation
 app.get('/auth', async function(req, res) {
@@ -153,12 +154,12 @@ app.get('/login', function(req, res){
 
 
 app.post('/login', function(req, res){
-	
+
 	console.log(req.body.email);
 
 	//G: 11/9 res.render() send to home page with user creds
-	
-	//11/4: res.fetch(list of usr with req.body.email) <--- 11/9 : why? 
+
+	//11/4: res.fetch(list of usr with req.body.email) <--- 11/9 : why?
 
 	res.end();
 });
@@ -212,10 +213,10 @@ app.get('/regauth', async function(req, res) {
 			res.redirect('/');
 			return;
 		}
-		
+
 		if(payload.type == "reg_auth") {
 			res.cookie('token', token).set('cookie set');
-			
+
 			res.cookie('banner','auth/user_login/success_default');
 		}
 		res.redirect('/');
@@ -230,7 +231,7 @@ app.get('/blog/create', [revalidate_login], function(req, res) {
 app.post('/blog/create', async function(req, res){
 
 	//var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
-	var user_list = await db.getUsers().then(results => results.rows);
+	var user_list = await db.datareq.getUsers().then(results => results.rows);
 	//or just redirect to //tt ^^ [revalidate_login should do this on .get]
 
 	console.log(req.body.title);
@@ -250,8 +251,7 @@ app.get('/b', [revalidate_login], function(req, res) {
 });
 app.get('/blogs', [revalidate_login], async function(req, res){
 	//this for blog gen from db
-	db.getBlogs().then(qres => qres.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
-	//fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
+	db.datareq.getBlogs().then(qres => qres.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
 });
 
 app.get('/blogs/:bg', [revalidate_login], function(req, res) {
@@ -267,7 +267,7 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	if(isNaN(origin)) {
 		origin = (p*def_blogs_per_page)
 	}
-	
+
 	group = req.params.bg;
 	numeric = true;
 	try {
@@ -275,19 +275,16 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	} catch(err) {
 		numeric = false;
 	}
-	
+
 	group_id = group;
 	if(!numeric) {
-		group_id = await db.getBloggroupByName(group).then(qres => qres.rows[0]).then(qres => parseInt(qres));
+		group_id = await db.datareq.getBloggroupByName(group).then(qres => qres.rows[0]).then(qres => parseInt(qres));
 	}
-	//group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
-	
-	//total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
-	total = await db_quan.getCountOfBlogsByGroupIdOffsetBy(group_id, 0).then(qres => parseInt(qres.rows[0]));
-	
+
+	total = await db.quan.getCountOfBlogsByGroupIdOffsetBy(group_id, 0).then(qres => parseInt(qres.rows[0]));
+
 	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
-	//fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
-	db.getBlogsByGroupIdOffsetBy(group_id, origin).then(results => results.rows).then(qres => res.render("pages/bloghome", {blogs: qres}));
+	db.datareq.getBlogsByGroupIdOffsetBy(group_id, origin).then(results => results.rows).then(qres => res.render("pages/bloghome", {blogs: qres}));
 });
 
 /*app.get('/b/:bg', function(req, res) {
@@ -299,7 +296,7 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 
 app.get('/tt', function(req, res, next) {
 	(async () => {
-		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.datareq.getUserById(1);
 		var key = await app.get('key');
 		x = await plman.tokenize(plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []),key);
 		console.log(x);
@@ -310,7 +307,7 @@ app.get('/tt', function(req, res, next) {
 
 app.get('/tt2', function(req, res, next) {
 	(async () => {
-		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.datareq.getUserById(1);
 		var key = await app.get('key');
 		x = "badtokentest"
 		console.log(x);
@@ -321,7 +318,7 @@ app.get('/tt2', function(req, res, next) {
 
 app.get('/tt3', function(req, res, next) {
 	(async () => {
-		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.datareq.getUserById(1);
 		var key = await app.get('key');
 		x = x = await plman.tokenize(plman.construct("rcquackenbush@salisbury.edu", "login_auth", 1440, []),key);
 		console.log(x);
@@ -335,7 +332,7 @@ app.get('/cc', function(req, res) {
 	res.render('pages/home');
 });
 
-// grace middleware 
+// grace middleware
 
 app.get('/ticket/create', [revalidate_login], function(req, res) {
 
@@ -354,8 +351,7 @@ app.post('/ticket/create',  function(req, res){
 });
 
 app.get('/tickets', [revalidate_login], function(req, res) {
-	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
-	db.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
+	db.datareq.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
 });
 
@@ -369,14 +365,12 @@ app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async fun
 			console.log(err);
 			res.cookie('banner','auth/invalid_default').set('cookie set');
 			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+			return;
 	}
 	email = payload.email;
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	//fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
-	db.getTicketsForUser(id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
+	db.datareq.getTicketsForUser(id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
 app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
@@ -391,11 +385,9 @@ app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async funct
 			res.redirect('/');
 			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
 	}
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	//fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
-	db.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+	db.datareq.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 });
 
 app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
@@ -414,9 +406,8 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
 	id = email_query.id;
 	*/
-	
-	//fetch('http://10.0.0.233:3000/api/blog/' + req.params.id).then(qres => qres.json()).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
-	db.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+
+	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
 	console.log(ticket_query);
 	if(id != ticket_query.creator) {
@@ -437,14 +428,12 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 			console.log(err);
 			res.cookie('banner','auth/invalid_default').set('cookie set');
 			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+			return;
 	}
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
 	console.log(id)
-	//ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
-	ticket_query = await db.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
+	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
 	console.log(ticket_query);
 	if(id != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized').set('cookie set');
