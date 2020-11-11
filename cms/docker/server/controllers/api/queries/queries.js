@@ -186,18 +186,11 @@ const groupBlog = (req, res) => {
 	})
 }
 */
-/*
-const createTicket = (req, res) => {
-	const { creator, title, body } = req.body;
 
-	pool.query('INSERT INTO \"ticket\" (\"lastName\", \"firstName\", \"email\", \"title\", \"body\") VALUES ($1, $2, $3, $4, $5) RETURNING \"id\"', [lastName, firstName, email, title, body], (error, results) => {
-		if(error) {
-			throw error;
-		}
-		res.status(201).send(`Ticket added with ID: ${results.rows[0].id}\n`);
-	})
+const createTicket = (email, title, body) => {
+	return pool.query('INSERT INTO \"ticket\" (\"creator\", \"title\", \"body\") VALUES ($1, $2, $3) RETURNING \"id\"', [email, title, body]);
 }
-*/
+
 
 const getTickets = () => {
 	return pool.query('SELECT * FROM \"ticket\"', []);
@@ -248,9 +241,9 @@ module.exports = {
 	getUsers,
 	getUserById,
 	getUsersById,
-	//createUser,
-	//updateUser,
-	//deleteUser,
+	// createUser,
+	// updateUser,
+	// deleteUser,
 	getBloggroups,
 	getBloggroupById,
 	getBloggroupByName,
@@ -269,9 +262,9 @@ module.exports = {
 	getBlogsByGroupIdAfterTime,
 	getBlogsByGroupIdOffsetBy,
 	//getBlogsByGroupIdOffsetBy_COUNT,
-	//createBlog,
+	// createBlog,
 	//groupBlog,
-	//createTicket,
+	createTicket,
 	getTickets,
 	getTicketsForUser,
 	getTicketById,

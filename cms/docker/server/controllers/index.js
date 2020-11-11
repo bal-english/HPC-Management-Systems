@@ -342,14 +342,33 @@ app.get('/ticket/create', [revalidate_login], function(req, res) {
 	res.render('pages/ticketcreation');
 });
 
-app.post('/ticket/create',  function(req, res){
+app.post('/ticket/create',  async function(req, res){
+	
+	  const token = req.cookies.token
+	  var key = await app.get('key');
+	  
+	  try {
+	    payload = await plman.validate(token, key);
+	    console.log(payload);
+	  } catch(err) {
+	      console.log(err);
+	      res.cookie('banner','auth/invalid_default').set('cookie set');
+	      res.redirect('/');
+	      return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	  }
+	  var email = payload.email;
+	  //email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	  var email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
+	  var user_id = email_query.id;
 
-	//retrieve user credentials?
+	var ticket_title = req.body.title;
+	var ticket_body = req.body.ticket_info;
+	console.log(ticket_title);
+	console.log(ticket_body);
+	
+	var ticket_id = db.createTicket(user_id, ticket_title, ticket_body);
 
-	console.log(req.body.ticket_info);
-
-	//send to postgres
-
+	res.redirect('/ticket/' + ticket_id); //redirect
 	res.end();
 });
 

@@ -3,75 +3,70 @@
 <%- include ('../templates/heading/htmlhead') -%>
 <%- include ('../templates/heading/alertmanager') -%>
 <%- include ('../templates/heading/standard_header') -%>
-<%- include ('../templates/nav') -%>
 
-  <br> <br>
-  
-<body class = "text-center bg-light">
-  <div class = "col">
-  <div class = "card" style="width:500px;">
-    <div class = "bg-light border-bottom-1 card-header" style="padding: 1rem 1rem">
-    <h5> Create a ticket below </h5>
-  </div>
+
+<br>
+<br>
+
+<body>
+
+ <div class = "container">
+  <div class = "content">
+
+ <div class = "card">
+    <div class = "bg-light border-bottom-1 card-header">
+        <h3 class = "card-title"> Create a Ticket </h3> 
+    </div>
     <br>
-    <form>
-      <br>
-<!--         <div class="form-group col-auto">
-          <input type = "text" class="form-control-sm" id="user-fname" placeholder="First name">
-        </div>
-        <div class="form-group col-auto">
-          <input type = "text"  class="form-control-sm" id="user-lname" placeholder="Last name">
-        </div> -->
-      <div class="form-group">
+    <br>
+        <label for="title"> Title </label>
+        <input id="title"> </input>
         <label for="ticket-info">Fill out your issue here</label>
         <textarea class="form-control-sm" id="ticket-info"></textarea>
-      </div>
 
-      <button type="submit" class="btn btn-primary">Submit</button>
-
-    </form>
+      <button id="submit" class="btn btn-primary">Submit</button>
  </div>
+
 </div>
-<br>
-<br>
-<br>
-    
+</div>
+
 </body>
 </html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script type = "text/javascript">
 
-jQuery(document).ready(function($){ 
+jQuery(document).ready(function($){
 
   jQuery('#submit').click(function() {
 
     var ticket = {
-        user: ,//user creds here
-        ticket-info: jQuery('#ticket-info').val()
+        // user: user_id, //G: we get user creds server side
+        title: jQuery('#title').val(),
+        ticket_info: jQuery('#ticket-info').val()
       }
-
-    console.log(blog);
 
     jQuery.ajax({
 
-      url: '/ticket/create',
-      type: 'POST',
-      // dataType: 'json',
-      contentType: 'application/json',
-      data: JSON.stringify(ticket),
-      success: function(data) {
-        console.log(data);
-        console.log('POST success');
-        //send
-      },
-      error: function(req, err) {
-        console.log('POST error');
-      }
+        url: '/ticket/create',
+        type: 'POST',
+        // dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(ticket),
+        success: function(data) {
+          console.log(data);
+          console.log('POST success');
+          //send
+        },
+        error: function(req, err) {
+          console.log('POST error');
+        }
 
       });
 
-    });
+    })
+
+});
 
 
 </script>
