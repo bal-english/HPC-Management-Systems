@@ -175,19 +175,6 @@ const getBlogsByGroupIdAfterTime = (g_id, ts) => {
 const getBlogsByGroupIdOffsetBy = (g_id, offset) => {
 	return pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC OFFSET $2 LIMIT 3', [g_id, offset]);
 }
-
-/*
-const getBlogsByGroupIdOffsetBy_COUNT = (req, res) => {
-	const offset = parseInt(req.params.offset);
-	const group_id = parseInt(req.params.gid);
-	pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC OFFSET $2) AS \"table\"' , [group_id, offset], (error, results) => {
-		if(error) {
-			throw error;
-		}
-		res.status(200).json(results.rows[0])
-	})
-}
-*/
 /*
 const groupBlog = (req, res) => {
 	const { blog_id, group_id } = req.body;

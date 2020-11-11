@@ -73,6 +73,13 @@ router.get('/count/tickets/user/:id', (req, res) => {
 	db_quan.getTicketCountOfUser(user_id).then(results => res.status(200).json(results.rows[0]));
 });
 
+router.get('/count/blogs/:gid([0-9]+)/:offset([0-9]+)', (req, res) => {
+	const offset = parseInt(req.params.offset);
+	const group_id = parseInt(req.params.gid);
+	db_quan.getCountOfBlogsByGroupIdOffsetBy(group_id, offset).then(results => res.status(200).json(results.rows[0]));
+});
+
+
 // TODO: Fix
 router.get('/exists/email/:email', (req, res) => {
 	const email = req.params.email;							// TODO: add format (regex) checking
@@ -244,8 +251,6 @@ router.get('/blogs/:gid([0-9]+)/:offset([0-9]+)', (req, res) => {
 	db.getBlogsByGroupIdOffsetBy(group_id, offset).then(results => res.status(200).json(results.rows));
 });
 
-//router.get('/count/blogs/:gid([0-9]+)/:offset([0-9]+)', db.getBlogsByGroupIdOffsetBy_COUNT)
-
 //router.post('/blogs', db.createBlog)
 
 //router.put('/blogs/group', db.groupBlog)
@@ -280,5 +285,8 @@ router.get('/permission/:id', (req, res) => {
 //router.post('/permission/:name', db.createPermission)
 
 module.exports = {
-	router
+	router,
+	db,
+	db_exis,
+	db_quan
 }

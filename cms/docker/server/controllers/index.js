@@ -4,7 +4,9 @@ var express = require('express');
 var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
-//var api2 = require('./apinew/api.js');
+var db = api.db;
+var db_exis = api.db_exis;
+var db_quan = api.db_quan;
 // var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
@@ -86,7 +88,7 @@ stdin.addListener("data", async function(d) {
     console.log("input: " + input);
 
 	(async () => {
-		var data = await fetch('http://localhost:3000/api/users/1');
+		var data = db.getUserById(1);//await fetch('http://localhost:3000/api/user/1');
 		var key = await app.get('key');
 		console.log(plman.tokenize(data, key));
 		x = await plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []);
@@ -227,7 +229,8 @@ app.get('/blog/create', [revalidate_login], function(req, res) {
 
 app.post('/blog/create', async function(req, res){
 
-	var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
+	//var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
+	var user_list = await db.getUsers().then(results => results.rows);
 	//or just redirect to //tt ^^ [revalidate_login should do this on .get]
 
 	console.log(req.body.title);
@@ -245,10 +248,10 @@ app.post('/blog/create', async function(req, res){
 app.get('/b', [revalidate_login], function(req, res) {
 	res.redirect('/blogs');
 });
-app.get('/blogs', [revalidate_login], function(req, res){
+app.get('/blogs', [revalidate_login], async function(req, res){
 	//this for blog gen from db
-	fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
-	//res.render('pages/newbloghome');
+	db.getBlogs().then(qres => qres.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
+	//fetch('http://localhost:3000/api/blogs').then(qres => qres.json()).then(qres => res.render('pages/bloghome', {blogs: qres}));
 });
 
 app.get('/blogs/:bg', [revalidate_login], function(req, res) {
@@ -266,12 +269,25 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 	}
 	
 	group = req.params.bg;
-	group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
+	numeric = true;
+	try {
+		group = parseInt(group);
+	} catch(err) {
+		numeric = false;
+	}
 	
-	total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
+	group_id = group;
+	if(!numeric) {
+		group_id = await db.getBloggroupByName(group).then(qres => qres.rows[0]).then(qres => parseInt(qres));
+	}
+	//group_id = await fetch('http://localhost:3000/api/groups/blog/' + group).then(qres => qres.json()).then(qres => parseInt(qres["id"]))
+	
+	//total = await fetch('http://localhost:3000/api/count/blogs/' + group_id + "/0").then(qres => qres.json()).then(qres => parseInt(qres["count"]));
+	total = await db_quan.getCountOfBlogsByGroupIdOffsetBy(group_id, 0).then(qres => parseInt(qres.rows[0]));
 	
 	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
-	fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
+	//fetch('http://localhost:3000/api/blogs/'+group_id+'/'+origin).then(qres => qres.json()).then(qres => res.render("pages/bloghome", {blogs: qres}));
+	db.getBlogsByGroupIdOffsetBy(group_id, origin).then(results => results.rows).then(qres => res.render("pages/bloghome", {blogs: qres}));
 });
 
 /*app.get('/b/:bg', function(req, res) {
@@ -283,7 +299,7 @@ app.get('/b/:bg', [revalidate_login], async function (req, res) {
 
 app.get('/tt', function(req, res, next) {
 	(async () => {
-		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
 		var key = await app.get('key');
 		x = await plman.tokenize(plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []),key);
 		console.log(x);
@@ -294,7 +310,7 @@ app.get('/tt', function(req, res, next) {
 
 app.get('/tt2', function(req, res, next) {
 	(async () => {
-		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
 		var key = await app.get('key');
 		x = "badtokentest"
 		console.log(x);
@@ -305,7 +321,7 @@ app.get('/tt2', function(req, res, next) {
 
 app.get('/tt3', function(req, res, next) {
 	(async () => {
-		var data = await fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
+		var data = await db.getUserById(1);//fetch('http://localhost:3000/api/users/1').then(qres => qres.json());
 		var key = await app.get('key');
 		x = x = await plman.tokenize(plman.construct("rcquackenbush@salisbury.edu", "login_auth", 1440, []),key);
 		console.log(x);
@@ -338,7 +354,8 @@ app.post('/ticket/create',  function(req, res){
 });
 
 app.get('/tickets', [revalidate_login], function(req, res) {
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
+	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketlist', {tickets: qres}));
+	db.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
 });
 
@@ -355,9 +372,11 @@ app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async fun
 			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
 	}
 	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
+	//fetch('http://10.0.0.233:3000/api/tickets/user/' + 1).then(qres => qres.json()).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
+	db.getTicketsForUser(id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
 app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
@@ -372,10 +391,11 @@ app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async funct
 			res.redirect('/');
 			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
 	}
-	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+	//fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+	db.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 });
 
 app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
@@ -394,7 +414,9 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
 	id = email_query.id;
 	*/
-	fetch('http://10.0.0.233:3000/api/blog/' + req.params.id).then(qres => qres.json()).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+	
+	//fetch('http://10.0.0.233:3000/api/blog/' + req.params.id).then(qres => qres.json()).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+	db.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
 	console.log(ticket_query);
 	if(id != ticket_query.creator) {
@@ -417,10 +439,12 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 			res.redirect('/');
 			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
 	}
-	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
+	console.log(id)
+	//ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
+	ticket_query = await db.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
 	console.log(ticket_query);
 	if(id != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized').set('cookie set');
@@ -430,10 +454,12 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	}
 });
 
+/*
 app.get('/admin', [revalidate_login], function(req, res){
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
+	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
 });
-
+*/
+/*
 app.get('/admin/tickets', [revalidate_login], async function(req, res){
 	var x = await fetch('http://localhost:3000/api/tickets');
 	var y = await fetch('http://localhost:3000/api/users');
@@ -446,23 +472,26 @@ app.get('/admin/tickets', [revalidate_login], async function(req, res){
 
 	res.render('pages/adminhome', {tickets: x, users: y})
 });
-
+*/
+/*
 app.get('/admin/tickets/:id', [revalidate_login], function(req, res){
 	id = req.params.id;
 	console.log(id);
 	fetch('http://localhost:3000/api/ticket/' + id).then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {ticket: qres}));
 });
-
-// app.get('/ticket/create', function(req, res){
-// 	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
-// });
-
+*/
+/*
+app.get('/ticket/create', function(req, res){
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
+});
+*/
+/*
 app.get('/admin/users/:id', [revalidate_login], function(req, res){
 	id = req.params.id;
 	console.log(id);
 	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
 });
-
+*/
 
 //app.use('/', validateBanner);
 
