@@ -2,14 +2,14 @@
 var express = require('express');
 var router = express.Router();
 
-const objective = require('./queries/queries');
+const objective = require('./queries/objective');
 const existential = require('./queries/existential');
 const quantitative = require('./queries/quantitative');
 
 var db = {
-	'datareq': db_datareq,
-	'exis': db_exis,
-	'quan': db_quan
+	'datareq': objective,
+	'exis': existential,
+	'quan': quantitative
 };
 
 router.get('/', (req, res) => {
