@@ -49,6 +49,14 @@ const getBlogsByGroupId = (g_id) => {
 	return pool.query('SELECT * FROM \"blog\" WHERE \"group\" = $1', [g_id]);
 }
 
+const getBlogsOffsetBy = (offset) => {
+	return pool.query('SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC OFFSET $1', [offset])
+}
+
+const getBlogsSubset = (offset, limit) => {
+	return pool.query('SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit])
+}
+
 const getBlogsByGroupIdAfterTime = (g_id, ts) => {
 	return pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 AND \"posttime\">to_timestamp($2, \'yyyy-mm-dd hh24:mi:ss\') ORDER BY \"posttime\" DESC' , [group_id, ts]);
 }
@@ -88,6 +96,8 @@ module.exports = {
 	getUsergroupById,
 	getBlogById,
 	getBlogs,
+	getBlogsOffsetBy,
+	getBlogsSubset,
 	getBlogsByAuthorId,
 	getBlogsByGroupId,
 	getBlogsByGroupIdAfterTime,

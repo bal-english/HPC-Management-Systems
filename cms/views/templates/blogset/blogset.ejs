@@ -1,4 +1,10 @@
-<div class = "container">
+<div class="container">
+	<ul class="pagination">
+		<li class="page-item"><a class="page-link" href="<% if(parseInt(currpage) == parseInt(0)) {%> <%= redirect + "?page=0" %> <%} else {%> <%= redirect + "?page=" + parseInt(currpage-1) %> <% } %>">&lt</a></li>
+		<li class="page-item"><a class="page-link" href="<% if(parseInt(currpage) == parseInt(pagecnt)) {%> <%= redirect + "?page=" + parseInt(pagecnt) %> <%} else {%> <%= redirect + "?page=" + parseInt(currpage+1) %> <% } %>">&gt</a></li>
+	</ul>
+</div>
+<div class="container">
 	<% blogs.forEach(function(blog){ %>
 		<tr>
 			<%- include('singleblog', {blog: blog}); %>

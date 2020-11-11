@@ -25,9 +25,10 @@ var bodyParser = require('body-parser');
 
 console.log(V2);
 
-app.set('views', '../views')
+app.set('views', '../views');
 app.set('view engine','ejs');
 
+app.set('pagination', {'blog_def': 6,'ticket_def': 8});
 
 app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
@@ -246,19 +247,89 @@ app.post('/blog/create', async function(req, res){
 
 });
 
+app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
+	const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+	id = email_query.id;
+	db.datareq.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+});
+
+app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
+	/*const token = req.cookies.token
+	var key = await app.get('key');
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+			console.log(err);
+			res.cookie('banner','auth/invalid_default').set('cookie set');
+			res.redirect('/');
+			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	}
+	email = payload.email;
+	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	id = email_query.id;
+	*/
+
+	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
+	console.log(ticket_query);
+	if(id != ticket_query.creator) {
+		res.cookie('banner','error/unauthorized').set('cookie set');
+		res.redirect('/mytickets');
+	} else {
+		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+	}*/
+});
+
 app.get('/b', [revalidate_login], function(req, res) {
 	res.redirect('/blogs');
-});
-app.get('/blogs', [revalidate_login], async function(req, res){
-	//this for blog gen from db
-	db.datareq.getBlogs().then(qres => qres.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
 });
 
 app.get('/blogs/:bg', [revalidate_login], function(req, res) {
 	res.redirect('/b/' + req.params.bg);
 });
 
-app.get('/b/:bg', [revalidate_login], async function (req, res) {
+async function blog_pagination_check(req, res, next) {
+	if(req.query.page === undefined) {
+		req.query.page = 0;
+	} else {
+		req.query.page = parseInt(req.query.page);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.view === undefined) {
+		req.query.view = app.get('pagination').blog_def;
+	} else {
+		req.query.view = parseInt(req.query.view);	// TODO: Add error handling for NaN and #<1
+	}
+	next();
+}
+
+app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req, res){
+	//this for blog gen from db
+
+	res.locals.total = db.quan.getCountOfBlogs().then(qres => qres.rows[0].count);
+	res.locals.pagecnt = res.locals.total/req.query.view;
+	if(res.locals.total % req.query.view != 0) {
+		res.locals.pagecnt = res.locals.pagecnt+1
+	}
+	res.locals.currpage = req.query.page;
+	res.locals.stdview = (req.query.view == app.get('pagination').blog_def)
+	res.locals.redirect = req.path
+	offset = req.query.page*req.query.view;
+	db.datareq.getBlogsSubset(offset, req.query.view).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
+});
+
+app.get('/b/:bg', [revalidate_login, blog_pagination_check], async function (req, res) {
 	p = parseInt(req.query.page)
 	if(isNaN(p)) {
 		p = 0;
@@ -373,50 +444,6 @@ app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async fun
 	db.datareq.getTicketsForUser(id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
-app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
-	const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-	}
-	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
-	id = email_query.id;
-	db.datareq.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
-});
-
-app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
-	/*const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-	}
-	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	id = email_query.id;
-	*/
-
-	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
-	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
-	console.log(ticket_query);
-	if(id != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized').set('cookie set');
-		res.redirect('/mytickets');
-	} else {
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
-	}*/
-});
 
 app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	const token = req.cookies.token
