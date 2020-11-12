@@ -227,11 +227,43 @@ router.get('/permissions', (req, res) => {
 	db.datareq.getPermissions().then(results => res.status(200).json(results.rows));
 });
 
-router.get('/permission/:id', (req, res) => {
+router.get('/permission/:id([0-9]+)', (req, res) => {
 	const perm_id = parseInt(req.params.id);
 	db.datareq.getPermissionById(perm_id).then(results => res.status(200).json(results.rows));
 });
 
+let addperms = async function(permset, results) {
+	//perm_set = new Set();
+	results.forEach(element => {
+		permset.add(element.perm_id);
+	})
+	return permset;
+}
+
+router.get('/groupsof/:id([0-9]+)', async (req, res) => {
+	const user_id = parseInt(req.params.id);
+	db.datareq.getUsergroupsOfUser(user_id).then(results => res.status(200).json(results.rows))
+})
+
+router.get('/permset/user/:id([0-9]+)', async (req, res) => {
+	const user_id = parseInt(req.params.id);
+	db.datareq.getPermissionsOfUser(user_id).then(results => addperms(new Set(), results.rows)).then(async permset => {
+		if(req.query.full == 'true' || req.query.full == 'True' || req.query.full == "TRUE") {
+			permset = await db.datareq.getUsergroupsOfUser(user_id).then(results => results.rows).then(async results => {
+				for (const element of results) {
+					await addperms(permset, await db.datareq.getPermissionsOfUsergroup(element.group_id).then(results2 => results2.rows));
+				}
+				return permset
+			})
+		}
+		return permset;
+	}).then(permset => res.status(200).json(Array.from(permset)));
+});
+
+router.get('/permset/group/:id([0-9]+)', (req, res) => {
+	const group_id = parseInt(req.params.id);
+	db.datareq.getPermissionsOfUsergroup(group_id).then(results => addperms(new Set(), results.rows)).then(permset => res.status(200).json(Array.from(permset)));
+})
 //router.patch('/permission/:id/:name', db.updatePermission)
 
 //router.post('/permission/:name', db.createPermission)

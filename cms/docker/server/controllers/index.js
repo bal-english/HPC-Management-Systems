@@ -23,8 +23,6 @@ var bodyParser = require('body-parser');
 	app.set('key', key);
 })()
 
-console.log(V2);
-
 app.set('views', '../views');
 app.set('view engine','ejs');
 
