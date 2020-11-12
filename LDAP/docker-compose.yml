@@ -42,12 +42,16 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_nodejs
     networks:
       - network1
+    environment:
+      AUTH_KEY: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSURDMTkzS2k2WjI0ZzlKNHA4akpuNlZkenVneTBwQWdSOTNHSjdId3d1elIKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
   homedirworker:
     image: cosc425/node:1.0.1
     hostname: "homedirworker"
     environment:
-      UMS_HOSTNAME: "node"
+      UMS_ADDRESS: "http://node:80"
+      UMS_HOSTNAME: "node:80"
       WORKER_EXTERNAL_ADDRESS: "homedirworker:8081"
+      AUTH_TOKEN: v2.public.eyJuYW1lIjoiYXV0aF90b2tlbiIsInB1cnBvc2UiOiJob21lZGlycXVldWUiLCJpYXQiOiIyMDIwLTExLTA5VDIxOjM4OjA0LjM5NVoifUOoEmbo3TWyyliTQ9UhiCu4UlBjh8z06tUrS-cVCjLXlvFPsIobK5K0AjCxPQIHCGuzFNEJ_h0JXyTrxYZSlQ4
     ports:
       - "8081:80"
     volumes:

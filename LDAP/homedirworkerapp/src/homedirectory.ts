@@ -2,13 +2,22 @@ const http = require('http');
 const fs = require('fs');
 const ncp = require('ncp').ncp;
 const path = require('path');
-import querystring from 'querystring';
 
-if(process.env.UMS_HOSTNAME === undefined || process.env.UMS_HOSTNAME === null)
+import { getRulesDirectories } from 'tslint/lib/configuration';
+// import * as httpm from 'typed-rest-client/HttpClient';
+import * as restm from 'typed-rest-client/RestClient';
+import { Token } from 'typescript';
+
+if(process.env.UMS_ADDRESS === undefined || process.env.UMS_ADDRESS === null)
 {
-    throw new Error("ERROR: UMS_HOSTNAME Environment variable is not set");
-
+    throw new Error("ERROR: UMS_ADDRESS Environment variable is not set");
 }
+if(process.env.AUTH_TOKEN === undefined || process.env.AUTH_TOKEN === null)
+{
+    throw new Error("ERROR: AUTH_TOKEN Environment variable is not set");
+}
+
+const restc: restm.RestClient = new restm.RestClient('homedirworker', process.env.UMS_ADDRESS);
 
 // Trampolined variant of recursive directory walk, assumes symlinks & etc. should be treated as files
 async function recursiveDirectoryWalk(filepath:string){
@@ -28,7 +37,7 @@ async function recursiveDirectoryWalk(filepath:string){
       const directoryContents = await fs.promises.readdir(currentDirectory);
       directories.push(currentDirectory);
       todo = todo.concat(directoryContents.map((x:string)=>{
-        return path.join(currentDirectory, x);
+      return path.join(currentDirectory, x);
       }));
     } else {
       files.push(todo.shift());
@@ -37,87 +46,94 @@ async function recursiveDirectoryWalk(filepath:string){
   return directories.concat(files);
 }
 
+interface TokenCarrier{
+  token: string;
+}
+
+interface UserInfo{
+  dn?: string;
+  uidNum?: number;
+  empty: boolean;
+}
+
+interface TokenCarrierUserInfoCombo{
+  token: string;
+  dn: string;
+  uidNum: number;
+  empty: boolean;
+}
+
+
+async function requestSessionToken():Promise<TokenCarrier>{
+
+  const tokenBuff = Buffer.from(process.env.AUTH_TOKEN, 'utf8');
+
+  const b:TokenCarrier = {
+    token: process.env.AUTH_TOKEN
+  } as TokenCarrier;
+  const restRes: restm.IRestResponse<TokenCarrier> = await restc.create<TokenCarrier>('/api/homeDirQueue/session/renew_token', b);
+  return restRes.result;
+
+}
+
 async function homeDirPolling(){
-    http.get({
-    hostname: process.env.UMS_HOSTNAME,
-    port: 80,
-    path: '/api/homeDirQueue/query',
-    agent: false
-    }, (res:any) => {
 
-        let output = '';
-        res.on("data", (d:any)=>{
-          output += d;
-        })
-        const testUsername = res;
+  const tc = await requestSessionToken();
+  if(tc === null || tc === undefined){
+    console.log("ERROR: Function 'requestSessionToken' returned a null token.");
+  } else {
+    console.log(tc);
+    const restRes: restm.IRestResponse<UserInfo> = await restc.create<UserInfo>('/api/homeDirQueue/query', tc);
+    if(restRes.result.dn !== undefined){
+      console.log(restRes.result, restRes.result.dn);
 
+      let uid = restRes.result.dn.split(',')[0];
+      uid = uid.split('=')[1];
+      const filepath = "/mnt/home/" + uid;
+      ncp("/mnt/skel", filepath, async (err:any)=>{
+        if(err){
+          console.log("ERROR: Tried to copy home directory but something went wrong");
+          console.log(err);
+        } else {
 
-        res.on('end', () => {
-
-          const object = JSON.parse(output);
-          if(object.empty === undefined || object.empty === true || object.empty === null){
-            return;
+          try {
+            const files = await recursiveDirectoryWalk(filepath);
+            await Promise.all(files.map((x:string)=>{
+              return fs.promises.chown(x, Number(restRes.result.uidNum), 100);
+            }));
+          } catch (err){
+            console.log("ERROR: Tried to change file ownership " + err);
           }
 
-          let uid = object.dn.split(',');
-          uid = uid[0].split('=')[1];
-          const filepath = "/mnt/home/" + uid;
-          ncp("/mnt/skel", filepath, async (err:any)=>{
-            if(err){
-              console.log("ERROR: Tried to copy home directory but something went wrong");
-              console.log(err);
-            } else {
 
-              const postData = JSON.stringify({
-                dn : object.dn
-              });
+          const d:TokenCarrierUserInfoCombo = {
+            token: tc.token,
+            dn: restRes.result.dn,
+            uidNum: restRes.result.uidNum,
+            empty: false
+          }
 
-              try {
-                const files = await recursiveDirectoryWalk(filepath);
-                await Promise.all(files.map((x:string)=>{
-                  return fs.promises.chown(x, Number(object.uidNum), 100);
-                }));
-              } catch (err){
-                console.log("ERROR: Tried to change file ownership " + err);
+          console.log(d)
+          const restRes1: restm.IRestResponse<TokenCarrierUserInfoCombo> = await restc.create<TokenCarrierUserInfoCombo>('/api/homeDirQueue/delete', d);
 
-              }
 
-              const options = {
-                host: process.env.UMS_HOSTNAME,
-                port: 80,
-                path: '/api/homeDirQueue/delete',
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Content-Length': postData.length
-                }
-              };
+
+        }
+      })
+    }
+  }
+}
+  /*
 
               const req:any = http.request(options, (res1:any)=> {
-                console.log('statusCode: ', res.statusCode);
-                console.log('headers: ', res.headers);
+                console.log('statusCode: ', res1.statusCode);
               })
               req.write(postData);
               req.end();
             }
-
           });
-
-
-
-
         });
-
-
-
-
     });
-
-}
-
-
+    */
 
 setInterval(homeDirPolling, 5000);
-
-
-// Do the rest of the worker stuff

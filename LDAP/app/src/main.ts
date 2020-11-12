@@ -5,7 +5,6 @@ import { reduce } from "bluebird";
 const ldap = require("ldapjs");
 const assert= require('assert');
 const Promises = require("bluebird");
-
 const { once, EventEmitter } = require('events');
 
 const client = ldap.createClient({
@@ -56,23 +55,7 @@ Group.createGroup("TravisScottBurger")
 })
 
 
-/*We left off...
-Group System account user does not save
-Monday fix so Billy and Ian stop sitting around
-*/
 
-// wrap nextgid in class\\
-
-/*For next time
-WednesdayProblem:
-step 1) NoSuchObject error on listGroups its dumb have fun for 2 hours and fifteen minutes Wednesday team
-step 2) Toss TypeScript in the garbage
-step 3) Ian is an imposter
-
-
-*/
-
-// TODO
 
 
 

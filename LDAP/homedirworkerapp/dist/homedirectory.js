@@ -1,12 +1,25 @@
 "use strict";
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const http = require('http');
 const fs = require('fs');
 const ncp = require('ncp').ncp;
 const path = require('path');
-if (process.env.UMS_HOSTNAME === undefined || process.env.UMS_HOSTNAME === null) {
-    throw new Error("ERROR: UMS_HOSTNAME Environment variable is not set");
+// import * as httpm from 'typed-rest-client/HttpClient';
+const restm = __importStar(require("typed-rest-client/RestClient"));
+if (process.env.UMS_ADDRESS === undefined || process.env.UMS_ADDRESS === null) {
+    throw new Error("ERROR: UMS_ADDRESS Environment variable is not set");
 }
+if (process.env.AUTH_TOKEN === undefined || process.env.AUTH_TOKEN === null) {
+    throw new Error("ERROR: AUTH_TOKEN Environment variable is not set");
+}
+const restc = new restm.RestClient('homedirworker', process.env.UMS_ADDRESS);
 // Trampolined variant of recursive directory walk, assumes symlinks & etc. should be treated as files
 async function recursiveDirectoryWalk(filepath) {
     if (!path.isAbsolute(filepath)) {
@@ -31,25 +44,26 @@ async function recursiveDirectoryWalk(filepath) {
     }
     return directories.concat(files);
 }
+async function requestSessionToken() {
+    const tokenBuff = Buffer.from(process.env.AUTH_TOKEN, 'utf8');
+    const b = {
+        token: process.env.AUTH_TOKEN
+    };
+    const restRes = await restc.create('/api/homeDirQueue/session/renew_token', b);
+    return restRes.result;
+}
 async function homeDirPolling() {
-    http.get({
-        hostname: process.env.UMS_HOSTNAME,
-        port: 80,
-        path: '/api/homeDirQueue/query',
-        agent: false
-    }, (res) => {
-        let output = '';
-        res.on("data", (d) => {
-            output += d;
-        });
-        const testUsername = res;
-        res.on('end', () => {
-            const object = JSON.parse(output);
-            if (object.empty === undefined || object.empty === true || object.empty === null) {
-                return;
-            }
-            let uid = object.dn.split(',');
-            uid = uid[0].split('=')[1];
+    const tc = await requestSessionToken();
+    if (tc === null || tc === undefined) {
+        console.log("ERROR: Function 'requestSessionToken' returned a null token.");
+    }
+    else {
+        console.log(tc);
+        const restRes = await restc.create('/api/homeDirQueue/query', tc);
+        if (restRes.result.dn !== undefined) {
+            console.log(restRes.result, restRes.result.dn);
+            let uid = restRes.result.dn.split(',')[0];
+            uid = uid.split('=')[1];
             const filepath = "/mnt/home/" + uid;
             ncp("/mnt/skel", filepath, async (err) => {
                 if (err) {
@@ -57,40 +71,39 @@ async function homeDirPolling() {
                     console.log(err);
                 }
                 else {
-                    const postData = JSON.stringify({
-                        dn: object.dn
-                    });
                     try {
                         const files = await recursiveDirectoryWalk(filepath);
                         await Promise.all(files.map((x) => {
-                            return fs.promises.chown(x, Number(object.uidNum), 100);
+                            return fs.promises.chown(x, Number(restRes.result.uidNum), 100);
                         }));
                     }
                     catch (err) {
                         console.log("ERROR: Tried to change file ownership " + err);
                     }
-                    const options = {
-                        host: process.env.UMS_HOSTNAME,
-                        port: 80,
-                        path: '/api/homeDirQueue/delete',
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Content-Length': postData.length
-                        }
+                    const d = {
+                        token: tc.token,
+                        dn: restRes.result.dn,
+                        uidNum: restRes.result.uidNum,
+                        empty: false
                     };
-                    console.log("This is the options we are printing", options);
-                    const req = http.request(options, (res1) => {
-                        console.log('statusCode: ', res.statusCode);
-                        console.log('headers: ', res.headers);
-                    });
-                    req.write(postData);
-                    req.end();
+                    console.log(d);
+                    const restRes1 = await restc.create('/api/homeDirQueue/delete', d);
                 }
             });
-        });
-    });
+        }
+    }
 }
+/*
+
+            const req:any = http.request(options, (res1:any)=> {
+              console.log('statusCode: ', res1.statusCode);
+            })
+            req.write(postData);
+            req.end();
+          }
+        });
+      });
+  });
+  */
 setInterval(homeDirPolling, 5000);
-// Do the rest of the worker stuff
 //# sourceMappingURL=homedirectory.js.map
