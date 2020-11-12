@@ -4,7 +4,6 @@
 <%- include ('../templates/heading/alertmanager') -%>
 <%- include ('../templates/heading/standard_header') -%>
 
-
 <br>
 <br>
 
@@ -50,7 +49,6 @@ jQuery(document).ready(function($){
 
         url: '/ticket/create',
         type: 'POST',
-        // dataType: 'json',
         contentType: 'application/json',
         data: JSON.stringify(ticket),
         success: function(data) {
@@ -70,3 +68,4 @@ jQuery(document).ready(function($){
 
 
 </script>
+<%- include ('../templates/footer') -%>

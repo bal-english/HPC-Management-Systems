@@ -117,17 +117,11 @@ const updateUsergroup = (req, res) => {
 	})
 }
 */
-/*
-const createBlog = (req, res) => {
-	const { title, author, body } = req.body;
-	pool.query('INSERT INTO \"blog\" (\"title\", \"author\", \"body\") VALUES ($1, $2, $3)' [title, author, body], (error, results) => {
-		if(error) {
-			throw error;
-		}
-		res.status(201).send(`Blog created with ID: ${results.rows[0].id}\n`);
-	})
+
+const createBlog = (title, author, group, body) => {
+	return pool.query('INSERT INTO \"blog\" (\"title\", \"author\", \"group\", \"body\") VALUES ($1, $2, $3, $4)', [title, author, group, body]);
 }
-*/
+
 
 const getBlogs = () => {
 	return pool.query('SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC', []);
@@ -262,7 +256,7 @@ module.exports = {
 	getBlogsByGroupIdAfterTime,
 	getBlogsByGroupIdOffsetBy,
 	//getBlogsByGroupIdOffsetBy_COUNT,
-	// createBlog,
+	createBlog,
 	//groupBlog,
 	createTicket,
 	getTickets,

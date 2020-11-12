@@ -21,39 +21,35 @@
 
 	      <label for="title"> Title </label>
 	      <input id="title"> </input>
-	      <label for="category"> Category </label>
-	      <input id="category"> </input>
-	      <label for="blog_content"> </label>
-	      <textarea id="blog_content" rows="4" cols="50">
+	      <label for="blog_content"> Blog Content </label>
+	      <textarea id="blog_content" rows="2" cols="10">
 	      	Blog content here
 	      </textarea>
 	      <br>
-	      <button id="submit" value="accept">Submit</button>
+	      <button id="submit" class="btn btn-primary">Submit</button>
   </div>
 </div>
 </div>
  
 </body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script type = "text/javascript">
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
-<script>
 jQuery(document).ready(function($){ 
 
   jQuery('#submit').click(function() {
 
     var blog = {
         title: jQuery('#title').val(),
-        category: jQuery('#category').val(),
         blog_content: jQuery('#blog_content').val()
       }
 
-    console.log(blog);
-
     jQuery.ajax({
 
-      url: '/login',
+      url: '/blog/create',
       type: 'POST',
-      // dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(blog),
       success: function(data) {

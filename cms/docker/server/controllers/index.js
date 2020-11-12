@@ -229,18 +229,32 @@ app.get('/blog/create', [revalidate_login], function(req, res) {
 
 app.post('/blog/create', async function(req, res){
 
-	//var user_list = await fetch('http://localhost:3000/api/users').then(qres => qres.json());
-	var user_list = await db.getUsers().then(results => results.rows);
-	//or just redirect to //tt ^^ [revalidate_login should do this on .get]
+	  const token = req.cookies.token
+	  var key = await app.get('key');
+	  
+	  try {
+	    payload = await plman.validate(token, key);
+	    console.log(payload);
+	  } catch(err) {
+	      console.log(err);
+	      res.cookie('banner','auth/invalid_default').set('cookie set');
+	      res.redirect('/');
+	      return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+	  }
+	  var email = payload.email;
+	  //email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	  var email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
+	  var user_id = email_query.id;
 
+	var title = req.body.title;
+	var body = req.body.blog_content;
+	var group = 0;
 	console.log(req.body.title);
-	console.log(req.body.category);
 	console.log(req.body.blog_content);
 
-	//createBlog api function here
-	//'/blogs'?
+	var blog_id = db.createBlog(title, user_id, group, body);
 
-	res.redirect('/');
+	res.redirect('/blog/' + blog_id);
 	res.end();
 
 });
