@@ -1,6 +1,6 @@
 import * as LdapTypes from "./LdapTypes/index";
 import { UserGroups } from "./UserGroups";
-import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry } from 'ldapjs';
+import ldap, { NoSuchObjectError, InsufficientAccessRightsError, SearchEntry, LDAPMessage } from 'ldapjs';
 import { EventEmitter } from 'events'
 import { Group } from "./groups";
 const { once } = require('events');
@@ -31,7 +31,7 @@ export class User {
     isInDB: boolean;
 
 
-    static async createUserFromEmail(comName:string, email:string):Promise<User>
+    static async createUserFromEmail(comName:string, email:string, password:string):Promise<User>
     {
         const emailComponents:string[] = email.split("@",2);
         const dc:LdapTypes.LdapKeyValuePair[] = [
@@ -57,7 +57,7 @@ export class User {
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
 
-        const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword("wordpass");
+        const userPassword:LdapTypes.UserPassword = new LdapTypes.UserPassword(password);
         const loginShell:LdapTypes.LoginShell = new LdapTypes.LoginShell("/bin/bash");
         const inDBflag:boolean=false;
 
@@ -88,10 +88,12 @@ export class User {
             this.sn=sn;
             this.userPassword=userPassword;
             this.loginShell=loginShell;
+           // console.log("In const", this.userPassword);
     }
 
         async disableUser():Promise<User>{
             this.loginShell = new LdapTypes.LoginShell("/sbin/nologin");
+            this.userPassword = new LdapTypes.UserPassword("!!");
             return Promise.resolve(this);
         }
 
@@ -272,6 +274,7 @@ export class User {
         let loadedUid: LdapTypes.UserID;
         let loadedUidNum: LdapTypes.UserIDNumber; // MAYBE
         let loadedUserPassword: LdapTypes.UserPassword;
+        // console.log("In loaduser", loadedUserPassword)
         let loadedLoginShell: LdapTypes.LoginShell;
         const inDBflag: boolean = true;
 
@@ -309,7 +312,9 @@ export class User {
                 loadedUidNum = new LdapTypes.UserIDNumber(entry.object.uidNumber);
                 loadedHomeDir = new LdapTypes.HomeDirectory("/home/" + loadedUid.toString());
                 loadedSN = new LdapTypes.Surname(entry.object.sn);
-                loadedUserPassword = new LdapTypes.UserPassword("wordpass");
+                loadedUserPassword = new LdapTypes.UserPassword(entry.object.userPassword); // Shouldnt have password
+                // console.log("In searchOnce", loadedUserPassword)
+                // console.log("In searchOnce", entry.object.userPassword)
                 loadedLoginShell = new LdapTypes.LoginShell(entry.object.loginShell);
                 return Promise.resolve(new User(loadedDN,loadedCN,loadedGidNumber,loadedHomeDir,loadedObjClass,loadedUid,loadedUidNum,loadedSN,loadedUserPassword,loadedLoginShell,inDBflag));
             });
@@ -368,6 +373,18 @@ export class User {
             res.loginShell = new LdapTypes.LoginShell(loginShell);
             return res;
         });
+    }
+    public async getRoles(){
+        const roles:string[] = []
+        let group:UserGroups[]
+        let tempCN
+        group = await this.listGroups()
+        group.forEach(g => {
+            tempCN = g.getGroupDn().split(",")
+            tempCN = tempCN[0].split("=")[1];
+            roles.push(tempCN);
+        });
+        return roles;
     }
 
 

@@ -12,12 +12,12 @@ const client = ldap.createClient({
 });
 
 Promises.promisifyAll(client);
-
+console.log("In the main")
 
 Group.createGroup("TravisScottBurger")
 .then((res:Group)=>res.save())
 
-.then(()=>User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu"))
+.then(()=>User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu", "Test"))
 .then((res:User)=>res.save())
 .then((res:any)=>{
     res.listGroups();
