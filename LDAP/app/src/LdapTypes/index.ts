@@ -13,3 +13,6 @@ export { default as Surname } from "./Surname";
 export { default as UserID } from "./UserID";
 export { default as UserIDNumber } from "./UserIDNumber";
 export { default as UserPassword } from "./UserPassword";
+export { default as LoginShell } from "./LoginShell";
+export { default as MemberBag } from "./MemberBag";
+export { default as Member } from "./Member";

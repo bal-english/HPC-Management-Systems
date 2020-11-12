@@ -1,0 +1,3 @@
+[submodule "LDAP/homedirworkerapp/wait-for-it"]
+	path = LDAP/homedirworkerapp/wait-for-it
+	url = https://github.com/vishnubob/wait-for-it.git

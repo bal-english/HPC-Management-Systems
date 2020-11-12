@@ -4,10 +4,7 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start4": "node dist/homedirectory.js",
-    "start2": "node dist/users.js",
-    "start": "node dist/index.js",
-    "start3": "node --trace-warnings dist/main.js",
+    "start": "bash /app/wait-for-it/wait-for-it.sh $UMS_HOSTNAME && node dist/homedirectory.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -17,10 +14,11 @@
     "ejs": "^3.1.2",
     "express": "^4.17.1",
     "ldapjs": "^1.0.2",
+    "paseto": "^1.0.7",
     "tslint": "^6.0.0",
     "tsmonad": "^0.8.0",
-    "typescript": "^3.8.3",
-    "paseto": "^1.0.7"
+    "typed-rest-client": "^1.7.3",
+    "typescript": "^3.8.3"
   },
   "devDependencies": {
     "@types/ldapjs": "^1.0.7"
