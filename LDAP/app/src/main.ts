@@ -12,25 +12,11 @@ const client = ldap.createClient({
 });
 
 Promises.promisifyAll(client);
+console.log("In the main")
 
 Group.createGroup("TravisScottBurger")
 .then((res:Group)=>res.save())
 
-.then(()=>User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu"))
-.then((res:User)=> res.save())
-.then((res:User)=>{
-    UmsQueue.getQueue();
-    return res;
-})
-.then((res:User)=> UmsQueue.removeByDn(res))
-.then((res:User)=> UmsQueue.push(res))
-.then((res:User)=> UmsQueue.push(res))
-.then((res:User)=>{
-    UmsQueue.getQueue();
-    return res;
-})
-.then((res:User)=> UmsQueue.removeByDn(res))
-.then((res:User)=> UmsQueue.removeByDn(res))
 .then((res:any)=>{
     res.listGroups();
     return Promise.all([User.loadUser("uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu"),

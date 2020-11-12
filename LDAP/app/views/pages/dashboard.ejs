@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <style>
+    h1 {
+      text-align: center;
+    }
+  </style>
+
+</head>
+
+<body>
+  <h1>Hello Richard!</h1>
+  <div class="container">
+
+    <h2>Create User</h2>
+    <form>
+      <div class="row">
+        <label for="create_email">Enter the Email:</label></label>
+        <input id="create_email" class="form-control" type="text" placeholder="Enter the Email"></input>
+      </div>
+      <span style="display:block; height: 20px;"></span>
+      <div class="row">
+        <label for="create_cn">Enter the Common Name:</label></label>
+        <input id="create_cn" class="form-control" type="text" placeholder="Enter the Common Name"></input>
+      </div>
+      <span style="display:block; height: 20px;"></span>
+      <div class="row">
+        <label for="create_pw">Enter the Password:</label></label>
+        <input id="create_pw" class="form-control" type="password" placeholder="Enter the Password"></input>
+      </div>
+      <span style="display:block; height: 20px;"></span>
+    </form>
+
+    <button id="createuser" class="btn btn-primary" type="button">Create User</button>
+
+    <hr>
+    <span style="display:block; height: 20px;"></span>
+
+    <div id="test"></div>
+
+    <h2>Modify User</h2>
+    <div class="row">
+      <label for="modify_dn">Enter the Common Name:</label></label>
+      <input id="modify_dn" type="text" class="form-control" placeholder="Enter the Common Name"></input>
+    </div>
+    <span style="display:block; height: 20px;"></span>
+    <div class="row">
+      <label for="modify_password">Enter the Password:</label></label>
+      <input id="modify_password" type="password" class="form-control" placeholder="Enter the Password"></input>
+    </div>
+    <span style="display:block; height: 10px;"></span>
+    </form>
+    <p style="text-align: center; margin: 0 auto">
+      <button id="modifyuser" style="text-align: center;" class="btn btn-primary" type="button">Modify User</button>
+      <hr>
+      <span style="display:block; height: 20px;"></span>
+      <div id="test2"></div>
+
+      <h2>Delete User</h2>
+      <form>
+        <div class="row">
+          <div class="col">
+            <label for="delete_email">Enter the Email:</label></label>
+            <input id="delete_email" class="form-control" type="text" placeholder="Enter the Email"></input>
+          </div>
+          <div class="col"></div>
+        </div>
+      </form>
+
+      <span style="display:block; height: 20px;"></span>
+      <button id="deleteuser" class="btn btn-primary" type="button">Delete User</button>
+
+  </div>
+  <div>
+    <button id="logoutuser" class="btn btn-primary" type="button">Logout</button>
+  </div>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+  integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+  integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="/dashboard.js"></script>
+
+
+</html>

@@ -4,23 +4,22 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start4": "node dist/homedirectory.js",
-    "start2": "node dist/users.js",
     "start": "node dist/index.js",
-    "start3": "node --trace-warnings dist/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@types/bluebird": "^3.5.30",
     "@types/express": "^4.17.3",
     "bluebird": "^3.7.2",
+    "cookie-parser": "^1.4.5",
     "ejs": "^3.1.2",
     "express": "^4.17.1",
     "ldapjs": "^1.0.2",
+    "paseto": "^1.0.7",
     "tslint": "^6.0.0",
     "tsmonad": "^0.8.0",
     "typescript": "^3.8.3",
-    "paseto": "^1.0.7"
+    "validator": "^13.1.1"
   },
   "devDependencies": {
     "@types/ldapjs": "^1.0.7"

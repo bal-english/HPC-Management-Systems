@@ -7,3 +7,5 @@ node_modules/*
 .DS_Store
 LDAP/app/npm-debug.log
 node_modules/
+LDAP/node/TempCPtest/*
+.directory

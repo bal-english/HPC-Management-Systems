@@ -34,6 +34,9 @@ services:
       - network1
   node:
     image: cosc425/node:1.0.1
+    #environment:
+    #  public_key: testkey
+    #  private_key: testkey2
     hostname: "node"
     ports:
       - "8080:80"
