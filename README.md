@@ -48,3 +48,18 @@ Universal Systems:
 	- basically like making a ticket
 - [ ] (grace) editing of a user (admin side , **on individual user pages**)
 - [ ] (grace) editing of a blog (admin side, **on individual blog pages**)
+
+- email information https://pepipost.com/tutorials/how-to-send-email-with-node-js/
+
+var fromMail = 'hp000test@gmail.com';
+var toMail = '';
+var email_subject = 'HPCL Authentication Link';
+var email_text = 'Authentication link will go here';
+
+const transporter = nodemailer.createTransport({
+    server: 'gmail',
+    auth: {
+        user: fromMail,
+    	pass: 'cosc426!2020'
+  }
+});
