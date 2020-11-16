@@ -85,8 +85,20 @@ const validate = async (token, key) => {
 	return payload;
 }
 
+const authorityCheck = async(payload, perm_name) => {
+	if(payload.type == "reg_auth") {
+		throw "Not a valid token"
+	}
+
+	email_query = await db.exis.checkUserExistsByEmail(payload.email).then(results => results.rows[0]);	// TODO: Add error handling
+	user_id = email_query.id;
+	perm_query = await db.datareq.getPermissionByName(perm_name).then(results => results.rows[0]); // TODO: Add error handling
+	perm_id = perm_query.id;
+	return db.perm.userHasPerm(user_id, perm_id);
+}
 module.exports = {
 	construct,
 	tokenize,
-	validate
+	validate,
+	authorityCheck
 };

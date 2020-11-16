@@ -6,12 +6,14 @@ const objective = require('./queries/objective');
 const existential = require('./queries/existential');
 const quantitative = require('./queries/quantitative');
 const permissive = require('./queries/permissive');
+const creation = require('./queries/creation')
 
 var db = {
 	'datareq': objective,
 	'exis': existential,
 	'quan': quantitative,
-	'perm': permissive
+	'perm': permissive,
+	'create': creation
 };
 
 router.get('/', (req, res) => {

@@ -97,6 +97,9 @@ const getPermissionById = (p_id) => {
 	return pool.query('SELECT * FROM \"permission\" WHERE id = $1', [p_id]);
 }
 
+const getPermissionByName = (p_name) => {
+	return pool.query('SELECT * FROM \"permission\" WHERE name = $1', [p_name]);
+}
 const getPermissionsOfUser = (u_id) => {
 	return pool.query('SELECT * FROM \"user-permission\" WHERE user_id = $1', [u_id]);
 }
@@ -129,6 +132,7 @@ module.exports = {
 	getPermissions,
 	getPermissions_def,
 	getPermissionById,
+	getPermissionByName,
 	getUsergroupsOfUser,
 	getPermissionsOfUser,
 	getPermissionsOfUsergroup

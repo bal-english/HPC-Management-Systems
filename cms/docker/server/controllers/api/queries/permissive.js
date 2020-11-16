@@ -43,12 +43,20 @@ const getUserPermSet = async (user_id, full) => {
 		});
 }
 
+const userHasPerm = (user_id, perm_id) => {
+	const u_id = parseInt(user_id);		// TODO: Add error handling
+	const p_id = parseInt(perm_id);		// TODO: Add error handling
+
+	return getUserPermSet(u_id, true).then(ps => ps.has(p_id));
+}
+
 const getGroupPermSet = async (group_id) => {
 	return getPermissionsOfUsergroup(group_id).then(results => addperms_json(new Set(), results.rows)).then(permset => res.status(200).json(Array.from(permset)));
 }
 
 module.exports = {
 	union,
+	userHasPerm,
 	getUserPermSet,
 	getGroupPermSet
 }

@@ -5,9 +5,9 @@ var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
 var db = api.db;
-//var db_datareq = api.db_datareq;
-//var db_exis = api.db_exis;
-//var db_quan = api.db_quan;
+//var db.datareq = api.db.datareq;
+//var db.exis = api.db.exis;
+//var db.quan = api.db.quan;
 // var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
@@ -55,6 +55,7 @@ async function revalidate_login(req, res, next) {
 		next();
 	} else {
 		var key = await app.get('key');
+		payload = {};
 		try {
 			payload = await plman.validate(token, key);
 			console.log(payload);
@@ -67,10 +68,13 @@ async function revalidate_login(req, res, next) {
 		//res.cookie('banner','auth/user_login/success_default').set('cookie set');
 		//res.redirect('/');
 		res.locals.authed = true;
+		if(req.internal === undefined) {
+			req.internal = {};
+		}
+		req.internal.payload = payload;
 		next();
 	}
 }
-//app.use('/auth', auth.router);
 
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -85,7 +89,7 @@ var stdin = process.openStdin();
 
 stdin.addListener("data", async function(d) {
 	const input = d.toString().trim();
-    console.log("input: " + input);
+	console.log("input: " + input);
 
 	(async () => {
 		var data = db.datareq.getUserById(1);
@@ -100,19 +104,19 @@ stdin.addListener("data", async function(d) {
 //------------- email info here ----------------
 
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'hp000test@gmail.com',
-    pass: 'cosc426!2020'
-  }
+	service: 'gmail',
+	auth: {
+		user: 'hp000test@gmail.com',
+		pass: 'cosc426!2020'
+	}
 });
 /*
 transporter.sendMail(mailOptions, function(error, info){
-  if (error) {
-    console.log(error);
-  } else {
-    console.log('Email sent: ' + info.response);
-  }
+	if (error) {
+		console.log(error);
+	} else {
+		console.log('Email sent: ' + info.response);
+	}
 });
 */
 //-------------------------------------------------
@@ -174,10 +178,10 @@ app.post('/register', function(req, res){
 		console.log(x);
 
 		var mailOptions = {
-		  from: 'hp000test@gmail.com',
-		  to: req.query.email,
-		  subject: 'HPCL Register Authenication',
-		  text: 'http://localhost:3000/regauth?token=' + x //where x is the new user's token
+			from: 'hp000test@gmail.com',
+			to: req.query.email,
+			subject: 'HPCL Register Authenication',
+			text: 'http://localhost:3000/regauth?token=' + x //where x is the new user's token
 		};
 
 		//send email via library system
@@ -219,41 +223,43 @@ app.get('/regauth', async function(req, res) {
 });
 */
 
-app.get('/blog/create', [revalidate_login], function(req, res) {
-	res.render('pages/createblog');
+
+app.get('/blog/create', [revalidate_login], async function(req, res) {
+	const payload = req.internal.payload;
+
+	if((await plman.authorityCheck(payload, "content.create")) == true) {
+			res.render('pages/createblog');
+	} else {
+			res.cookie('banner','error/unauthorized_view').set('cookie set');
+			res.redirect('/');
+	}
 });
 
-app.post('/blog/create', async function(req, res){
+app.post('/blog/create', [revalidate_login], async function(req, res){
 
 
-	  const token = req.cookies.token
-	  var key = await app.get('key');
+	const payload = req.internal.payload;
+	if((await plman.authorityCheck(payload, "content.create")) == true) {
+			var email = payload.email;
+			//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+			var email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
+			var user_id = email_query.id;
 
-	  try {
-	    payload = await plman.validate(token, key);
-	    console.log(payload);
-	  } catch(err) {
-	      console.log(err);
-	      res.cookie('banner','auth/invalid_default').set('cookie set');
-	      res.redirect('/');
-	      return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-	  }
-	  var email = payload.email;
-	  //email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	  var email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
-	  var user_id = email_query.id;
+			var title = req.body.title;
+			var body = req.body.blog_content;
+			var group = 0;
 
-	var title = req.body.title;
-	var body = req.body.blog_content;
-	var group = 0;
+			console.log(req.body.title);
+			console.log(req.body.blog_content);
 
-	console.log(req.body.title);
-	console.log(req.body.blog_content);
+			var b_id = await db.create.blog(title, user_id, group, body).then(results => results.rows[0].id);
 
-	var blog_id = db.createBlog(title, user_id, group, body);
-
-	res.redirect('/blog/' + blog_id);
-	res.end();
+			res.redirect('/blog/' + b_id);
+			res.end();
+	} else {
+			res.cookie('banner','error/unauthorized_view').set('cookie set');
+			res.redirect('/');
+	}
 
 });
 
@@ -264,10 +270,10 @@ app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async funct
 		payload = await plman.validate(token, key);
 		console.log(payload);
 	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+		console.log(err);
+		res.cookie('banner','auth/invalid_default').set('cookie set');
+		res.redirect('/');
+		return;
 	}
 	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
@@ -284,7 +290,7 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 			console.log(err);
 			res.cookie('banner','auth/invalid_default').set('cookie set');
 			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
+			return;
 	}
 	email = payload.email;
 	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
@@ -295,7 +301,7 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
 	console.log(ticket_query);
 	if(id != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized').set('cookie set');
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	} else {
 		res.render('pages/tickets/singleticket', {ticket: ticket_query});
@@ -379,7 +385,7 @@ app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(1);
 		var key = await app.get('key');
-		x = await plman.tokenize(plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []),key);
+		x = await plman.tokenize(plman.construct("login_auth", "benglish4@gulls.salisbury.edu", 1440, []),key);
 		console.log(x);
 		res.cookie('token', x).set('cookie set');
 		res.redirect('/auth');
@@ -420,24 +426,24 @@ app.get('/ticket/create', [revalidate_login], function(req, res) {
 	res.render('pages/ticketcreation');
 });
 
-app.post('/ticket/create',  async function(req, res){
+app.post('/ticket/create', async function(req, res){
 
-	  const token = req.cookies.token
-	  var key = await app.get('key');
+	const token = req.cookies.token
+	var key = await app.get('key');
 
-	  try {
-	    payload = await plman.validate(token, key);
-	    console.log(payload);
-	  } catch(err) {
-	      console.log(err);
-	      res.cookie('banner','auth/invalid_default').set('cookie set');
-	      res.redirect('/');
-	      return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-	  }
-	  var email = payload.email;
-	  //email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	  var email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
-	  var user_id = email_query.id;
+	try {
+		payload = await plman.validate(token, key);
+		console.log(payload);
+	} catch(err) {
+		console.log(err);
+		res.cookie('banner','auth/invalid_default').set('cookie set');
+		res.redirect('/');
+		return;
+	}
+	var email = payload.email;
+	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+	var email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
+	var user_id = email_query.id;
 
 	var ticket_title = req.body.title;
 	var ticket_body = req.body.ticket_info;
@@ -486,7 +492,7 @@ app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async funct
 			return;
 	}
 	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
 	//fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 	db.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
@@ -517,7 +523,7 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
 	console.log(ticket_query);
 	if(user_id != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized').set('cookie set');
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	}
 	else {
@@ -578,3 +584,7 @@ app.get('/', [validateBanner, clearBanner, revalidate_login], function(req, res,
 app.listen(port, () => {
 	console.log(`App running on port ${port}`);
 });
+
+/*(async () => {
+console.log("Test: " + await db.perm.userHasPerm(1, 1));
+})();*/
