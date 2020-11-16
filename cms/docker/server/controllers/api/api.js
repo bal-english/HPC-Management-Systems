@@ -5,11 +5,13 @@ var router = express.Router();
 const objective = require('./queries/objective');
 const existential = require('./queries/existential');
 const quantitative = require('./queries/quantitative');
+const permissive = require('./queries/permissive');
 
 var db = {
 	'datareq': objective,
 	'exis': existential,
-	'quan': quantitative
+	'quan': quantitative,
+	'perm': permissive
 };
 
 router.get('/', (req, res) => {
@@ -144,8 +146,15 @@ router.get('/users/l:min([0-9]+)u:max([0-9]+)', (req, res) => {
 //router.delete('/users/:id([0-9]+)', db.deleteUser)
 
 router.get('/groups/user', (req, res) => {
-	db.datareq.getUsergroups().then(results => res.status(200).json(results.rows));
+	if(req.query.def == 'true' || req.query.def == 'True' || req.query.def == "TRUE") {
+		db.datareq.getUsergroups_def(true).then(results => res.status(200).json(results.rows));
+	} else if(req.query.def == 'false' || req.query.def == 'False' || req.query.def == "FALSE") {
+		db.datareq.getUsergroups_def(false).then(results => res.status(200).json(results.rows));
+	} else {
+		db.datareq.getUsergroups().then(results => res.status(200).json(results.rows));
+	}
 });
+
 router.get('/group/user/:id([0-9]+)', (req, res) => {
 	const id = parseInt(req.params.id);
 	db.datareq.getUsergroupById(id).then(results => res.status(200).json(results.rows[0]));
@@ -224,21 +233,19 @@ router.get('/ticket/:id([0-9]+)', (req, res) => {
 });
 
 router.get('/permissions', (req, res) => {
-	db.datareq.getPermissions().then(results => res.status(200).json(results.rows));
+	if(req.query.def == 'true' || req.query.def == 'True' || req.query.def == "TRUE") {
+		db.datareq.getPermissions_def(true).then(results => res.status(200).json(results.rows))
+	} else if(req.query.def == 'false' || req.query.def == 'False' || req.query.def == "FALSE") {
+		db.datareq.getPermissions_def(false).then(results => res.status(200).json(results.rows))
+	} else {
+		db.datareq.getPermissions().then(results => res.status(200).json(results.rows));
+	}
 });
 
 router.get('/permission/:id([0-9]+)', (req, res) => {
 	const perm_id = parseInt(req.params.id);
 	db.datareq.getPermissionById(perm_id).then(results => res.status(200).json(results.rows));
 });
-
-let addperms = async function(permset, results) {
-	//perm_set = new Set();
-	results.forEach(element => {
-		permset.add(element.perm_id);
-	})
-	return permset;
-}
 
 router.get('/groupsof/:id([0-9]+)', async (req, res) => {
 	const user_id = parseInt(req.params.id);
@@ -247,23 +254,15 @@ router.get('/groupsof/:id([0-9]+)', async (req, res) => {
 
 router.get('/permset/user/:id([0-9]+)', async (req, res) => {
 	const user_id = parseInt(req.params.id);
-	db.datareq.getPermissionsOfUser(user_id).then(results => addperms(new Set(), results.rows)).then(async permset => {
-		if(req.query.full == 'true' || req.query.full == 'True' || req.query.full == "TRUE") {
-			permset = await db.datareq.getUsergroupsOfUser(user_id).then(results => results.rows).then(async results => {
-				for (const element of results) {
-					await addperms(permset, await db.datareq.getPermissionsOfUsergroup(element.group_id).then(results2 => results2.rows));
-				}
-				return permset
-			})
-		}
-		return permset;
-	}).then(permset => res.status(200).json(Array.from(permset)));
+	db.perm.getUserPermSet(user_id, req.query.full).then(permset => res.status(200).json(Array.from(permset)));
 });
 
 router.get('/permset/group/:id([0-9]+)', (req, res) => {
 	const group_id = parseInt(req.params.id);
-	db.datareq.getPermissionsOfUsergroup(group_id).then(results => addperms(new Set(), results.rows)).then(permset => res.status(200).json(Array.from(permset)));
+	db.perm.getGroupPermSet(group_id).then(results => addperms(new Set(), results.rows)).then(permset => res.status(200).json(Array.from(permset)));
 })
+
+
 //router.patch('/permission/:id/:name', db.updatePermission)
 
 //router.post('/permission/:name', db.createPermission)

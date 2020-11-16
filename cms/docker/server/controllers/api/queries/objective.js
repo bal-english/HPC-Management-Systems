@@ -13,6 +13,10 @@ const getUsersById = (min, max) => {
 	return pool.query('SELECT * FROM \"user\" WHERE id >= $1 AND id <= $2', [min, max]);
 }
 
+const getUsergroupsOfUser = (u_id) => {
+	return pool.query('SELECT * FROM \"user-usergroup\" WHERE user_id = $1', [u_id]);
+}
+
 const getBloggroups = () => {
 	return pool.query('SELECT * FROM \"bloggroup\"', []);
 }
@@ -27,6 +31,10 @@ const getBloggroupByName = (name) => {
 
 const getUsergroups = () => {
 	return pool.query('SELECT * FROM \"usergroup\"', []);
+}
+
+const getUsergroups_def = (def) => {
+	return pool.query('SELECT * FROM \"usergroup\" WHERE def = $1', [def]);
 }
 
 const getUsergroupById = (u_id) => {
@@ -81,8 +89,20 @@ const getPermissions = () => {
 	return pool.query('SELECT * FROM \"permission\"', []);
 }
 
+const getPermissions_def = (def) => {
+	return pool.query('SELECT * FROM \"permission\" WHERE def = $1', [def]);
+}
+
 const getPermissionById = (p_id) => {
 	return pool.query('SELECT * FROM \"permission\" WHERE id = $1', [p_id]);
+}
+
+const getPermissionsOfUser = (u_id) => {
+	return pool.query('SELECT * FROM \"user-permission\" WHERE user_id = $1', [u_id]);
+}
+
+const getPermissionsOfUsergroup = async (g_id) => {
+	return pool.query('SELECT * FROM \"usergroup-permission\" WHERE group_id = $1', [g_id]);
 }
 
 module.exports = {
@@ -93,6 +113,7 @@ module.exports = {
 	getBloggroupById,
 	getBloggroupByName,
 	getUsergroups,
+	getUsergroups_def,
 	getUsergroupById,
 	getBlogById,
 	getBlogs,
@@ -106,5 +127,9 @@ module.exports = {
 	getTicketsForUser,
 	getTicketById,
 	getPermissions,
-	getPermissionById
+	getPermissions_def,
+	getPermissionById,
+	getUsergroupsOfUser,
+	getPermissionsOfUser,
+	getPermissionsOfUsergroup
 }
