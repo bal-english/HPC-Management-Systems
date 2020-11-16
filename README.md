@@ -43,12 +43,8 @@ Universal Systems:
 * EJS Templating - For populating and sending website content.
 * PASETO Authorization - For user authorization systems.
 
-### TODO List (11/4): 
-- [ ] (grace) blog creation page
-	- finish ejs page
-	- finish middleware routing
-	- sent to db
-- [ ] (grace) ticketing system
-	- ticketcreation.ejs (user)
-	- editing of a ticket (admin side, on individual ticket pages)
-- [ ] (alex) //add ur stuff here
+### TODO List (11/11): 
+- [ ] (grace) editing of a ticket (admin side, **on individual ticket pages**)
+	- basically like making a ticket
+- [ ] (grace) editing of a user (admin side , **on individual user pages**)
+- [ ] (grace) editing of a blog (admin side, **on individual blog pages**)
