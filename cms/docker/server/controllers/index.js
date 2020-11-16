@@ -145,8 +145,6 @@ app.get('/auth', async function(req, res) {
 	}
 });
 
-//--- Login & Register middleware  ---
-
 app.get('/login', function(req, res){
  	res.render('pages/user_accounts/login');
 });
@@ -156,9 +154,7 @@ app.post('/login', function(req, res){
 	
 	console.log(req.body.email);
 
-	//G: 11/9 res.render() send to home page with user creds
-	
-	//11/4: res.fetch(list of usr with req.body.email) <--- 11/9 : why? 
+	//G: 11/11 if logged in already --> redirect to home
 
 	res.end();
 });
@@ -432,32 +428,10 @@ app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async funct
 });
 
 app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
-	/*const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
-	}
-	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	id = email_query.id;
-	*/
 	
-	//fetch('http://10.0.0.233:3000/api/blog/' + req.params.id).then(qres => qres.json()).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 	db.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
-	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
-	console.log(ticket_query);
-	if(id != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized').set('cookie set');
-		res.redirect('/mytickets');
-	} else {
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
-	}*/
+
+	//if logged in as admin, edit privileges? 
 });
 
 app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
@@ -472,17 +446,16 @@ app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
 			res.redirect('/');
 			return; // Is this return necessary? Not sure if res.redirect ends code execution for a function (-Alex)
 	}
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
 	email_query = await db_exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
-	id = email_query.id;
+	user_id = email_query.id;
 	console.log(id)
-	//ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
 	ticket_query = await db.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
 	console.log(ticket_query);
-	if(id != ticket_query.creator) {
+	if(user_id != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized').set('cookie set');
 		res.redirect('/mytickets');
-	} else {
+	}
+	else {
 		res.render('pages/tickets/singleticket', {ticket: ticket_query});
 	}
 });
