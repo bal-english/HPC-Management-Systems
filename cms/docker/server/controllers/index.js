@@ -49,6 +49,16 @@ function clearBanner(req, res, next) {
 	next();
 }
 
+async function verify_signin(req, res, next) {
+	const token = req.cookies.token;
+	if(token === undefined) {
+		res.cookie('banner', 'auth/signin_required').set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}
+
 async function revalidate_login(req, res, next) {
 	const token = req.cookies.token
 	if(token === undefined) {
@@ -65,8 +75,6 @@ async function revalidate_login(req, res, next) {
 			res.clearCookie('token');
 			res.redirect('/');
 		}
-		//res.cookie('banner','auth/user_login/success_default').set('cookie set');
-		//res.redirect('/');
 		res.locals.authed = true;
 		if(req.internal === undefined) {
 			req.internal = {};
@@ -75,7 +83,6 @@ async function revalidate_login(req, res, next) {
 		next();
 	}
 }
-
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use('/', function(req, res, next) {
@@ -224,9 +231,8 @@ app.get('/regauth', async function(req, res) {
 */
 
 
-app.get('/blog/create', [revalidate_login], async function(req, res) {
+app.get('/blog/create', [verify_signin, revalidate_login], async function(req, res) {
 	const payload = req.internal.payload;
-
 	if((await plman.authorityCheck(payload, "content.create")) == true) {
 			res.render('pages/createblog');
 	} else {
@@ -235,8 +241,7 @@ app.get('/blog/create', [revalidate_login], async function(req, res) {
 	}
 });
 
-app.post('/blog/create', [revalidate_login], async function(req, res){
-
+app.post('/blog/create', [verify_signin, revalidate_login], async function(req, res){
 
 	const payload = req.internal.payload;
 	if((await plman.authorityCheck(payload, "content.create")) == true) {
@@ -260,7 +265,6 @@ app.post('/blog/create', [revalidate_login], async function(req, res){
 			res.cookie('banner','error/unauthorized_view').set('cookie set');
 			res.redirect('/');
 	}
-
 });
 
 app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
@@ -419,41 +423,38 @@ app.get('/cc', function(req, res) {
 	res.render('pages/home');
 });
 
-// grace middleware
-
-app.get('/ticket/create', [revalidate_login], function(req, res) {
-
-	res.render('pages/ticketcreation');
+app.get('/ticket/create', [verify_signin, revalidate_login], async function(req, res) {
+	const payload = req.internal.payload;
+	if((await plman.authorityCheck(payload, "ticket.create")) == true) {
+		res.render('pages/ticketcreation');
+	} else {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/');
+	}
 });
 
-app.post('/ticket/create', async function(req, res){
+app.post('/ticket/create', [revalidate_login], async function(req, res){
 
-	const token = req.cookies.token
-	var key = await app.get('key');
+	const payload = req.internal.payload;
+	if((await plman.authorityCheck(payload, "ticket.create")) == true) {
+		var email = payload.email;
 
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-		console.log(err);
-		res.cookie('banner','auth/invalid_default').set('cookie set');
-		res.redirect('/');
-		return;
+		var email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
+		var user_id = email_query.id;
+
+		var ticket_title = req.body.title;
+		var ticket_body = req.body.ticket_info;
+		console.log(ticket_title);
+		console.log(ticket_body);
+
+		var ticket_id = db.createTicket(user_id, ticket_title, ticket_body);
+
+		res.redirect('/ticket/' + ticket_id); //redirect
+		res.end();
+	} else {
+			res.cookie('banner','error/unauthorized_view').set('cookie set');
+			res.redirect('/');
 	}
-	var email = payload.email;
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	var email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]); // TODO: Add error handling
-	var user_id = email_query.id;
-
-	var ticket_title = req.body.title;
-	var ticket_body = req.body.ticket_info;
-	console.log(ticket_title);
-	console.log(ticket_body);
-
-	var ticket_id = db.createTicket(user_id, ticket_title, ticket_body);
-
-	res.redirect('/ticket/' + ticket_id); //redirect
-	res.end();
 });
 
 app.get('/tickets', [revalidate_login], function(req, res) {
@@ -461,40 +462,18 @@ app.get('/tickets', [revalidate_login], function(req, res) {
 
 });
 
-app.get('/mytickets', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
-	const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return;
-	}
+app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
+	const payload = req.internal.payload
 	email = payload.email;
 	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
 	db.datareq.getTicketsForUser(id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
-app.get('/myblogs', [validateBanner, clearBanner, revalidate_login], async function(req, res) {
-	const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return;
-	}
-	//email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
+app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
+	const payload = req.internal.payload
 	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
-	//fetch('http://10.0.0.233:3000/api/blogs/by' + 1).then(qres => qres.json()).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 	db.getBlogsByAuthorId(id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 });
 
@@ -505,18 +484,8 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 	//if logged in as admin, edit privileges?
 });
 
-app.get('/ticket/:id([0-9]+)', [revalidate_login], async function(req, res) {
-	const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return;
-	}
+app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+	const payload = req.internal.payload;
 	email_query = await db.exis.checkUserExistsByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
 	id = email_query.id;
 	console.log(id)
