@@ -1,7 +1,7 @@
-LDAP/.env
-LDAP/app/node_modules
-LDAP/app/.npm
-LDAP/app/dist/*
-cms-db/docker-compose-exposed.yml.old
-node_modules/*
-cms-db/
+cms/docker/postgres/migration/migrations (backup)/
+cms/docker/server/controllers/api/queries/queries.js.old
+cms/docker/server/controllers/api/validation.js
+cms/docker/server/controllers/node_modules/
+cms/docker/server/controllers/pas3.js
+cms/docker/server/controllers/reg process.txt
+.gitignore

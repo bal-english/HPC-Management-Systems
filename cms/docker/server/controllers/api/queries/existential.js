@@ -14,7 +14,6 @@ const userHasPerm = (u_id, p_id) => {
 }
 
 const usergroupHasPerm = (g_id, p_id) => {
-	
 	return pool.query('SELECT * FROM \"usergroup-permission\" WHERE group_id=$1 AND perm_id=$2', [g_id, p_id]);
 }
 

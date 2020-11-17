@@ -9,6 +9,14 @@ const getUserById = (u_id) => {
 	return pool.query('SELECT * FROM \"user\" WHERE id = $1', [u_id]);
 }
 
+const getUserByEmail = async (email) => {
+	return pool.query('SELECT * FROM \"user\" WHERE email=$1', [email]);
+}
+
+const getUserNameById = (u_id) => {
+	return pool.query('SELECT firstName, lastName FROM \"user\" WHERE id = $1' [u_id]);
+}
+
 const getUsersById = (min, max) => {
 	return pool.query('SELECT * FROM \"user\" WHERE id >= $1 AND id <= $2', [min, max]);
 }
@@ -111,6 +119,8 @@ const getPermissionsOfUsergroup = async (g_id) => {
 module.exports = {
 	getUsers,
 	getUserById,
+	getUserNameById,
+	getUserByEmail,
 	getUsersById,
 	getBloggroups,
 	getBloggroupById,
