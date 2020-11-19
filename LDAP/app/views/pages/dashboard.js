@@ -73,9 +73,7 @@ $('#createuser').click(function(){
             "<br/>" +
             "uidNumber: " + data.success.uidNumber.value +
             "<br/>" +
-            "sn: " + data.success.sn.value +
-            "<br/>" +
-            "userPassword: " + data.success.userPassword.value;
+            "sn: " + data.success.sn.value
             displaySuccess('User modified <br/> ' + usr, "test2");
             console.log(data)
         }

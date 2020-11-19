@@ -164,11 +164,9 @@ app.post('/api/user/modify', [auth.authenticateUser], async (request:Request, re
     }else{
       throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
     }
-    /*if(homeDirectory.length!==0)
-      res = await res.setHomeDirectory(homeDirectory);
-    */const ressave = await res.save();
+
     response.send({
-      success: ressave,
+      success: res,
     });
   }
   catch (err) {
