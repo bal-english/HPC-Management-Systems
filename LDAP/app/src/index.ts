@@ -4,14 +4,13 @@ import paseto from "paseto";
 import { Request, Response } from 'express';
 import { User } from "./users";
 import { UmsQueue } from "./UmsQueue";
-import { authenticateWorker } from "./workerauthentication";
+import { authenticateWorkerAuthToken, authenticateWorkerSessionToken } from "./workerauthentication";
 import { createPrivateKey } from 'crypto';
 import {validateUserPass} from "./validateUser"
 import {UserGroups} from "./UserGroups"
 import {authenticateUser} from "./authentication"
 import path from 'path'
 import { each } from 'bluebird';
-import { UserPassword } from './LdapTypes';
 import { authLogin } from './authenticateLogin';
 import { Obfuscation } from './Obfuscation';
 import * as main from "./main"
@@ -19,8 +18,14 @@ const cookieParser = require('cookie-parser')
 const auth = require('./authentication');
 
 // TESTING
- User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu", "Test")
- .then((res:User)=>res.save())
+User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu")
+.then(async (res:User)=>{
+  return res.save();
+})
+.then(async (res:User)=>{
+  await res.setUserPassword("drowssap");
+})
+
 
 // Obfuscate middleware
 // add auth to all but login
@@ -44,16 +49,18 @@ app.use(bodyparser.json());
   app.set('workerKey', key);
 
 
-  app.all('/api/homeDirQueue/*', authenticateWorker);
 // Generates static auth token
-  app.post('/admin/homeDirQueue/createToken', async (request:Request, response:Response) => {
-    const token = await V2.sign({'name': 'auth_token', 'purpose': 'homedirqueue'}, app.get('workerKey'));
+// TODO
+//  - Middleware needs to be changed to admin role middleware
+//  - Ian has got it, talk to him
+  app.post('/admin/homeDirQueue/createToken', authenticateWorkerAuthToken, async (request:Request, response:Response) => {
+    const token = await V2.sign({subject: 'auth_token', issuer: 'homedirqueue'}, app.get('workerKey'), {subject: 'auth_token', issuer: 'homedirqueue'});
     response.send({'token': token});
 
   });
   // Transform an auth token into a session token
-  app.post('/api/homeDirQueue/session/renew_token', async (request:Request, response:Response) => {
-    const token = await V2.sign({'name': 'session_token', 'purpose': 'homedirqueue'}, app.get('workerKey'));
+  app.post('/api/homeDirQueue/session/renew_token', authenticateWorkerAuthToken, async (request:Request, response:Response) => {
+    const token = await V2.sign({subject: 'session_token', issuer: 'homedirqueue'}, app.get('workerKey'), {subject: 'session_token', issuer: 'homedirqueue'});
     response.send({'token': token});
   });
 
@@ -61,7 +68,7 @@ app.use(bodyparser.json());
     response.sendFile('/app/views/pages/tokenTest.html');
   })
 
-  app.post('/api/homeDirQueue/query', async (request:Request, response:Response) => {
+  app.post('/api/homeDirQueue/query', authenticateWorkerSessionToken, async (request:Request, response:Response) => {
     await new Promise<any>(async ()=>{
       const hdQueue = await UmsQueue.getQueue();
       if(hdQueue.length === 0){
@@ -87,10 +94,9 @@ app.use(bodyparser.json());
     });
   });
 
-  app.post('/api/homeDirQueue/delete', async (request:Request, response:Response) => {
+  app.post('/api/homeDirQueue/delete', authenticateWorkerSessionToken, async (request:Request, response:Response) => {
     const dn = request.body.dn;
     const currUser = await User.loadUser(dn);
-    console.log("HERE");
     await UmsQueue.removeByDn(currUser)
     .catch((err:any)=>
     {
@@ -110,29 +116,19 @@ app.get('/', (request:Request, response:Response) => {
     test: "HPCL UMS Test"
   });
 });
+
 app.get('/dashboard', [auth.authenticateUser], /*auth.checkPermissions(["admin", "faculty", ])],*/ (request:Request, response:Response) => {
   response.render('pages/dashboard', {
     test: "HPCL UMS Test2"
   });
 });
-/*
-TODO:
-  -add error checking, user friendly format
-  -refactor into API routings for JSON between client-server (/api/<domain>/<action>)
-  -start with EJS, controller & view
-  -bootstrap
-*/
 
-// app.get('/api/user/:id', (request:Request, response:Response) => {
-// });
 app.get('/dashboard.js', (request:Request, response:Response) => {
   response.sendFile( path.join(__dirname, '../views/pages/dashboard.js'))
 });
 
 
-app.post('/api/user/create',[auth.authenticateUser], /*
-auth.checkPermissions(["admin"])] ,*/ async (request:Request, response:Response) => {
-  console.log(request.body);
+app.post('/api/user/create',[auth.authenticateUser], async (request:Request, response:Response) => {
   const email:string = request.body.email;
   const cn:string = request.body.cn;
   const pw:string = request.body.pw;
@@ -140,8 +136,9 @@ auth.checkPermissions(["admin"])] ,*/ async (request:Request, response:Response)
 
     if (!validateUserPass(pw))
       throw new Error("Password Error: must be composed of either letters, numbers or symbols and at least 4 characters");
-    const res = await User.createUserFromEmail(cn, email, pw); // TODO push password into user
+    const res = await User.createUserFromEmail(cn, email); // TODO push password into user
     const res1 = await res.save();
+    await res1.setUserPassword(pw);
     await UmsQueue.push(res);
     response.send({
       success: res1,
@@ -153,9 +150,8 @@ auth.checkPermissions(["admin"])] ,*/ async (request:Request, response:Response)
     });
   }
 });
-// added auth user
-app.post('/api/user/modify', [auth.authenticateUser], /*auth.checkPermissions(["faculty", "admin"])],*/ async (request:Request, response:Response) => {
-  console.log(request.body);
+
+app.post('/api/user/modify', [auth.authenticateUser], async (request:Request, response:Response) => {
   const dn:string = request.body.dn;
   const cn:string = request.body.cn;
   const gidNumber:number = request.body.gidNumber;
@@ -182,54 +178,46 @@ app.post('/api/user/modify', [auth.authenticateUser], /*auth.checkPermissions(["
   }
 });
 // added authenticate user
-app.post('/api/user/delete',[auth.authenticateUser], /*auth.checkPermissions(["faculty", "admin"])],*/ async(request:Request, response:Response,) => {
-  // console.log(request.body.email + "REQ")
+app.post('/api/user/delete',[auth.authenticateUser], async(request:Request, response:Response,) => {
   const tempEmail = request.body.email.split("@");
-  // console.log(tempEmail+ "TEMP")
-  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
-  // console.log("TEMPUID" + tempUID)
-  const user = await User.loadUser(tempUID)
+  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
+  const user = await User.loadUser(tempUID);
   try {
-   // console.log("user" + user)
     await user.disableUser();
     await user.save();
-    response.send("User was successfully disabled!")
+    response.send("User was successfully disabled!");
   }
   catch(error){
-    console.log("Error: User was not successfully disabled!")
-    response.send({error:"Error: User was not successfully disabled!"})
+    console.log("Error: User was not successfully disabled!");
+    response.send({error:"Error: User was not successfully disabled!"});
   }
 
 });
 
 
 app.post('/api/user/login', async (request:Request, response:Response) => {
-  const email = request.body.email
+  const email = request.body.email;
   const password:Obfuscation = new Obfuscation(request.body.password);
   const tempEmail = request.body.email.split("@");
-  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
+  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
   let user:User
   try {
-    if(password.getPass() === "!!")
+    if(password.getPass() === "!!"){
       throw new Error();
-    await authLogin(tempUID, password)
-    console.log("End of the try block")
     }
-  catch(error) {
-    console.log("In the catch block")
-    if (error){
-    console.log("caught error")
-    response.send({error:"No Account Found!"})
-    return
-    }
-
+    await authLogin(tempUID, password);
   }
-  console.log("Finsihed Try catch block")
+  catch(error) {
+    if (error){
+      response.send({error:"No Account Found!"});
+      return;
+    }
+  }
   user = await User.loadUser(tempUID);
   const roles:string[] = await user.getRoles();
   const key = app.get("key");
-  const { V2 : {sign} } = paseto
-  const token = await sign({roles}, key)
+  const { V2 : {sign} } = paseto;
+  const token = await sign({roles}, key);
   response.send(token);
 });
 

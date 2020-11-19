@@ -11,7 +11,6 @@ const http = require('http');
 const fs = require('fs');
 const ncp = require('ncp').ncp;
 const path = require('path');
-// import * as httpm from 'typed-rest-client/HttpClient';
 const restm = __importStar(require("typed-rest-client/RestClient"));
 if (process.env.UMS_ADDRESS === undefined || process.env.UMS_ADDRESS === null) {
     throw new Error("ERROR: UMS_ADDRESS Environment variable is not set");
@@ -53,15 +52,13 @@ async function requestSessionToken() {
     return restRes.result;
 }
 async function homeDirPolling() {
-    const tc = await requestSessionToken();
+    let tc = await requestSessionToken();
     if (tc === null || tc === undefined) {
         console.log("ERROR: Function 'requestSessionToken' returned a null token.");
     }
     else {
-        console.log(tc);
         const restRes = await restc.create('/api/homeDirQueue/query', tc);
         if (restRes.result.dn !== undefined) {
-            console.log(restRes.result, restRes.result.dn);
             let uid = restRes.result.dn.split(',')[0];
             uid = uid.split('=')[1];
             const filepath = "/mnt/home/" + uid;
@@ -80,30 +77,23 @@ async function homeDirPolling() {
                     catch (err) {
                         console.log("ERROR: Tried to change file ownership " + err);
                     }
-                    const d = {
-                        token: tc.token,
-                        dn: restRes.result.dn,
-                        uidNum: restRes.result.uidNum,
-                        empty: false
-                    };
-                    console.log(d);
-                    const restRes1 = await restc.create('/api/homeDirQueue/delete', d);
+                    tc = await requestSessionToken();
+                    if (tc === null || tc === undefined) {
+                        console.log("ERROR: Function 'requestSessionToken' returned a null token.");
+                    }
+                    else {
+                        const d = {
+                            token: tc.token,
+                            dn: restRes.result.dn,
+                            uidNum: restRes.result.uidNum,
+                            empty: false
+                        };
+                        const restRes1 = await restc.create('/api/homeDirQueue/delete', d);
+                    }
                 }
             });
         }
     }
 }
-/*
-
-            const req:any = http.request(options, (res1:any)=> {
-              console.log('statusCode: ', res1.statusCode);
-            })
-            req.write(postData);
-            req.end();
-          }
-        });
-      });
-  });
-  */
 setInterval(homeDirPolling, 5000);
 //# sourceMappingURL=homedirectory.js.map

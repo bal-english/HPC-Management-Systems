@@ -2,6 +2,7 @@ import { User } from "./users";
 import { Group } from "./groups";
 import {UmsQueue } from "./UmsQueue";
 import { reduce } from "bluebird";
+import { getDefaultCompilerOptions } from "typescript";
 const ldap = require("ldapjs");
 const assert= require('assert');
 const Promises = require("bluebird");
@@ -14,6 +15,15 @@ const client = ldap.createClient({
 Promises.promisifyAll(client);
 console.log("In the main")
 
+User.createUserFromEmail("Spongebob Squarepants", "ssquarepants1@gulls.salisbury.edu")
+.then((res:User)=>{
+    return res.save();
+})
+.then(async (res:User)=>{
+    await res.setUserPassword("drowssap");
+    await res.deleteUserPassword();
+})
+/*
 Group.createGroup("TravisScottBurger")
 .then((res:Group)=>res.save())
 
@@ -42,6 +52,6 @@ Group.createGroup("TravisScottBurger")
 
 
 
-
+*/
 
 

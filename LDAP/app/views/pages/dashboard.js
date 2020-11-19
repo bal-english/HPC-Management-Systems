@@ -30,9 +30,7 @@ $('#createuser').click(function(){
           "<br/>" +
           "uidNumber: " + data.success.uidNumber.value +
           "<br/>" +
-          "sn: " + data.success.sn.value +
-          "<br/>" +
-          "userPassword: " + data.success.userPassword.value;
+          "sn: " + data.success.sn.value
           displaySuccess('User added <br/> ' + usr, "test");
           console.log(data)
         }

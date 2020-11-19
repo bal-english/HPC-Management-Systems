@@ -54,7 +54,7 @@ services:
       UMS_ADDRESS: "http://node:80"
       UMS_HOSTNAME: "node:80"
       WORKER_EXTERNAL_ADDRESS: "homedirworker:8081"
-      AUTH_TOKEN: v2.public.eyJuYW1lIjoiYXV0aF90b2tlbiIsInB1cnBvc2UiOiJob21lZGlycXVldWUiLCJpYXQiOiIyMDIwLTExLTA5VDIxOjM4OjA0LjM5NVoifUOoEmbo3TWyyliTQ9UhiCu4UlBjh8z06tUrS-cVCjLXlvFPsIobK5K0AjCxPQIHCGuzFNEJ_h0JXyTrxYZSlQ4
+      AUTH_TOKEN: v2.public.eyJzdWJqZWN0IjoiYXV0aF90b2tlbiIsImlzc3VlciI6ImhvbWVkaXJxdWV1ZSIsImlhdCI6IjIwMjAtMTEtMThUMjA6MDg6MzAuNzg0WiIsImlzcyI6ImhvbWVkaXJxdWV1ZSIsInN1YiI6ImF1dGhfdG9rZW4ifY29MHiynly3CPEmPSjkclmyO_MGT1U2vji1lPUZk_bnPLf7oeG80MV-c8bar3-KwIBpIyW701DOjH3rSd6Ldwc
     ports:
       - "8081:80"
     volumes:

@@ -2,11 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const ncp = require('ncp').ncp;
 const path = require('path');
-
-import { getRulesDirectories } from 'tslint/lib/configuration';
-// import * as httpm from 'typed-rest-client/HttpClient';
 import * as restm from 'typed-rest-client/RestClient';
-import { Token } from 'typescript';
 
 if(process.env.UMS_ADDRESS === undefined || process.env.UMS_ADDRESS === null)
 {
@@ -78,14 +74,12 @@ async function requestSessionToken():Promise<TokenCarrier>{
 
 async function homeDirPolling(){
 
-  const tc = await requestSessionToken();
+  let tc = await requestSessionToken();
   if(tc === null || tc === undefined){
     console.log("ERROR: Function 'requestSessionToken' returned a null token.");
   } else {
-    console.log(tc);
     const restRes: restm.IRestResponse<UserInfo> = await restc.create<UserInfo>('/api/homeDirQueue/query', tc);
     if(restRes.result.dn !== undefined){
-      console.log(restRes.result, restRes.result.dn);
 
       let uid = restRes.result.dn.split(',')[0];
       uid = uid.split('=')[1];
@@ -104,36 +98,23 @@ async function homeDirPolling(){
           } catch (err){
             console.log("ERROR: Tried to change file ownership " + err);
           }
+          tc = await requestSessionToken();
+          if(tc === null || tc === undefined){
+            console.log("ERROR: Function 'requestSessionToken' returned a null token.");
+          } else {
+            const d:TokenCarrierUserInfoCombo = {
+              token: tc.token,
+              dn: restRes.result.dn,
+              uidNum: restRes.result.uidNum,
+              empty: false
+            }
 
-
-          const d:TokenCarrierUserInfoCombo = {
-            token: tc.token,
-            dn: restRes.result.dn,
-            uidNum: restRes.result.uidNum,
-            empty: false
+            const restRes1: restm.IRestResponse<TokenCarrierUserInfoCombo> = await restc.create<TokenCarrierUserInfoCombo>('/api/homeDirQueue/delete', d);
           }
-
-          console.log(d)
-          const restRes1: restm.IRestResponse<TokenCarrierUserInfoCombo> = await restc.create<TokenCarrierUserInfoCombo>('/api/homeDirQueue/delete', d);
-
-
-
         }
       })
     }
   }
 }
-  /*
-
-              const req:any = http.request(options, (res1:any)=> {
-                console.log('statusCode: ', res1.statusCode);
-              })
-              req.write(postData);
-              req.end();
-            }
-          });
-        });
-    });
-    */
 
 setInterval(homeDirPolling, 5000);

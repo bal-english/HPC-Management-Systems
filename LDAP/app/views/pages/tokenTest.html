@@ -1,11 +1,15 @@
-
 <html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    </head>
     <body>
-
-        <button id="createToken" class="btn btn-primary" type="button">Token</button>
+        <h1 style="text-align: center"><u>Generate Token</u></h1>
+        </br>
+        <div style="text-align: center"><button id="createToken" class="btn btn-primary" type="button">Token</button></div>
+        </br>
         <div id="test"></div>
-        
-
+    
     </body>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
@@ -21,8 +25,13 @@
             type: 'POST',
             datatype: 'json',
             
+            
             success: function(data){
-                displayError(data.token, 'test');
+                if(!data.token){
+                    displayError(data.token, 'test');
+                } else {
+                    displaySuccess(data.token, 'test');
+                }
             }
             });
     
@@ -30,9 +39,17 @@
     </script>
     <script>
         function displayError(msg, div){
-      var errorbox = `<div class="alert alert-danger" role="alert">` + msg + `</div>`
-      $("#" + div).append(errorbox);
-    }
+            var errorbox = `<div style="word-wrap:break-word" class="alert alert-danger alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>` + msg + `</div>`
+            $("#" + div).html(errorbox);
+        }
+        function displaySuccess(msg, div){
+            var successbox = `<div style="word-wrap:break-word" class="alert alert-success alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>` + msg + `</div>`
+            $("#" + div).html(successbox);
+        }
     </script>
+
    
 </html>
+

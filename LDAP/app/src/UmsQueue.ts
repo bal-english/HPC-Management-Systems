@@ -25,7 +25,6 @@ export class UmsQueue{
         for(const x of entry.hdQueueEntry){
             dnList.push(x);
         }
-        console.log(dnList);
         return Promise.resolve(dnList);
 
     }
@@ -37,7 +36,6 @@ export class UmsQueue{
 
         let entry = await LdapUtils.searchOnce("cn=umsqueue,dc=linuxlab,dc=salisbury,dc=edu");
         entry = LdapUtils.normalizeUmsQueueQuery(entry);
-        console.log(entry);
         for(const x of entry.hdQueueEntry){
             if(x === dn){
                 console.log("WARNING: Tried to add duplicate User to the UmsQueue (" + dn + ")");
