@@ -1,0 +1,8 @@
+<div class="container">
+	<% dec = redirect_data.redirect + "?"; for(let key in redirect_data.queries) { if(key != page_data.prefix+'page') { dec += (key + '=' + redirect_data.queries[key] + '&') } else { if(parseInt(redirect_data.queries[key]) == parseInt(0)) { dec += (key + '=0&') } else { dec += (key + '=' + (parseInt(page_data.currpage)-1) + "&") } } }; dec = dec.substring(0, dec.length-1); %>
+	<% inc = redirect_data.redirect + "?"; for(let key in redirect_data.queries) { if(key != page_data.prefix+'page') { inc += (key + '=' + redirect_data.queries[key] + '&') } else { if(parseInt(redirect_data.queries[key]) == parseInt(page_data.pagemax)) { inc += (key + '=' + page_data.pagemax + '&') } else { inc += (key + '=' + (parseInt(page_data.currpage)+1) + "&") } } }; inc = inc.substring(0, inc.length-1); %>
+	<ul class="pagination">
+		<li class="page-item"><a class="page-link" href="<%= dec %>">&lt</a></li>
+		<li class="page-item"><a class="page-link" href="<%= inc %>">&gt</a></li>
+	</ul>
+</div>

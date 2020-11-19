@@ -1,0 +1,18 @@
+<%- include('../pagination/page_refresh', {page_data: page_data}) %>
+<div class="container">
+  <h4> My Blogs </h4>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th> Title </th>
+        <th> Date </th>
+        <th> Group </th>
+      </tr>
+    </thead>
+    <tbody>
+      <% blogs.forEach(function(blog) { %>
+        <%- include('singles/small', {blog: blog}) %>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

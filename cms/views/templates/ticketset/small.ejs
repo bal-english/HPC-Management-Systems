@@ -1,0 +1,18 @@
+<%- include('../pagination/page_refresh') %>
+<div class="container">
+  <h4> My Tickets </h4>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th> Subject </th>
+        <th> Ticket ID </th>
+        <th> Status </th>
+      </tr>
+    </thead>
+    <tbody>
+      <% tickets.forEach(function(ticket) { %>
+        <%- include('singles/small', {ticket: ticket}) %>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

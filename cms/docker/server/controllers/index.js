@@ -5,10 +5,6 @@ var ejs = require('ejs');
 var app = express();
 var api = require('./api/api.js');
 var db = api.db;
-//var db.datareq = api.db.datareq;
-//var db.exis = api.db.exis;
-//var db.quan = api.db.quan;
-// var auth = require('./auth/authmiddleware.js');
 var fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 var nodemailer = require('nodemailer');
@@ -26,7 +22,7 @@ var bodyParser = require('body-parser');
 app.set('views', '../views');
 app.set('view engine','ejs');
 
-app.set('pagination', {'blog_def': 6,'ticket_def': 8});
+app.set('pagination', {'profile': {'blog_def': 5, 'ticket_def': 5}, 'blog_def': 6,'ticket_def': 8});
 
 app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
@@ -88,6 +84,37 @@ async function revalidate_login(req, res, next) {
 	}
 }
 
+async function blog_pagination_check(req, res, next) {
+	if(req.query.page === undefined) {
+		req.query.page = 0;
+	} else {
+		req.query.page = parseInt(req.query.page);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.view === undefined) {
+		req.query.view = app.get('pagination').blog_def;	// TODO: Add ability to specify default from parameter
+	} else {
+		req.query.view = parseInt(req.query.view);	// TODO: Add error handling for NaN and #<1
+	}
+	next();
+}
+
+async function prepare_pagination(path, page, view, total, prefix) {
+	total = parseInt(total);
+	payload = {'total': total}
+	payload.view = view;
+	payload.currpage = page;
+	payload.pagecnt = parseInt((payload.total/payload.view));
+	if(payload.total % payload.view != 0) {
+		payload.pagecnt = payload.pagecnt+1;
+	}
+	payload.pagemax = payload.pagecnt-1;
+	if(prefix === undefined) {
+		prefix = "";
+	}
+	payload.prefix = prefix;
+	return payload;
+
+}
 async function handle_signout(req, res, next) {
 	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
 		if(req.cookies.token == undefined) {
@@ -201,9 +228,71 @@ app.post('/login', function(req, res){
 	res.end();
 });
 
+async function profile_pagination_check(req, res, next) {
+	if(req.query.ticketpage === undefined) {
+		req.query.ticketpage = 0;
+	} else {
+		req.query.ticketpage = parseInt(req.query.ticketpage);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.ticketview === undefined) {
+		req.query.ticketview = app.get('pagination').blog_def;
+	} else {
+		req.query.ticketview = parseInt(req.query.ticketview);	// TODO: Add error handling for NaN and #<1
+	}
+
+	if(req.query.blogpage === undefined) {
+		req.query.blogpage = 0;
+	} else {
+		req.query.blogpage = parseInt(req.query.blogpage);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.blogview === undefined) {
+		req.query.blogview = app.get('pagination').blog_def;
+	} else {
+		req.query.blogview = parseInt(req.query.blogview);	// TODO: Add error handling for NaN and #<1
+	}
+	next();
+}
+/*
+app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req, res){
+	//this for blog gen from db
+
+	res.locals.total = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count);
+	res.locals.pagecnt = res.locals.total/req.query.view;
+	if(res.locals.total % req.query.view == 0) {
+		res.locals.pagecnt = res.locals.pagecnt-1
+	}
+	res.locals.currpage = req.query.page;
+	res.locals.stdview = (req.query.view == app.get('pagination').blog_def)
+	res.locals.redirect = req.path
+	offset = req.query.page*req.query.view;
+	db.datareq.getBlogsSubset(offset, req.query.view).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
+});
+*/
+app.get('/profile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
+	const user_id = parseInt(req.internal.user_id);
+	const blog_page_data = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
+	blog_offset = blog_page_data.currpage*blog_page_data.view;
+	res.locals.blog_page_data = blog_page_data;
+	blog_data = await db.datareq.getBlogsSubset/*ByUserId*/(/*user_id, */blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	const ticket_page_data = await db.quan.getTicketCount().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
+	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
+	res.locals.ticket_page_data = ticket_page_data;
+	ticket_data = await db.datareq.getTicketsSubset/*ByUserId*/(/*user_id, */ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'blogpage': req.query.blogpage,
+			'blogview': req.query.blogview,
+			'ticketpage': req.query.ticketpage,
+			'ticketview': req.query.ticketview
+		}
+	};
+	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data})
+});
+
 app.get('/signout', [validateBanner, clearBanner, verify_signin, revalidate_login, handle_signout], function(req, res, next) {
 	res.render('pages/user_accounts/signout')
-})
+});
 
 app.get('/register', function(req, res){
 	res.render('pages/user_accounts/register');
@@ -302,6 +391,13 @@ app.post('/blog/create', [verify_signin, revalidate_login], async function(req, 
 app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
 	const payload = req.internal.payload;
 	if((await plman.authorityCheck(payload, "content.create")) == true || (await db.hist.userAuthoredBlogs(req.internal.user_id)) == true) {
+		res.locals.redirect_data = {
+			'redirect': req.path,
+			'queries': {
+				'page': req.query.page,
+				'view': req.query.view
+			}
+		};
 		db.datareq.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 	} else {
 		res.cookie('banner', 'error/unauthorized_view').set('cookie set');
@@ -310,31 +406,7 @@ app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_logi
 });
 
 app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
-	/*const token = req.cookies.token
-	var key = await app.get('key');
-	try {
-		payload = await plman.validate(token, key);
-		console.log(payload);
-	} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
-			res.redirect('/');
-			return;
-	}
-	email = payload.email;
-	email_query = await fetch('http://localhost:3000/api/user/email/' + email).then(qres => qres.json());
-	id = email_query.id;
-	*/
-
 	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
-	/*ticket_query = await fetch('http://10.0.0.233:3000/api/ticket/' + req.params.id).then(qres => qres.json());
-	console.log(ticket_query);
-	if(id != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized_view').set('cookie set');
-		res.redirect('/mytickets');
-	} else {
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
-	}*/
 });
 
 app.get('/b', [revalidate_login], function(req, res) {
@@ -345,33 +417,18 @@ app.get('/blogs/:bg', [revalidate_login], function(req, res) {
 	res.redirect('/b/' + req.params.bg);
 });
 
-async function blog_pagination_check(req, res, next) {
-	if(req.query.page === undefined) {
-		req.query.page = 0;
-	} else {
-		req.query.page = parseInt(req.query.page);	// TODO: Add error handling for NaN and #<1
-	}
-	if(req.query.view === undefined) {
-		req.query.view = app.get('pagination').blog_def;
-	} else {
-		req.query.view = parseInt(req.query.view);	// TODO: Add error handling for NaN and #<1
-	}
-	next();
-}
-
 app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req, res){
-	//this for blog gen from db
-
-	res.locals.total = db.quan.getCountOfBlogs().then(qres => qres.rows[0].count);
-	res.locals.pagecnt = res.locals.total/req.query.view;
-	if(res.locals.total % req.query.view != 0) {
-		res.locals.pagecnt = res.locals.pagecnt+1
-	}
-	res.locals.currpage = req.query.page;
-	res.locals.stdview = (req.query.view == app.get('pagination').blog_def)
-	res.locals.redirect = req.path
-	offset = req.query.page*req.query.view;
-	db.datareq.getBlogsSubset(offset, req.query.view).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
+	const page_data = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.page, req.query.view, total,""));
+	offset = page_data.currpage*page_data.view;
+	res.locals.page_data = page_data;
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'page': req.query.page,
+			'view': req.query.view
+		}
+	};
+	db.datareq.getBlogsSubset(offset, (await page_data.view) ).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
 });
 
 app.get('/b/:bg', [revalidate_login, blog_pagination_check], async function (req, res) {
@@ -484,16 +541,23 @@ app.get('/tickets', [revalidate_login], function(req, res) {
 });
 
 app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'page': req.query.page,
+			'view': req.query.view
+		}
+	};
 	db.datareq.getTicketsForUser(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
 app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
-	db.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
+	db.datareq.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 });
 
 app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 
-	db.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
+	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 
 	//if logged in as admin, edit privileges?
 });

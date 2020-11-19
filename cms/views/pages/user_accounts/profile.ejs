@@ -3,15 +3,16 @@
 <%- include ('../../templates/heading/htmlhead') -%>
 <%- include ('../../templates/heading/alertmanager') -%>
 <%- include ('../../templates/heading/standard_header') -%>
-
 <%- include ('../../templates/nav') -%>
 
 <br>
 <br>
 
-<body class="text-center bg-light">
-	<%- include('../../templates/blogset/medium', {blogs: blogs}) %>
+<body class = "text-center bg-light">
+	<%- include('../../templates/blogset/small', {blogs: blogs, page_data: blog_page_data}); %>
+  <%- include('../../templates/ticketset/small', {tickets: tickets, page_data: ticket_page_data}); %>
 </body>
+
 
 <br>
 <br>

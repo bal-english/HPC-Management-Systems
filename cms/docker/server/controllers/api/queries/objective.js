@@ -73,6 +73,10 @@ const getBlogsSubset = (offset, limit) => {
 	return pool.query('SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit])
 }
 
+const getBlogsSubsetByUserId = (user_id, offset, limit) => {
+	return pool.query('SELECT * FROM \"blog\" WHERE id=$3 ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit, user_id])
+}
+
 const getBlogsByGroupIdAfterTime = (g_id, ts) => {
 	return pool.query('SELECT * FROM \"blog\" WHERE \"group\"=$1 AND \"posttime\">to_timestamp($2, \'yyyy-mm-dd hh24:mi:ss\') ORDER BY \"posttime\" DESC' , [group_id, ts]);
 }
@@ -87,6 +91,16 @@ const getTickets = () => {
 
 const getTicketsForUser = (u_id) => {
 	return pool.query('SELECT * FROM \"ticket\" WHERE creator = $1', [u_id]);
+}
+
+const getTicketsSubset = (offset, limit) => {
+	//return pool.query('SELECT * FROM \"ticket\" ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit])
+	return pool.query('SELECT * FROM \"ticket\" OFFSET $1 LIMIT $2', [offset, limit])
+}
+
+const getTicketsSubsetByUserId = (user_id, offset, limit) => {
+	//return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit, user_id])
+	return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 OFFSET $1 LIMIT $2', [offset, limit, user_id])
 }
 
 const getTicketById = (u_id) => {
@@ -132,12 +146,15 @@ module.exports = {
 	getBlogs,
 	getBlogsOffsetBy,
 	getBlogsSubset,
+	getBlogsSubsetByUserId,
 	getBlogsByAuthorId,
 	getBlogsByGroupId,
 	getBlogsByGroupIdAfterTime,
 	getBlogsByGroupIdOffsetBy,
 	getTickets,
 	getTicketsForUser,
+	getTicketsSubset,
+	getTicketsSubsetByUserId,
 	getTicketById,
 	getPermissions,
 	getPermissions_def,

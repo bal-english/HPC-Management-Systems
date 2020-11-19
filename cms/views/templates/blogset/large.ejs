@@ -1,0 +1,8 @@
+<%- include('../pagination/page_refresh') %>
+<div class="container">
+	<% blogs.forEach(function(blog){ %>
+		<tr>
+			<%- include('singles/large', {blog: blog}); %>
+		</tr>
+	<% }); %>
+</div>
