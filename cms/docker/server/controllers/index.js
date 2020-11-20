@@ -115,6 +115,7 @@ async function prepare_pagination(path, page, view, total, prefix) {
 	return payload;
 
 }
+
 async function handle_signout(req, res, next) {
 	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
 		if(req.cookies.token == undefined) {
@@ -563,16 +564,73 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
 });
 
 app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+	
 	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
-	if(req.internal.user_id != ticket_query.creator) {
+	ticket_assignee = await db.datareq.getAssignedByTicket(parseInt(req.params.id)).then(results => results.rows[0]);
+
+	user_assigned = await db.datareq.getUserById(ticket_assignee);
+	// console.log(user_assigned);
+
+	u = req.internal.user_id;
+	ticket_creator = await db.datareq.getUserById(u);
+	// console.log(ticket_creator);
+
+	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
+		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
+    } else {
+    	console.log("user has no edit privileges");
+		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+    }
+
+	if(u != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	}
-	else {
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
-	}
 });
 
+app.post('/ticket/status', [verify_signin, revalidate_login], async function(req, res) {
+
+	const payload = req.internal.payload;
+	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
+
+		var ticket_status = req.body.status;
+		var ticket = req.body.ticket_id;
+		console.log(ticket_status);
+		console.log(ticket_id);
+		//change ticket status api here
+		//TODO: Add db.update
+		// var t_id = db.update.ticket().then(results => results.rows[0].id);
+		// res.redirect('/ticket/' + t_id);
+		// res.end();
+
+	} else {
+			res.cookie('banner','error/unauthorized_view').set('cookie set');
+			res.redirect('/');
+	}
+
+});
+
+app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(req, res) {
+
+	const payload = req.internal.payload;
+	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
+
+		var assigned_admin = req.body.user_id;
+		var ticket = req.body.ticket_id;
+		console.log(assigned_admin);
+		console.log(ticket);
+		//change assigned_admin api here
+		//TODO: Add db.update
+		// var t_id = db.update.ticket().then(results => results.rows[0].id);
+		// res.redirect('/ticket/' + t_id);
+		// res.end();
+
+	} else {
+			res.cookie('banner','error/unauthorized_view').set('cookie set');
+			res.redirect('/');
+	}
+
+});
 /*
 app.get('/admin', [revalidate_login], function(req, res){
 	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
