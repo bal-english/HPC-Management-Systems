@@ -28,6 +28,10 @@ const payload_models = () => {
 			"email": "",
 			"expiration": payload_types["reg_auth"].def_exp,
 			"setup": {
+				"data": {
+					"lastName": "",
+					"firstName": ""
+				},
 				"usergroups": {
 					"def": true,
 					"extra": []
@@ -71,9 +75,6 @@ const construct = (type, email/*, expiration*/) => {
 }
 
 const tokenize = async (payload, key) => {
-	//console.log('Tokenizing Payload:');
-	//console.log(payload);
-	//console.log("with key: " + key);
 	const token = await V2.encrypt(payload, key)
 	console.log("Token: " + token);
 	return token;
@@ -85,7 +86,7 @@ const validate = async (token, key) => {
 	return payload;
 }
 
-const authorityCheck = async(payload, perm_name) => {
+const authorityCheck = async (payload, perm_name) => {
 	if(payload.type == "reg_auth") {
 		throw "Not a valid token"
 	}
@@ -96,9 +97,49 @@ const authorityCheck = async(payload, perm_name) => {
 	perm_id = perm_query.id;
 	return db.perm.userHasPerm(user_id, perm_id);
 }
+
+const process = async (req, res) => {
+	var key = (await req.key);// delete req.key;
+	payload = {};
+	try {
+		payload = await validate(req.query.token, key);
+	} catch(err) {
+		res.cookie('banner','auth/failure_default').set('cookie set');
+		res.redirect('/');
+		return {'res': res, 'req': req};
+	}
+
+	if(payload.type == payload_types.login_auth.name) {
+		res.cookie('token', req.query.token).set('cookie set');
+		res.cookie('banner','auth/user_login/success_default');
+		res.redirect('/');
+	} else	if(payload.type == payload_types.reg_auth.name) {
+		if(payload.email == '') {
+			res.cookie('banner','auth/user_reg/failure_default').set('cookie set');
+			res.clearCookie('token');
+			return {'res': res, 'req': req};
+		} else {
+			//try {
+				console.log(await db.create.user('Smith', 'Dan', payload.email));
+				new_payload = payload_models().login_auth;
+				new_payload.email = payload.email;
+				new_token = tokenize(new_payload, key);
+				res.cookie('token', (await new_token)).set('cookie set');
+				res.cookie('banner','auth/user_reg/success_default').set('cookie set');
+				return {'res': res, 'req': req};
+			}
+			//} catch (err) {
+					res.cookie('banner','auth/user_reg/failure_default').set('cookie set');
+					res.clearCookie('token');
+			//}
+	}
+	return {'res': res, 'req': req};
+}
+
 module.exports = {
 	construct,
 	tokenize,
 	validate,
-	authorityCheck
+	authorityCheck,
+	process
 };

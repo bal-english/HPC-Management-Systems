@@ -63,8 +63,9 @@ async function revalidate_login(req, res, next) {
 		var key = await app.get('key');
 		payload = {};
 		try {
+			//console.log(token);
 			payload = await plman.validate(token, key);
-			console.log(payload);
+			//console.log(payload);
 		} catch(err) {
 			console.log(err);
 			res.cookie('banner','auth/invalid_default').set('cookie set');
@@ -77,8 +78,10 @@ async function revalidate_login(req, res, next) {
 		}
 		req.internal.auth = true;
 		req.internal.payload = payload;
+		//console.log(req.internal.payload);
 		email = req.internal.payload.email;
 		email_query = await db.datareq.getUserByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
+		console.log(email_query);
 		req.internal.user_id = email_query.id;
 		next();
 	}
@@ -146,6 +149,9 @@ stdin.addListener("data", async function(d) {
 	const input = d.toString().trim();
 	console.log("input: " + input);
 
+	if(input == "email") {
+		send_email('hpcl000test@gmail.com', 'maps@inkwright.net', 'Hello', 'World');
+	} else {
 	(async () => {
 		var data = db.datareq.getUserById(1);
 		var key = await app.get('key');
@@ -153,80 +159,76 @@ stdin.addListener("data", async function(d) {
 		x = await plman.construct("benglish4@gulls.salisbury.edu", "login_auth", 1440, []);
 		console.log(x);
 	})()
-
+}
 });
 
 //------------- email info here ----------------
 
+const from_email = 'hpcl000test@gmail.com';
 var transporter = nodemailer.createTransport({
 	service: 'gmail',
 	auth: {
-		user: 'hp000test@gmail.com',
+		user: from_email,
 		pass: 'cosc426!2020'
 	}
 });
-/*
-transporter.sendMail(mailOptions, function(error, info){
-	if (error) {
-		console.log(error);
-	} else {
-		console.log('Email sent: ' + info.response);
-	}
-});
-*/
-//-------------------------------------------------
 
-async function getTokenFromQuery(req, res, next) {
-	/*if(req.query.token !== undefined) {
-		t = req.query.token;
-	} else {
-		t = req.cookies.token;
-	}*/
-	if(req.query.token !== undefined) {
-		res.cookie('token', req.query.token).set('cookie set');
-	}
-	next();
+function send_email(from, to, sub, body) {
+	transporter.sendMail({from: from, to: to, subject: sub, text: body}, (error, response) => {
+		if (error) {
+    	console.log(error);
+		}
+		console.log(response);
+	});
+};
+
+function send_login_auth(to, token) {
+	send_email(from_email, to, 'SU HPCL: Login Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token);
 }
+
 // TODO: Create a router for middleware separation
-app.get('/auth', [getTokenFromQuery], async function(req, res, next) {
-
-	if(req.cookies.token === undefined) {
-		res.cookie('banner','auth/failure_default').set('cookie set');
-		res.redirect('/');
-	} else {
-		var token = req.cookies.token;
-	}
-
-	if(token === undefined) {
-		res.redirect('/');
-	} else {
-		var key = await app.get('key');
-		try {
-			payload = await plman.validate(token, key);
-			console.log(payload);
-		} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/failure_default').set('cookie set');
+app.get('/auth', async function(req, res, next) {
+	if(req.query.token === undefined) {
+		if(req.cookies.token === undefined) {
 			res.redirect('/');
 			return;
+		} else {
+			res.redirect('/?signout=true');
+			return;
 		}
-		res.cookie('token', token).set('cookie set');
-		res.cookie('banner','auth/user_login/success_default');
-		res.redirect('/');
 	}
+
+	// Signed out message here if token !== undefined
+
+	req.key = await app.get('key');
+	plman.process(req, res).then(resp => {
+		req = resp.req;
+		res = resp.res;
+		res.redirect('/')
+	});
 });
 
 app.get('/login', function(req, res){
  	res.render('pages/user_accounts/login');
 });
 
-app.post('/login', function(req, res){
-
-	console.log(req.body.email);
-
-	//G: 11/11 if logged in already --> redirect to home
-
-	res.end();
+app.post('/login', async function(req, res){
+	key = await app.get('key');
+	return new Promise((resolve, reject) => {
+		resolve(plman.construct('login_auth', req.body.email))
+	}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
+		return new Promise(async (resolve, reject) => {
+			try {
+				send_login_auth(req.body.email, token);
+				resolve(res.cookie('banner', 'mail/login/success_default'));
+			} catch(err) {
+				reject(err);
+			}
+		});
+	}).catch(result => {
+		return res.cookie('banner', 'mail/login/failure_default');
+	}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+	//send_login_auth(req.body.email, (await plman.tokenize(await plman.construct('login_auth', req.body.email), (await app.get('key')))));
 });
 
 async function profile_pagination_check(req, res, next) {
@@ -322,39 +324,6 @@ app.post('/register', function(req, res){
 		//banner 'user already in system' pop up here
 });
 */
-/*
-app.get('/regauth', async function(req, res) {
-	if(req.query.token !== undefined) {
-		t = req.query.token;
-	} else {
-		t = req.cookies.token;
-	}
-	const token = t;
-
-	if(token === undefined) {
-		res.redirect('/');
-	} else {
-		var key = await app.get('key');
-		try {
-			payload = await plman.validate(token, key);
-			console.log(payload);
-		} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/failure_default').set('cookie set');
-			res.redirect('/');
-			return;
-		}
-
-		if(payload.type == "reg_auth") {
-			res.cookie('token', token).set('cookie set');
-
-			res.cookie('banner','auth/user_login/success_default');
-		}
-		res.redirect('/');
-	}
-});
-*/
-
 
 app.get('/blog/create', [verify_signin, revalidate_login], async function(req, res) {
 	const payload = req.internal.payload;
@@ -468,14 +437,26 @@ app.get('/b/:bg', [revalidate_login, blog_pagination_check], async function (req
 	}
 }*/
 
+app.get('/rtt', async function(req, res, next) {
+	(async () => {
+		var data = await db.datareq.getUserById(1);
+		var key = await app.get('key');
+		x = await plman.tokenize(plman.construct("reg_auth", "maps@inkwright.net", 1440, []), key);
+		//console.log(x);
+		res.redirect('/auth?token=' + (await x));
+	})()
+});
+
+;
+
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(1);
 		var key = await app.get('key');
 		x = await plman.tokenize(plman.construct("login_auth", "benglish4@gulls.salisbury.edu", 1440, []),key);
 		console.log(x);
-		res.cookie('token', x).set('cookie set');
-		res.redirect('/auth');
+		//res.cookie('token', x).set('cookie set');
+		res.redirect('/auth?token=' + (await x));
 	})()
 });
 

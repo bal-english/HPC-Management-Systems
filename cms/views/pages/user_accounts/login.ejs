@@ -44,15 +44,19 @@ jQuery(document).ready(function($){
 
       url: '/login',
       type: 'POST',
-      // dataType: 'json',
+      //dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(formData),
-      success: function(data) {
-        console.log(data);
+      success: function(res) {
         console.log('POST success');
+        window.location.replace(res.url);
       },
-      error: function(req, err) {
+      error: function(res, err) {
         console.log('POST error');
+        if(res.url === undefined) {
+          res.url = '/';
+        }
+        window.location.replace(res.url);//href = res.url;
       }
 
     });
