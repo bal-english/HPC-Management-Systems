@@ -111,6 +111,11 @@ app.use(bodyparser.json());
 
 })()
 
+app.post('/api/user/resetPW', async (request:Request, response:Response) => {
+  
+});
+
+
 app.get('/', (request:Request, response:Response) => {
   response.render('pages/login', {
     test: "HPCL UMS Test"
@@ -119,6 +124,12 @@ app.get('/', (request:Request, response:Response) => {
 
 app.get('/dashboard', [auth.authenticateUser], /*auth.checkPermissions(["admin", "faculty", ])],*/ (request:Request, response:Response) => {
   response.render('pages/dashboard', {
+    test: "HPCL UMS Test2"
+  });
+});
+
+app.get('/resetPW', /*auth.checkPermissions(["admin", "faculty", ])],*/ (request:Request, response:Response) => {
+  response.render('pages/resetPW', {
     test: "HPCL UMS Test2"
   });
 });
