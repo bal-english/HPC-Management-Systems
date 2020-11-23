@@ -34,10 +34,10 @@
       <div class="card-header">
         <div class="row"> 
           <div class="col">
-            <h5 class="mb-2">
+            <h5 id="ticket_creator" class="mb-2">
               <%= user.firstName %><%= user.lastName %>
               <!-- needs to send the user id with this \/ -->
-              <a href="/profile"> <%= user.email %> </a>
+              <a id="ticket_email" href="/profile"> <%= user.email %> </a>
             </h5>
             <!-- <button class = "btn btn-sm">
               //Add note to ticket
@@ -57,8 +57,8 @@
          <div class="border-top p-0 card-body">
           <div class="align-items-center border-bottom ppy-2 px-3 no-gutters row">
             <div class="pr-3 col-md-auto">
-              <span id="ticket_id" class="badge badge-soft-success-badge-pill"> <%= ticket.id %>
-              </span>
+              <p id="ticket_id" class="badge badge-soft-success-badge-pill"> <%= ticket.id %>
+              </p>
             </div>
             <div class="pr-3 col-md-auto">
               <code id="status"><%= ticket.status %>
@@ -70,12 +70,12 @@
               </span>
               </div>
             </div>
-            <div class="mt-1 mt-md-0 col-md">
+            <div id="ticket_title" class="mt-1 mt-md-0 col-md">
               <%= ticket.title %>
             </div>
             <div class="col-md-auto">
               <br>
-              <p class="mb-0">
+              <p id="ticket_body" class="mb-0">
                 <%= ticket.body %>
               </p>
             </div>
@@ -146,6 +146,8 @@ jQuery(document).ready(function($){
           ticket_id: jQuery('#ticket_id').val(),
           user_id: jQuery('#assign_change').val()
       }
+
+      console.log(assigned);
 
       jQuery.ajax({
 
