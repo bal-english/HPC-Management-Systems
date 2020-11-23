@@ -2,11 +2,12 @@ const Pool = require('pg').Pool;
 const pool = new Pool();
 
 const makeNonce = () => {
-	return Math.floor(Math.random()*4294967296);
+	return parseInt(Math.floor(Math.random()*4294967296)-2147483648);
 }
+
 const user = async (lastName, firstName, email) => {
-	//const nonce = parseInt(makeNonce());
-	return pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\", \"nonce\") VALUES ($1, $2, $3, $4)', [lastName, firstName, email, 0])
+	const nonce = parseInt(makeNonce());
+	return pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\", \"nonce\") VALUES ($1, $2, $3, $4)', [lastName, firstName, email, nonce])
 }
 
 const blog = (title, author, group, body) => {

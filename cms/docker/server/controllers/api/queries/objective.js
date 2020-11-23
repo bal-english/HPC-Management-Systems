@@ -13,6 +13,10 @@ const getUserByEmail = async (email) => {
 	return pool.query('SELECT * FROM \"user\" WHERE email=$1', [email]);
 }
 
+const getUserNonce = async (u_id) => {
+	return pool.query('SELECT')
+}
+
 const getUserNameById = (u_id) => {
 	return pool.query('SELECT firstName, lastName FROM \"user\" WHERE id = $1' [u_id]);
 }

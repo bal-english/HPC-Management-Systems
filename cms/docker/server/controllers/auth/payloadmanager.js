@@ -45,6 +45,7 @@ const payload_models = () => {
 		"login_auth": {
 			"type": payload_types["login_auth"].name,
 			"email": "",
+			"lastNonce": "",
 			"expiration": payload_types["login_auth"].def_exp,
 			"extra_perms": []
 		}
@@ -54,7 +55,7 @@ const payload_models = () => {
 const default_account_perms = Array.from(db.datareq.getPermissions_def(true));
 const default_account_groups = Array.from(db.datareq.getUsergroups_def(true));
 
-const construct = (type, email/*, expiration*/) => {
+const construct = (type, email, nonce/*, expiration*/) => {
 	if(type === undefined || payload_types[type] === undefined) {
 		throw "Invalid Payload Type";
 	}
@@ -70,19 +71,21 @@ const construct = (type, email/*, expiration*/) => {
 	*/
 	payload = payload_models()[type];
 	payload.email = email;
+	if(payload.type == 'login_auth') {
+		payload.lastNonce = parseInt(nonce);
+	}
+
 
 	return payload;
 }
 
 const tokenize = async (payload, key) => {
 	const token = await V2.encrypt(payload, key)
-	console.log("Token: " + token);
 	return token;
 };
 
 const validate = async (token, key) => {
-	const payload = await V2.decrypt(token, key)
-	console.log("Payload: " + payload);
+	const payload = await V2.decrypt(token, key);
 	return payload;
 }
 
@@ -105,14 +108,13 @@ const process = async (req, res) => {
 		payload = await validate(req.query.token, key);
 	} catch(err) {
 		res.cookie('banner','auth/failure_default').set('cookie set');
-		res.redirect('/');
 		return {'res': res, 'req': req};
 	}
 
 	if(payload.type == payload_types.login_auth.name) {
 		res.cookie('token', req.query.token).set('cookie set');
 		res.cookie('banner','auth/user_login/success_default');
-		res.redirect('/');
+		return {'res': res, 'req': req};
 	} else	if(payload.type == payload_types.reg_auth.name) {
 		if(payload.email == '') {
 			res.cookie('banner','auth/user_reg/failure_default').set('cookie set');

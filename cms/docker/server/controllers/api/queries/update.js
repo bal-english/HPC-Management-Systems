@@ -8,7 +8,7 @@ const makeNonce = () => {
 const user = {
   'nonce': async (user_id) => {
     const newnonce = parseInt(makeNonce());
-    return pool.query('UPDATE \"user\" SET nonce=$1 WHERE id=$2', [nonce, user_id]);
+    return pool.query('UPDATE \"user\" SET nonce=$1 WHERE id=$2', [newnonce, user_id]);
   }
 }
 

@@ -8,9 +8,12 @@
 <br>
 <br>
 
-<body class = "text-center bg-light">
+<body class="text-center bg-light">
 	<%- include('../../templates/blogset/small', {blogs: blogs, page_data: blog_page_data}); %>
   <%- include('../../templates/ticketset/small', {tickets: tickets, page_data: ticket_page_data}); %>
+	<div class="container">
+    <button id="submit" value="accept"> Signout Across All Devices </button>
+	</div>
 </body>
 
 
@@ -18,4 +21,29 @@
 <br>
 <%- include ('../../templates/footer') -%>
 </body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+	jQuery(document).ready(function($){
+  	jQuery('#submit').click(function() {
+			var formData = {
+	      data: ''
+	    }
+    	jQuery.ajax({
+      	url: '/profile/reset',
+      	type: 'POST',
+      	//dataType: 'json',
+      	contentType: 'application/json',
+      	data: JSON.stringify(formData),
+      	success: async function(res) {
+        	window.location.replace(res.url);
+      	},
+      	error: async function(res, err) {
+        	window.location.replace(res.responseJSON.url);
+      	}
+    	});
+  	})
+	});
+</script>
+
 </html>
