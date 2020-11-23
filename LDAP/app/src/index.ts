@@ -223,6 +223,4 @@ app.post('/api/user/logout', async (request:Request, response:Response) => {
   response.send(true);
 });
 
-
 app.listen(80, 'node');
-
