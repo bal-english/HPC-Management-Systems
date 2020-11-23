@@ -8,6 +8,7 @@ const quantitative = require('./queries/quantitative');
 const permissive = require('./queries/permissive');
 const creation = require('./queries/creation');
 const historical = require('./queries/historical');
+const update = require('./queries/update');
 
 var db = {
 	'datareq': objective,
@@ -15,6 +16,7 @@ var db = {
 	'quan': quantitative,
 	'perm': permissive,
 	'create': creation,
+	'update': update,
 	'hist': historical
 };
 
