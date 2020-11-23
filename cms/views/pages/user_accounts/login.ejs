@@ -47,16 +47,16 @@ jQuery(document).ready(function($){
       //dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(formData),
-      success: function(res) {
+      success: async function(res) {
         console.log('POST success');
         window.location.replace(res.url);
       },
-      error: function(res, err) {
+      error: async function(res, err) {
         console.log('POST error');
-        if(res.url === undefined) {
-          res.url = '/';
+        if(res.responseJSON.url === undefined) {
+          res.responseJSON.url = '/';
         }
-        window.location.replace(res.url);//href = res.url;
+        window.location.replace(res.responseJSON.url);
       }
 
     });

@@ -207,26 +207,42 @@ app.get('/auth', async function(req, res, next) {
 	});
 });
 
-app.get('/login', function(req, res){
+app.get('/login', [validateBanner, clearBanner, revalidate_login], function(req, res){
  	res.render('pages/user_accounts/login');
 });
 
 app.post('/login', async function(req, res){
 	key = await app.get('key');
-	return new Promise((resolve, reject) => {
-		resolve(plman.construct('login_auth', req.body.email))
-	}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				send_login_auth(req.body.email, token);
-				resolve(res.cookie('banner', 'mail/login/success_default'));
-			} catch(err) {
-				reject(err);
-			}
-		});
-	}).catch(result => {
-		return res.cookie('banner', 'mail/login/failure_default');
-	}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+	return db.datareq.getUserByEmail(req.body.email).then(results => results.rowCount).then(async (rowCount) => {
+		if(rowCount == 0) {
+			return new Promise((resolve, reject) => {
+				resolve(res.cookie('banner', 'mail/login/failure_noaccount'));
+			}).then(newres => newres.status(404).json({'redirect': true, 'url': '/login'}));
+		} else {
+			return new Promise((resolve, reject) => {
+				resolve(plman.construct('login_auth', req.body.email))
+			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
+				return new Promise(async (resolve, reject) => {
+					try {
+						send_login_auth(req.body.email, token);
+						resolve(res.cookie('banner', 'mail/login/success_default'));
+					} catch(err) {
+						reject(err);
+					}
+				});
+			}).catch(result => {
+				return res.cookie('banner', 'mail/login/failure_default');
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+		}
+	});
+	/*
+	email_found = db_query != 0;
+	console.log(await email_found);
+	if(!email_found) {
+
+	} else {
+
+	}*/
 	//send_login_auth(req.body.email, (await plman.tokenize(await plman.construct('login_auth', req.body.email), (await app.get('key')))));
 });
 
