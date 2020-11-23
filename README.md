@@ -43,21 +43,9 @@ Universal Systems:
 * EJS Templating - For populating and sending website content.
 * PASETO Authorization - For user authorization systems.
 
-### TODO List (11/11): 
+### TODO List (11/23): 
 - [x] (grace) editing of a ticket (admin side, **on individual ticket pages**)
 - [x] (grace) editing of a blog (admin side, **on individual blog pages**)
-
-- email information https://pepipost.com/tutorials/how-to-send-email-with-node-js/
-
-var fromMail = 'hp000test@gmail.com';
-var toMail = '';
-var email_subject = 'HPCL Authentication Link';
-var email_text = 'Authentication link will go here';
-
-const transporter = nodemailer.createTransport({
-    server: 'gmail',
-    auth: {
-        user: fromMail,
-    	pass: 'cosc426!2020'
-  }
-});
+- [ ] code clean up (11/30)
+- [ ] error handleing 
+	- [ ] TODOs in code, mostly API
