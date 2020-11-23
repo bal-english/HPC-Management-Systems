@@ -12,6 +12,16 @@ const user = {
   }
 }
 
+const ticketStatus = (t_id, t_status) => {
+	return pool.query('UPDATE \"ticket\" SET \"status\"=$2 WHERE id=$1', [t_id, t_status]);
+};
+
+const ticketAssigned = (t_id, t_assign) => {
+	return pool.query('UPDATE \"ticket-user_assignee\" SET \"user_id\"=$2 WHERE ticket_id=$1', [t_id, t_assign]);
+};
+
 module.exports = {
-  user
+  user,
+  ticketStatus,
+  ticketAssigned
 };
