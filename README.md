@@ -44,10 +44,8 @@ Universal Systems:
 * PASETO Authorization - For user authorization systems.
 
 ### TODO List (11/11): 
-- [ ] (grace) editing of a ticket (admin side, **on individual ticket pages**)
-	- basically like making a ticket
-- [ ] (grace) editing of a user (admin side , **on individual user pages**)
-- [ ] (grace) editing of a blog (admin side, **on individual blog pages**)
+- [x] (grace) editing of a ticket (admin side, **on individual ticket pages**)
+- [x] (grace) editing of a blog (admin side, **on individual blog pages**)
 
 - email information https://pepipost.com/tutorials/how-to-send-email-with-node-js/
 
