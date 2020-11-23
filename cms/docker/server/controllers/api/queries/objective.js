@@ -130,6 +130,14 @@ const getPermissionsOfUsergroup = async (g_id) => {
 	return pool.query('SELECT * FROM \"usergroup-permission\" WHERE group_id = $1', [g_id]);
 }
 
+const getAssignedByTicket = async (t_id) => {
+	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE ticket_id = $1', [t_id]);
+}
+
+const getAssignedByUser = async (u_id) => {
+	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE user_id = $1', [u_id]);
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -162,5 +170,7 @@ module.exports = {
 	getPermissionByName,
 	getUsergroupsOfUser,
 	getPermissionsOfUser,
-	getPermissionsOfUsergroup
+	getPermissionsOfUsergroup,
+	getAssignedByTicket,
+	getAssignedByUser
 }
