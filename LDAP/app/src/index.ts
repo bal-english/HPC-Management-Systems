@@ -6,7 +6,7 @@ import { User } from "./users";
 import { UmsQueue } from "./UmsQueue";
 import { authenticateWorkerAuthToken, authenticateWorkerSessionToken } from "./workerauthentication";
 import { createPrivateKey } from 'crypto';
-import {validateUserPass} from "./validateUser"
+import {validateUserPass, validateUserCN, validateUserDN, validateUserEmail} from "./validateUser"
 import {UserGroups} from "./UserGroups"
 import {authenticateUser} from "./authentication"
 import path from 'path'
@@ -23,13 +23,10 @@ User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu")
   return res.save();
 })
 .then(async (res:User)=>{
-  await res.setUserPassword("drowssap");
+  await res.setUserPassword("Test");
 })
+// TESTING
 
-
-// Obfuscate middleware
-// add auth to all but login
-// modify needs to call midleware
 const {V2} = paseto
 const app = express();
 (async () => {
@@ -45,9 +42,7 @@ app.use(bodyparser.json());
 (async () => {
 
   const key = await createPrivateKey(Buffer.from(process.env.AUTH_KEY, 'base64'));
-  // const key = await V2.generateKey('public');
   app.set('workerKey', key);
-
 
 // Generates static auth token
 // TODO
@@ -117,7 +112,7 @@ app.get('/', (request:Request, response:Response) => {
   });
 });
 
-app.get('/dashboard', [auth.authenticateUser], /*auth.checkPermissions(["admin", "faculty", ])],*/ (request:Request, response:Response) => {
+app.get('/dashboard', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], (request:Request, response:Response) => {
   response.render('pages/dashboard', {
     test: "HPCL UMS Test2"
   });
@@ -128,45 +123,80 @@ app.get('/dashboard.js', (request:Request, response:Response) => {
 });
 
 
-app.post('/api/user/create',[auth.authenticateUser], async (request:Request, response:Response) => {
-  const email:string = request.body.email;
-  const cn:string = request.body.cn;
-  const pw:string = request.body.pw;
-  try {
+app.post('/api/user/create', [auth.authenticateUser, auth.checkPermissions(["admin"])], async (request: Request, response: Response) => {
+    const email: string = request.body.email;
+    const cn: string = request.body.cn;
+    const password: Obfuscation = request.body.password;
+    try {
+      if (!validateUserEmail(email))
+        throw new Error("Invaid university email entered");
+      if (!validateUserCN(cn))
+        throw new Error("Common name must be alphabetic and at least 3 characters");
+      if (!validateUserPass(password))
+        throw new Error("Password must be composed of either letters, numbers or symbols and at least 4 characters");
 
-    if (!validateUserPass(pw))
-      throw new Error("Password Error: must be composed of either letters, numbers or symbols and at least 4 characters");
-    const res = await User.createUserFromEmail(cn, email); // TODO push password into user
-    const res1 = await res.save();
-    await res1.setUserPassword(pw);
-    await UmsQueue.push(res);
-    response.send({
-      success: res1,
-    });
-  }
-  catch (err) {
-    response.send({
-      error: err.toString(),
-    });
-  }
-});
+      const res = await User.createUserFromEmail(cn, email);
+      const res1 = await res.save();
+      await UmsQueue.push(res);
+      response.send({
+        success: res1,
+      });
+    }
+    catch (err) {
+      response.send({
+        error: err.toString(),
+      });
+    }
+  });
 
-app.post('/api/user/modify', [auth.authenticateUser], async (request:Request, response:Response) => {
-  const dn:string = request.body.dn;
-  const cn:string = request.body.cn;
-  const gidNumber:number = request.body.gidNumber;
-  const userPassword:string = request.body.userPassword;
-  const homeDirectory:string = request.body.homeDirectory;
+  app.post('/api/user/modify', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], async (request: Request, response: Response) => {
+    const dn: string = request.body.dn;
+    try {
+      if (!validateUserDN(dn))
+        throw new Error("Invaid User ID, needs to be composed of letters and numbers");
+      const tempUID = "uid=" + dn + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
+      const userPassword: Obfuscation = request.body.password;
+      let res
+      try {
+        res = await User.loadUser(tempUID);
+      } catch (error) {
+        response.send({
+          error: "Could not load user with that User ID",
+        })
+        return
+      }
+      if (validateUserPass(userPassword)){
+        res = await res.setUserPassword(userPassword.getPass());
+      } else {
+        throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+      }
+      await res.save();
+      response.send({
+      });
+    }
+    catch (err) {
+      response.send({
+        error: err.toString(),
+      });
+    }
+  });
+
+
+app.post('/api/user/modifyOwn', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], async (request: Request, response: Response) => {
+  const userPassword: Obfuscation = request.body.password;
   try {
-    let res = await User.loadUser(dn);
-   if(validateUserPass(userPassword)){
-      res = await res.setUserPassword(userPassword);
-    }else{
+    const key = request.app.get('key');
+    const token = request.cookies.token;
+    const { V2: { verify, decrypt } } = paseto
+    const payload: any = await verify(token, key);
+    let res = await User.loadUser(payload.uid);
+    if (validateUserPass(userPassword)) {
+      res = await res.setUserPassword(userPassword.getPass());
+    } else {
       throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
     }
-
+    await res.save();
     response.send({
-      success: res,
     });
   }
   catch (err) {
@@ -176,51 +206,57 @@ app.post('/api/user/modify', [auth.authenticateUser], async (request:Request, re
   }
 });
 // added authenticate user
-app.post('/api/user/delete',[auth.authenticateUser], async(request:Request, response:Response,) => {
+app.post('/api/user/delete', [auth.authenticateUser, auth.checkPermissions(["faculty", "admin"])], async (request: Request, response: Response, ) => {
+
+  if (!validateUserEmail(request.body.email))
+    throw new Error("Invaid university email entered");
   const tempEmail = request.body.email.split("@");
-  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
-  const user = await User.loadUser(tempUID);
+  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
   try {
+    const user = await User.loadUser(tempUID)
     await user.disableUser();
     await user.save();
-    response.send("User was successfully disabled!");
+    response.send("User was successfully disabled!")
   }
-  catch(error){
-    console.log("Error: User was not successfully disabled!");
-    response.send({error:"Error: User was not successfully disabled!"});
+  catch (error) {
+    response.send({ error: "Error: User was not successfully disabled!" })
   }
 
 });
 
 
-app.post('/api/user/login', async (request:Request, response:Response) => {
-  const email = request.body.email;
-  const password:Obfuscation = new Obfuscation(request.body.password);
+app.post('/api/user/login', async (request: Request, response: Response) => {
+  const email = request.body.email
+  const password: Obfuscation = new Obfuscation(request.body.password);
   const tempEmail = request.body.email.split("@");
-  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
-  let user:User
+  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
+  let user: User
   try {
-    if(password.getPass() === "!!"){
+    if (!validateUserEmail(email)){
       throw new Error();
     }
-    await authLogin(tempUID, password);
+    if (password.getPass() === "!!")
+      throw new Error();
+    await authLogin(tempUID, password)
   }
-  catch(error) {
-    if (error){
-      response.send({error:"No Account Found!"});
-      return;
+  catch (error) {
+    if (error) {
+      response.send({ error: "Could not login with the credentials" })
+      return
     }
+
   }
   user = await User.loadUser(tempUID);
-  const roles:string[] = await user.getRoles();
-  const key = app.get("key");
-  const { V2 : {sign} } = paseto;
-  const token = await sign({roles}, key);
+  const roles: string[] = await user.getRoles();
+  const key = app.get('key');
+  const { V2: { sign } } = paseto
+  const token = await sign({ roles, uid: tempUID }, key)
   response.send(token);
 });
 
-app.post('/api/user/logout', async (request:Request, response:Response) => {
+app.post('/api/user/logout', async (request: Request, response: Response) => {
   response.send(true);
 });
+
 
 app.listen(80, 'node');

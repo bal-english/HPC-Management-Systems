@@ -3,6 +3,7 @@ import { Obfuscation } from './Obfuscation';
 import { isConstructorDeclaration } from 'typescript';
 const { once } = require('events');
 const Promises = require("bluebird");
+import { User } from "./users";
 
 const authLogin = async (uid:string, pw:Obfuscation):Promise<any> =>{
 
@@ -12,7 +13,10 @@ const authLogin = async (uid:string, pw:Obfuscation):Promise<any> =>{
     });
     Promises.promisifyAll(client);
     const done:boolean = false;
-
+    const user = await User.loadUser(uid);
+    if(user.loginShell.toString() === '/sbin/nologin'){
+        throw new Error();
+    }
     await client.bindAsync(uid, pw.getPass())
 
 }

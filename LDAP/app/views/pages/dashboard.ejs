@@ -42,10 +42,10 @@
 
     <div id="test"></div>
 
-    <h2>Modify User</h2>
+    <h2>Modify User Password</h2>
     <div class="row">
-      <label for="modify_dn">Enter the Common Name:</label></label>
-      <input id="modify_dn" type="text" class="form-control" placeholder="Enter the Common Name"></input>
+      <label for="modify_dn">Enter the User ID:</label></label>
+      <input id="modify_dn" type="text" class="form-control" placeholder="Enter the User ID"></input>
     </div>
     <span style="display:block; height: 20px;"></span>
     <div class="row">
@@ -53,12 +53,24 @@
       <input id="modify_password" type="password" class="form-control" placeholder="Enter the Password"></input>
     </div>
     <span style="display:block; height: 10px;"></span>
-    </form>
     <p style="text-align: center; margin: 0 auto">
       <button id="modifyuser" style="text-align: center;" class="btn btn-primary" type="button">Modify User</button>
       <hr>
       <span style="display:block; height: 20px;"></span>
       <div id="test2"></div>
+    
+    
+      <h2>Change Own Password</h2>
+    <div class="row">
+      <label for="modify_own_password">Enter the Password:</label></label>
+      <input id="modify_own_password" type="password" class="form-control" placeholder="Enter the Password"></input>
+    </div>
+    <span style="display:block; height: 10px;"></span>
+    <p style="text-align: left; margin: 0 auto">
+      <button id="modifyOwn" style="text-align: left;" class="btn btn-primary" type="button">Change Own Password</button>
+      <hr>
+      <span style="display:block; height: 20px;"></span>
+      <div id="test3"></div>
 
       <h2>Delete User</h2>
       <form>
@@ -73,7 +85,7 @@
 
       <span style="display:block; height: 20px;"></span>
       <button id="deleteuser" class="btn btn-primary" type="button">Delete User</button>
-
+      <div id="test4"></div>
   </div>
   <div>
     <button id="logoutuser" class="btn btn-primary" type="button">Logout</button>

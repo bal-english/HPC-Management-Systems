@@ -7,8 +7,9 @@ import { isNamedExportBindings } from 'typescript'
 const {V2} = paseto
 // lambda function fix
 
-const authenticateUser = async (req:any, res:any, next:any, pageRoles:string[]) => { // asymmetric key
-if (req.body.password){
+const authenticateUser = async (req:any, res:any, next:any) => { // asymmetric key
+// console.log("In authUSER");
+   if (req.body.password){
     req.body.password = new Obfuscation(req.body.password);
 }
 try {
@@ -20,7 +21,7 @@ const key = req.app.get('key');
     const token = req.cookies.token;
     const {V2: { verify, decrypt } } = paseto
     const payload:any = await verify(token ,key);
-    console.log(payload);
+    console.log("Not junk " + JSON.stringify (payload));
     return next();
  }
 }catch(error){
