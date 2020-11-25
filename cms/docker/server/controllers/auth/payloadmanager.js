@@ -122,9 +122,8 @@ const process = async (req, res) => {
 			return {'res': res, 'req': req};
 		} else {
 			//try {
-				console.log(await db.create.user('Smith', 'Dan', payload.email));
-				new_payload = payload_models().login_auth;
-				new_payload.email = payload.email;
+				newuser = await db.create.user('Smith', 'Dan', payload.email).then(results => results.rows[0]);
+				new_payload = construct('login_auth', payload.email, newuser.nonce);
 				new_token = tokenize(new_payload, key);
 				res.cookie('token', (await new_token)).set('cookie set');
 				res.cookie('banner','auth/user_reg/success_default').set('cookie set');

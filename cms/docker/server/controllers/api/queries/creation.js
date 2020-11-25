@@ -7,7 +7,7 @@ const makeNonce = () => {
 
 const user = async (lastName, firstName, email) => {
 	const nonce = parseInt(makeNonce());
-	return pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\", \"nonce\") VALUES ($1, $2, $3, $4)', [lastName, firstName, email, nonce])
+	return pool.query('INSERT INTO \"user\" (\"lastName\", \"firstName\", \"email\", \"nonce\") VALUES ($1, $2, $3, $4) RETURNING \"id\", \"nonce\"', [lastName, firstName, email, nonce])
 }
 
 const blog = (title, author, group, body) => {

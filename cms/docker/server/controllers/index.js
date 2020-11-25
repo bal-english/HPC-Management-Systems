@@ -45,7 +45,7 @@ function clearBanner(req, res, next) {
 	next();
 }
 
-async function verify_signin(req, res, next) {
+function verify_signin(req, res, next) {
 	const token = req.cookies.token;
 	if(token === undefined) {
 		res.cookie('banner', 'auth/signin_required').set('cookie set');
@@ -92,7 +92,7 @@ async function revalidate_login(req, res, next) {
 	}
 }
 
-async function blog_pagination_check(req, res, next) {
+function blog_pagination_check(req, res, next) {
 	if(req.query.page === undefined) {
 		req.query.page = 0;
 	} else {
@@ -106,7 +106,7 @@ async function blog_pagination_check(req, res, next) {
 	next();
 }
 
-async function prepare_pagination(path, page, view, total, prefix) {
+function prepare_pagination(path, page, view, total, prefix) {
 	total = parseInt(total);
 	payload = {'total': total}
 	payload.view = view;
@@ -124,7 +124,7 @@ async function prepare_pagination(path, page, view, total, prefix) {
 
 }
 
-async function handle_signout(req, res, next) {
+function handle_signout(req, res, next) {
 	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
 		if(req.cookies.token == undefined) {
 			res.cookie('banner','auth/user_logout/failure_notsignedin').set('cookie set');
@@ -174,17 +174,20 @@ var transporter = nodemailer.createTransport({
 	}
 });
 
-function send_email(from, to, sub, body) {
-	transporter.sendMail({from: from, to: to, subject: sub, text: body}, (error, response) => {
-		if (error) {
-    	console.log(error);
-		}
-		console.log(response);
-	});
+async function send_email(from, to, sub, body) {
+	return transporter.sendMail({from: from, to: to, subject: sub, text: body});
 };
 
-function send_login_auth(to, token) {
-	send_email(from_email, to, 'SU HPCL: Login Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token);
+async function send_login_auth(to, token) {
+	return send_email(from_email, to, 'SU HPCL: Login Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
+		throw err;
+	});
+}
+
+async function send_reg_auth(to, token) {
+	return send_email(from_email, to, 'SU HPCL: Account Registration', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
+		throw err;
+	});
 }
 
 // TODO: Create a router for middleware separation
@@ -216,59 +219,28 @@ app.get('/login', [validateBanner, clearBanner, revalidate_login], function(req,
 
 app.post('/login', async function(req, res){
 	key = await app.get('key');
-	/*return db.datareq.getUserByEmail(req.body.email).then(results => results.rowCount).then(async (rowCount) => {
-		if(rowCount == 0) {
-			return new Promise((resolve, reject) => {
-				resolve(res.cookie('banner', 'mail/login/failure_noaccount'));
-			}).then(newres => newres.status(404).json({'redirect': true, 'url': '/login'}));
-		} else {
-			return new Promise((resolve, reject) => {
-				resolve(plman.construct('login_auth', req.body.email))
-			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
-				return new Promise(async (resolve, reject) => {
-					try {
-						send_login_auth(req.body.email, token);
-						resolve(res.cookie('banner', 'mail/login/success_default'));
-					} catch(err) {
-						reject(err);
-					}
-				});
-			}).catch(result => {
-				return res.cookie('banner', 'mail/login/failure_default');
-			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
-		}
-	});*/
-	return db.datareq.getUserByEmail(req.body.email).then(results /*=> results.rowCount).then(async (rowCount)*/ => {
+	return db.datareq.getUserByEmail(req.body.email).then(results => {
 		if(results.rowCount == 0) {
 			return new Promise((resolve, reject) => {
 				resolve(res.cookie('banner', 'mail/login/failure_noaccount'));
-			}).then(newres => newres.status(404).json({'redirect': true, 'url': '/login'}));
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/login'}));
 		} else {
 			return new Promise((resolve, reject) => {
 				resolve(plman.construct('login_auth', req.body.email, results.rows[0].nonce))
-			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
+			}).then(payload => plman.tokenize(payload, key)).then(token => {
 				return new Promise(async (resolve, reject) => {
 					try {
-						send_login_auth(req.body.email, token);
+						await send_login_auth(req.body.email, token);
 						resolve(res.cookie('banner', 'mail/login/success_default'));
 					} catch(err) {
 						reject(err);
 					}
+				}).catch((result) => {
+					return res.cookie('banner', 'mail/login/failure_default');
 				});
-			}).catch(result => {
-				return res.cookie('banner', 'mail/login/failure_default');
 			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
 		}
 	});
-	/*
-	email_found = db_query != 0;
-	console.log(await email_found);
-	if(!email_found) {
-
-	} else {
-
-	}*/
-	//send_login_auth(req.body.email, (await plman.tokenize(await plman.construct('login_auth', req.body.email), (await app.get('key')))));
 });
 
 async function profile_pagination_check(req, res, next) {
@@ -386,8 +358,62 @@ app.get('/signout', [validateBanner, clearBanner, verify_signin, revalidate_logi
 	res.render('pages/user_accounts/signout')
 });
 
-app.get('/register', function(req, res){
+app.get('/register', [validateBanner, clearBanner], function(req, res){
 	res.render('pages/user_accounts/register');
+});
+
+/*
+app.post('/register', async function(req, res) {
+	key = await app.get('key');
+	return db.datareq.getUserByEmail(req.body.email).then(results => {
+		if(results.rowCount == 0) {
+			return new Promise((resolve, reject) => {
+				resolve(plman.construct('reg_auth', req.body.email))
+			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
+				return new Promise(async (resolve, reject) => {
+					try {
+						send_reg_auth(req.body.email, token);
+						resolve(res.cookie('banner', 'mail/reg/success_default'));
+					} catch(err) {
+						reject(err);
+					}
+				});
+			}).catch(result => {
+				return res.coookie('banner', 'mail/reg/failure_default');
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+		} else {
+			return new Promise((resolve, reject) => {
+				resolve(res.cookie('banner', 'mail/reg/failure_emailtaken'))
+			}).then(newres => newres.status(403).json({'redirect': true, 'url': '/register'}));	// TODO: Is this the right HTTP status for this?
+		}
+	})
+})
+*/
+app.post('/register', async function(req, res) {
+	key = await app.get('key');
+	return db.datareq.getUserByEmail(req.body.email).then(results => {
+		if(results.rowCount == 0) {
+			return new Promise((resolve, reject) => {
+				resolve(plman.construct('reg_auth', req.body.email))
+			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
+				return new Promise(async (resolve, reject) => {
+					try {
+						await send_reg_auth(req.body.email, token)
+						resolve(res.cookie('banner', 'mail/reg/success_default'));
+					} catch(err) {
+					//	console.log('err');
+						reject(err);
+					}
+				}).catch(err => {
+					return res.cookie('banner', 'mail/reg/failure_default');
+				});
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+		} else {
+			return new Promise((resolve, reject) => {
+				resolve(res.cookie('banner', 'mail/reg/failure_emailtaken'))
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/register'}));	// TODO: Is this the right HTTP status for this?
+		}
+	});
 });
 /*
 app.post('/register', function(req, res){
@@ -427,7 +453,7 @@ app.get('/blog/create', [verify_signin, revalidate_login], async function(req, r
 app.post('/blog/create', [verify_signin, revalidate_login], async function(req, res){
 
 	const payload = req.internal.payload;
-	if((plman.authorityCheck(payload, "content.create")) == true) {
+	if((await plman.authorityCheck(payload, "content.create")) == true) {
 
 			var user_id = req.internal.user_id
 			var title = req.body.title;
@@ -464,7 +490,7 @@ app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_logi
 	}
 });
 
-app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
+app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
 	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 });
 
@@ -526,7 +552,7 @@ app.get('/b/:bg', [revalidate_login, blog_pagination_check], async function (req
 	}
 }*/
 
-app.get('/rtt', async function(req, res, next) {
+app.get('/rtt', function(req, res, next) {
 	(async () => {
 		var key = await app.get('key');
 		x = await plman.tokenize(plman.construct("reg_auth", "maps@inkwright.net"), key);
@@ -537,7 +563,7 @@ app.get('/rtt', async function(req, res, next) {
 
 ;
 
-app.get('/tt', async function(req, res, next) {
+app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(1).then(results => results.rows[0]);
 		var key = await app.get('key');
@@ -606,7 +632,7 @@ app.get('/tickets', [revalidate_login], function(req, res) {
 
 });
 
-app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
+app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], function(req, res) {
 	res.locals.redirect_data = {
 		'redirect': req.path,
 		'queries': {
@@ -617,11 +643,11 @@ app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_lo
 	db.datareq.getTicketsForUser(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
 });
 
-app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
+app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], function(req, res) {
 	db.datareq.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
 });
 
-app.get('/blog/:id([0-9]+)', [revalidate_login], async function(req, res) {
+app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
 
 	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 

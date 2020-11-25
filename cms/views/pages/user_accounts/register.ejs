@@ -24,7 +24,6 @@
       <br>
 
       <button id="submit" value="accept">Submit</button>
-    </form>
 
 </div>
 </div>
@@ -41,7 +40,7 @@ jQuery(document).ready(function($){
         email: jQuery('#login_email').val(),
       }
 
-    console.log(formData);
+    console.log(user);
 
     jQuery.ajax({
 
@@ -50,13 +49,16 @@ jQuery(document).ready(function($){
       // dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(user),
-      success: function(data) {
-        console.log(data);
-        console.log('POST sucess');
+      success: async function(res) {
+        console.log('POST success');
+        window.location.replace(res.url);
       },
-      error: function(req, err) {
+      error: async function(res, err) {
         console.log('POST error');
-        console.log(err);
+        if(res.responseJSON.url === undefined) {
+          res.responseJSON.url = '/';
+        }
+        window.location.replace(res.responseJSON.url);
       }
 
     });
