@@ -45,12 +45,12 @@ const getUsergroups = () => {
 	return pool.query('SELECT * FROM \"usergroup\"', []);
 }
 
-const getUsergroups_def = (def) => {
-	return pool.query('SELECT * FROM \"usergroup\" WHERE def = $1', [def]);
-}
-
 const getUsergroupById = (u_id) => {
 	return pool.query('SELECT * FROM \"usergroup\" WHERE id = $1', [u_id]);
+}
+
+const getUsergroups_def = (def) => {
+	return pool.query('SELECT * FROM \"usergroup\" WHERE def = $1', [def]);
 }
 
 const getBlogs = () => {

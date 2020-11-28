@@ -15,12 +15,13 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db) {
-  return db.addColumn('usergroup', 'def',
+  db.addColumn('usergroup', 'def',
   {
     type: 'boolean',
     notNull: true,
     defaultValue: false
-  })
+  });
+  return db.runSql('UPDATE \"usergroup\" SET def=true WHERE id=8');
 };
 
 exports.down = function(db) {

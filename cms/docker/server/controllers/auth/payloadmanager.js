@@ -122,7 +122,32 @@ const process = async (req, res) => {
 			return {'res': res, 'req': req};
 		} else {
 			//try {
-				newuser = await db.create.user('Smith', 'Dan', payload.email).then(results => results.rows[0]);
+				newuser = await db.create.user(payload.setup.data.lastName, payload.setup.data.firstName, payload.email).then(results => results.rows[0]);
+				if(payload.setup.usergroups.def == true) {
+					await db.datareq.getUsergroups_def('true').then(results => results.rows).then(results => {
+						arr = [];
+						results.forEach(element => {
+							arr.push(element.id);
+						})
+						return arr;
+					}).then(arr => {
+						arr.forEach(async (element) =>{
+							try {
+								await db.create.connection.user_usergroup(newuser.id, element);
+							} catch(err) {
+								console.log(err);
+							}
+						})
+					})
+				}
+				await payload.setup.usergroups.extra.forEach(async (element) => {
+					try {
+						await db.create.connection.user_usergroup(newuser.id, element);
+					} catch(err) {
+						console.log(err);
+					}
+				});
+				// TODO: ADD default perms
 				new_payload = construct('login_auth', payload.email, newuser.nonce);
 				new_token = tokenize(new_payload, key);
 				res.cookie('token', (await new_token)).set('cookie set');

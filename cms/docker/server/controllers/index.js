@@ -395,6 +395,12 @@ app.post('/register', async function(req, res) {
 		if(results.rowCount == 0) {
 			return new Promise((resolve, reject) => {
 				resolve(plman.construct('reg_auth', req.body.email))
+			}).then(payload => {
+				payload.setup.data.firstName = req.body.first;
+				return payload;
+			}).then(payload => {
+				payload.setup.data.lastName = req.body.last;
+				return payload;
 			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
 				return new Promise(async (resolve, reject) => {
 					try {
