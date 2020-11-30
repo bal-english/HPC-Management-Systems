@@ -5,8 +5,43 @@ const checkUserExistsByEmail = (email) => {
 	return pool.query('SELECT * FROM \"user\" WHERE email=$1', [email]);
 }
 
+const checkUserExistsById = (id) => {
+	const user_id = parseInt(id);
+	return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"user\" WHERE id=$1) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [user_id]);
+}
+
+const checkUsergroupExistsById = (id) => {
+	const group_id = parseInt(id);
+	return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"usergroup\" WHERE id=$1) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [group_id])
+}
+
+const checkPermExistsById = (id) => {
+	const perm_id = parseInt(id);
+	return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"permission\" WHERE id=$1) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [perm_id])
+}
+
+const checkUserInGroup = (u_id, g_id) => {
+		const user_id = parseInt(u_id);
+		const group_id = parseInt(g_id)
+		return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"user-usergroup\" WHERE user_id=$1 AND group_id=$2) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [user_id, group_id]);
+}
+
+const checkUserHasPerm = (u_id, p_id) => {
+	const user_id = parseInt(u_id);
+	const perm_id = parseInt(p_id)
+	return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"user-permission\" WHERE user_id=$1 AND perm_id=$2) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [user_id, perm_id]);
+}
+
+const checkUsergroupHasPerm = (g_id, p_id) => {
+	const group_id = parseInt(g_id);
+	const perm_id = parseInt(p_id);
+	return pool.query('SELECT CASE WHEN EXISTS (SELECT * FROM \"usergroup-permission\" WHERE group_id=$1 AND perm_id=$2) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;', [group_id, perm_id])
+}
+
 const userInGroup = (u_id, g_id) => {
-	return pool.query('SELECT * FROM \"user-usergroup\" WHERE user_id=$1 AND group_id=$2', [u_id, g_id]);
+	const user_id = parseInt(u_id);
+	const group_id = parseInt(g_id);
+	return pool.query('SELECT * FROM \"user-usergroup\" WHERE user_id=$1 AND group_id=$2', [user_id, group_id]);
 }
 
 const userHasPerm = (u_id, p_id) => {
@@ -27,6 +62,12 @@ const groupIsAssignedTicket = (g_id, t_id) => {
 
 module.exports = {
 	checkUserExistsByEmail,
+	checkUserExistsById,
+	checkPermExistsById,
+	checkUserHasPerm,
+	checkUsergroupHasPerm,
+	checkUserInGroup,
+	checkUsergroupExistsById,
 	userInGroup,
 	userHasPerm,
 	usergroupHasPerm,

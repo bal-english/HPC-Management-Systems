@@ -1,0 +1,192 @@
+<html>
+
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<%- include ('/home/app/views/templates/heading/standard_header') -%>
+<%- include ('/home/app/views/templates/nav') -%>
+
+<br>
+<br>
+
+<body>
+
+<div class="container">
+  <div class="accordion" id="permAccordion">
+    <div class="card">
+      <div class="card-header" id="UgP-headingOne">
+        <h2 class="mb-0">
+          <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UgP-collapseOne" aria-expanded="true" aria-controls="UgP-collapseOne">
+            Give Permission to Usergroup
+          </button>
+        </h2>
+      </div>
+      <div id="UgP-collapseOne" class="collapse" aria-labelledby="UgP-headingOne" data-parent="#permAccordion">
+        <div class="card-body">
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UgP-Add-group_id"> Usergroup ID: </label>
+                    <input id="UgP-Add-group_id" class="form-control" type="text" placeholder="Group ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UgP-Add-perm_id"> Perm ID: </label>
+                    <input id="UgP-Add-perm_id" class="form-control" type="text" placeholder="Perm ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="p-0" id="UgP-Add-status">
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="UgP-Add-submit" value="accept">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="UgP-headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UgP-collapseTwo" aria-expanded="false" aria-controls="UgP-collapseTwo">
+              Remove Permission from Usergroup
+            </button>
+          </h2>
+        </div>
+        <div id="UgP-collapseTwo" class="collapse" aria-labelledby="UgP-headingTwo" data-parent="#permAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UgP-Rem-group_id"> Usergroup ID: </label>
+                    <input id="UgP-Rem-group_id" class="form-control" type="text" placeholder="Group ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UgP-Rem-perm_id"> Perm ID: </label>
+                    <input id="UgP-Rem-perm_id" class="form-control" type="text" placeholder="Perm ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="row">
+            <div class="p-0" id="UgP-Rem-status">
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline-primary btn-sm" id="UgP-Rem-submit" value="accept">Submit</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function($){
+  $('#UgP-Add-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('#UgP-Rem-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  jQuery('#UgP-Add-submit').click(function() {
+    var data = {
+        group_id: jQuery('#UgP-Add-group_id').val(),
+        perm_id: jQuery('#UgP-Add-perm_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/usergroup/perm',
+      type: 'POST',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('POST success');
+        console.log(res);
+        if($('#UgP-Add-status').is(":visible")) {
+          $('#UgP-Add-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UgP-Add-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UgP-Add-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('POST error');
+      }
+    });
+  })
+  jQuery('#UgP-Rem-submit').click(function() {
+    var data = {
+        group_id: jQuery('#UgP-Rem-group_id').val(),
+        perm_id: jQuery('#UgP-Rem-perm_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/usergroup/perm',
+      type: 'DELETE',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('DELETE success');
+        console.log(res);
+        if($('#UgP-Rem-status').is(":visible")) {
+          $('#UgP-Rem-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UgP-Rem-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UgP-Rem-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('DELETE error');
+      }
+    });
+  })
+});
+</script>
+
+<%- include ('/home/app/views/templates/footer') -%>
+
+</html>

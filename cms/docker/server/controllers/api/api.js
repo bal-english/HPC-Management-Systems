@@ -7,6 +7,7 @@ const existential = require('./queries/existential');
 const quantitative = require('./queries/quantitative');
 const permissive = require('./queries/permissive');
 const creation = require('./queries/creation');
+const connection = require('./queries/connection');
 const historical = require('./queries/historical');
 const update = require('./queries/update');
 
@@ -16,8 +17,9 @@ var db = {
 	'quan': quantitative,
 	'perm': permissive,
 	'create': creation,
+	'connect': connection,
 	'update': update,
-	'hist': historical
+	'hist': historical,
 };
 
 router.get('/', (req, res) => {

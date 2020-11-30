@@ -18,17 +18,8 @@ const ticket = (email, title, body) => {
 	return pool.query('INSERT INTO \"ticket\" (\"creator\", \"title\", \"body\") VALUES ($1, $2, $3) RETURNING \"id\"', [email, title, body]);
 }
 
-const connection = {
-	'user_usergroup': (user_id, group_id) => {
-		const u_id = parseInt(user_id);
-		const g_id = parseInt(group_id);
-		return pool.query('INSERT INTO \"user-usergroup\" (\"user_id\", \"group_id\") VALUES ($1, $2)', [u_id, g_id]);
-	}
-}
-
 module.exports = {
 	user,
   blog,
   ticket,
-	connection
 }

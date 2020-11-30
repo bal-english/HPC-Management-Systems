@@ -5,15 +5,25 @@ const getUsers = () => {
 	return pool.query('SELECT * FROM \"user\"', []);
 }
 
-const getUserById = (u_id) => {
+const getUserById = (id) => {
+	const u_id = parseInt(id);
 	return pool.query('SELECT * FROM \"user\" WHERE id = $1', [u_id]);
 }
 
-const getUserByEmail = async (email) => {
+const getUserInfoById = (id) => {
+	const u_id = parseInt(id);
+	return pool.query('SELECT * FROM \"user\" WHERE id = $1 RETURNING \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\"', [u_id]);
+}
+
+const getUserByEmail = (email) => {
 	return pool.query('SELECT * FROM \"user\" WHERE email=$1', [email]);
 }
 
-const getUserNonce = async (u_id) => {
+const getUserInfoByEmail = (email) => {
+	return pool.query('SELECT * FROM \"user\" WHERE email=$1 RETURNING \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\"', [email]);
+}
+
+const getUserNonce = (u_id) => {
 	return pool.query('SELECT')
 }
 
@@ -130,15 +140,15 @@ const getPermissionsOfUser = (u_id) => {
 	return pool.query('SELECT * FROM \"user-permission\" WHERE user_id = $1', [u_id]);
 }
 
-const getPermissionsOfUsergroup = async (g_id) => {
+const getPermissionsOfUsergroup = (g_id) => {
 	return pool.query('SELECT * FROM \"usergroup-permission\" WHERE group_id = $1', [g_id]);
 }
 
-const getAssignedByTicket = async (t_id) => {
+const getAssignedByTicket = (t_id) => {
 	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE ticket_id = $1', [t_id]);
 }
 
-const getAssignedByUser = async (u_id) => {
+const getAssignedByUser = (u_id) => {
 	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE user_id = $1', [u_id]);
 }
 
@@ -148,6 +158,8 @@ module.exports = {
 	getUserNameById,
 	getUserByEmail,
 	getUsersById,
+	getUserInfoById,
+	getUserInfoByEmail,
 	getBloggroups,
 	getBloggroupById,
 	getBloggroupByName,

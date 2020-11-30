@@ -422,30 +422,6 @@ app.post('/register', async function(req, res) {
 		}
 	});
 });
-/*
-app.post('/register', function(req, res){
-
-	//check users for validation
-	var email = await fetch('http://localhost:3000/api/user/email/' + req.query.email).then(qres => qres.json());
-
-	//if email is not in db, will return empty array
-	if email == {}:
-		x = await plman.tokenize(plman.construct(req.query.email, "reg_auth", 1440, []),key);
-		console.log(x);
-
-		var mailOptions = {
-			from: 'hp000test@gmail.com',
-			to: req.query.email,
-			subject: 'HPCL Register Authenication',
-			text: 'http://localhost:3000/regauth?token=' + x //where x is the new user's token
-		};
-
-		//send email via library system
-
-	else:
-		//banner 'user already in system' pop up here
-});
-*/
 
 app.get('/blog/create', [verify_signin, revalidate_login], async function(req, res) {
 	const payload = req.internal.payload;
@@ -732,11 +708,242 @@ app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(r
 			res.cookie('banner','error/unauthorized_view').set('cookie set');
 			res.redirect('/');
 	}
-
 });
 
-app.get('/admin/home', [revalidate_login], function(req, res){
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
+app.get('/admin/manage/usergroup', [/*verify_signin,*/revalidate_login], function(res, res, next) {
+	res.render('pages/admin/usergroup-management');
+});
+
+app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
+	exists = {};
+	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
+	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.checkUsergroupHasPerm(req.body.group_id, req.body.perm_id).then(results => results.rows[0].case == 1);
+	result = {'success': false};
+	if(exists.group && exists.perm && !exists.connection) {
+		try {
+			await db.connect.givePermToUsergroup(req.body.group_id, req.body.perm_id);
+			result = {'success': true};
+		} catch(err) {
+			console.log(err);
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Permission successfully given to Usergroup.'}));
+		} else {
+			if(exists.group && exists.perm) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'Usergroup already has that Permission.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That Usergroup and Permission exist and were not connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.group && !exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup and Permission with those IDs could not be found.'}));
+			} else if(!exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup with that ID could not be found.'}));
+			} else if(!exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Permission with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.delete('/admin/manage/usergroup/perm', [], async function(req, res, next) {
+	exists = {};
+	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
+	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.checkUsergroupHasPerm(req.body.group_id, req.body.perm_id).then(results => results.rows[0].case == 1);
+	result = {'success': false};
+	if(exists.group && exists.perm && exists.connection) {
+		try {
+			await db.connect.removePermFromUsergroup(req.body.group_id, req.body.perm_id);
+			result = {'success': true};
+		} catch(err) {
+			console.log(err);
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Permission successfully removed from Usergroup.'}));
+		} else {
+			if(exists.group && exists.perm) {
+				if(!exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'Usergroup already lacks that Permission.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That Usergroup and Permission exist and were connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.group && !exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup and Permission with those IDs could not be found.'}));
+			} else if(!exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup with that ID could not be found.'}));
+			} else if(!exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Permission with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.get('/admin/manage/user', [/*verify_signin,*/revalidate_login], function(req, res, next) {
+	res.render('pages/admin/user-management');
+});
+
+app.post('/admin/manage/user/group', [], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.checkUserInGroup(req.body.user_id, req.body.group_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.group && !exists.connection) {
+		try {
+			await db.connect.addUserToGroup(req.body.user_id, req.body.group_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'User Successfully Added to Group.'}));
+		} else {
+			if(exists.user && exists.group) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'User is already a member.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User and Usergroup exist and were not connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User and Usergroup with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.delete('/admin/manage/user/group', [], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	console.log(exists.user);
+	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
+	console.log(exists.group);
+	exists.connection = await db.exis.checkUserInGroup(req.body.user_id, req.body.group_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.group && exists.connection) {
+		try {
+			await db.connect.removeUserFromGroup(req.body.user_id, req.body.group_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'User Successfully Removed from Group.'}));
+		} else {
+			if(exists.user && exists.group) {
+				if(!exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'User is already not  a member.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User and Usergroup exist and were connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User and Usergroup with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.group) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Usergroup with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.post('/admin/manage/user/perm', [], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.checkUserHasPerm(req.body.user_id, req.body.perm_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.perm && !exists.connection) {
+		try {
+			await db.connect.givePermToUser(req.body.user_id, req.body.perm_id)
+			result = {'success': true};
+		} catch(err) {
+			console.log(err);
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Permission successfully given to User.'}));
+		} else {
+			if(exists.user && exists.perm) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'User already has that Permission.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User and permission exist and were not connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User and permission with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A permission with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.delete('/admin/manage/user/perm', [], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	console.log(exists.user);
+	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
+	console.log(exists.perm);
+	exists.connection = await db.exis.checkUserHasPerm(req.body.user_id, req.body.perm_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.perm && exists.connection) {
+		try {
+			await db.connect.removePermFromUser(req.body.user_id, req.body.perm_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': await err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Permission successfully removed from User.'}));
+		} else {
+			if(exists.user && exists.user) {
+				if(!exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'User already lacks that Permission.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User and Permission exist and were connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User and Permission with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.perm) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Permission with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+/*
+app.get('/admin', [revalidate_login], function(req, res){
+	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
 });
 
 

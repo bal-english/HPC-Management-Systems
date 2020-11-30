@@ -1,0 +1,428 @@
+<html>
+
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<%- include ('/home/app/views/templates/heading/standard_header') -%>
+<%- include ('/home/app/views/templates/nav') -%>
+
+<br>
+<br>
+
+<body>
+
+<div class="container">
+  <div class="accordion" id="groupAccordion">
+    <div class="card">
+      <div class="card-header" id="UUg-headingOne">
+        <h2 class="mb-0">
+          <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UUg-collapseOne" aria-expanded="true" aria-controls="UUg-collapseOne">
+            Add User to Group
+          </button>
+        </h2>
+      </div>
+      <div id="UUg-collapseOne" class="collapse" aria-labelledby="UUg-headingOne" data-parent="#groupAccordion">
+        <div class="card-body">
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UUg-Add-user_id"> User ID: </label>
+                    <input id="UUg-Add-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UUg-Add-usergroup_id"> Group ID: </label>
+                    <input id="UUg-Add-usergroup_id" class="form-control" type="text" placeholder="Group ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="p-0" id="UUg-Add-status">
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="UUg-Add-submit" value="accept">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="UUg-headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UUg-collapseTwo" aria-expanded="false" aria-controls="UUg-collapseTwo">
+              Remove User From Group
+            </button>
+          </h2>
+        </div>
+        <div id="UUg-collapseTwo" class="collapse" aria-labelledby="UUg-headingTwo" data-parent="#groupAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UUg-Rem-user_id"> User ID: </label>
+                    <input id="UUg-Rem-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UUg-Rem-usergroup_id"> Group ID: </label>
+                    <input id="UUg-Rem-usergroup_id" class="form-control" type="text" placeholder="Group ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="row">
+            <div class="p-0" id="UUg-Rem-status">
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline-primary btn-sm" id="UUg-Rem-submit" value="accept">Submit</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+<div class="container">
+  <div class="accordion" id="permAccordion">
+    <div class="card">
+      <div class="card-header" id="UP-headingOne">
+        <h2 class="mb-0">
+          <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UP-collapseOne" aria-expanded="true" aria-controls="UP-collapseOne">
+            Give Permission to User
+          </button>
+        </h2>
+      </div>
+      <div id="UP-collapseOne" class="collapse" aria-labelledby="UP-headingOne" data-parent="#permAccordion">
+        <div class="card-body">
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UP-Add-user_id"> User ID: </label>
+                    <input id="UP-Add-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UP-Add-perm_id"> Perm ID: </label>
+                    <input id="UP-Add-perm_id" class="form-control" type="text" placeholder="Perm ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="p-0" id="UP-Add-status">
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="UP-Add-submit" value="accept">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="UP-headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UP-collapseTwo" aria-expanded="false" aria-controls="UP-collapseTwo">
+              Remove User From Group
+            </button>
+          </h2>
+        </div>
+        <div id="UP-collapseTwo" class="collapse" aria-labelledby="UP-headingTwo" data-parent="#permAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UP-Rem-user_id"> User ID: </label>
+                    <input id="UP-Rem-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UP-Rem-perm_id"> Perm ID: </label>
+                    <input id="UP-Rem-perm_id" class="form-control" type="text" placeholder="Perm ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="row">
+            <div class="p-0" id="UP-Rem-status">
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline-primary btn-sm" id="UP-Rem-submit" value="accept">Submit</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<br>
+<% if(false) { %> <!-- disabled for now -->
+<div class="container">
+  <div class="accordion" id="deactAccordion">
+    <div class="card">
+      <div class="card-header" id="UD-headingOne">
+        <h2 class="mb-0">
+          <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UD-collapseOne" aria-expanded="true" aria-controls="UD-collapseOne">
+            Deactivate a User
+          </button>
+        </h2>
+      </div>
+      <div id="UD-collapseOne" class="collapse" aria-labelledby="UD-headingOne" data-parent="#permAccordion">
+        <div class="card-body">
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UD-De-user_id"> User ID: </label>
+                    <input id="UD-De-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="p-0" id="UD-De-status">
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="UD-De-submit" value="accept">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="UD-headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#UD-collapseTwo" aria-expanded="false" aria-controls="UD-collapseTwo">
+              Reactivate a User
+            </button>
+          </h2>
+        </div>
+        <div id="UD-collapseTwo" class="collapse" aria-labelledby="UD-headingTwo" data-parent="#permAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="p-2">
+                <div class="card">
+                  <div class="card-header">
+                    <label for="UD-Re-user_id"> User ID: </label>
+                    <input id="UD-Re-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="row">
+            <div class="p-0" id="UD-Re-status">
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline-primary btn-sm" id="UD-Re-submit" value="accept">Submit</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function($){
+  $('#UUg-Add-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('#UUg-Rem-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('#UP-Add-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('#UP-Rem-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  jQuery('#UUg-Add-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UUg-Add-user_id').val(),
+        group_id: jQuery('#UUg-Add-usergroup_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/group',
+      type: 'POST',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('POST success');
+        console.log(res);
+        if($('#UUg-Add-status').is(":visible")) {
+          $('#UUg-Add-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UUg-Add-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UUg-Add-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('POST error');
+      }
+    });
+  })
+  jQuery('#UUg-Rem-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UUg-Rem-user_id').val(),
+        group_id: jQuery('#UUg-Rem-usergroup_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/group',
+      type: 'DELETE',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('DELETE success');
+        console.log(res);
+        if($('#UUg-Rem-status').is(":visible")) {
+          $('#UUg-Rem-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UUg-Rem-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UUg-Rem-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('DELETE error');
+      }
+    });
+  })
+  jQuery('#UP-Add-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UP-Add-user_id').val(),
+        perm_id: jQuery('#UP-Add-perm_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/perm',
+      type: 'POST',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('POST success');
+        console.log(res);
+        if($('#UP-Add-status').is(":visible")) {
+          $('#UP-Add-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UP-Add-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UP-Add-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('POST error');
+      }
+    });
+  })
+  jQuery('#UP-Rem-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UP-Rem-user_id').val(),
+        perm_id: jQuery('#UP-Rem-perm_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/perm',
+      type: 'DELETE',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('DELETE success');
+        console.log(res);
+        if($('#UP-Rem-status').is(":visible")) {
+          $('#UP-Rem-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UP-Rem-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UP-Rem-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('DELETE error');
+      }
+    });
+  })
+});
+</script>
+
+<%- include ('/home/app/views/templates/footer') -%>
+
+</html>
