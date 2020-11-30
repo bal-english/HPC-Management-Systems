@@ -1,3 +1,11 @@
+/*Working on the reset password
+TODO
+<uo>
+  - Reroute to page to enter token
+  - Generate token
+  - Make a page to enter the token
+</uo>
+*/
 import * as bodyparser from 'body-parser';
 import express from 'express';
 import paseto from "paseto";
@@ -6,14 +14,14 @@ import { User } from "./users";
 import { UmsQueue } from "./UmsQueue";
 import { authenticateWorkerAuthToken, authenticateWorkerSessionToken } from "./workerauthentication";
 import { createPrivateKey } from 'crypto';
-import {validateUserPass, validateUserCN, validateUserDN, validateUserEmail} from "./validateUser"
-import {UserGroups} from "./UserGroups"
-import {authenticateUser} from "./authentication"
+import { validateUserPass, validateUserCN, validateUserDN, validateUserEmail } from "./validateUser";
+import { UserGroups } from "./UserGroups";
+import { authenticateUser } from "./authentication";
 import path from 'path'
 import { each } from 'bluebird';
 import { authLogin } from './authenticateLogin';
 import { Obfuscation } from './Obfuscation';
-import * as main from "./main"
+import * as main from "./main";
 const cookieParser = require('cookie-parser')
 const auth = require('./authentication');
 
@@ -106,6 +114,23 @@ app.use(bodyparser.json());
 
 })()
 
+app.post('/api/user/resetPW', async (request:Request, response:Response) => {
+  const email = request.body.email;
+  
+  try {
+    if (!validateUserEmail(email))
+      throw new Error("Invaid university email entered");
+    const tempEmail = request.body.email.split("@");
+    const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
+    let res = await User.loadUser(tempUID);
+  } catch(error){
+
+  }
+  
+
+});
+
+
 app.get('/', (request:Request, response:Response) => {
   response.render('pages/login', {
     test: "HPCL UMS Test"
@@ -114,6 +139,12 @@ app.get('/', (request:Request, response:Response) => {
 
 app.get('/dashboard', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], (request:Request, response:Response) => {
   response.render('pages/dashboard', {
+    test: "HPCL UMS Test2"
+  });
+});
+
+app.get('/resetPW', /*auth.checkPermissions(["admin", "faculty", ])],*/ (request:Request, response:Response) => {
+  response.render('pages/resetPW', {
     test: "HPCL UMS Test2"
   });
 });
