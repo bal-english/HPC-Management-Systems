@@ -8,8 +8,7 @@
 <br>
 <br>
 
-<body>
-
+<body class = "text-center bg-light">
  <div class = "container">
   <div class = "content">
     
@@ -17,17 +16,20 @@
     <div class = "bg-light border-bottom-1 card-header">
       <h3 class = "card-title"> Activity Log </h3>
     </div>
-    <div class = "row align-items-center">
-        <div class = "col-sm">
+    <div class="row">
+        <div class="col-6">
+          <h4>
           User
+          </h4>
         </div>
-        <div class = "col-sm">
+        <div class="col-6">
+          <h4>
           Ticket Status
+          </h4>
         </div>
     </div>
     <% tickets.forEach(function(ticket){ %>
-      <% console.log(ticket); %>
-        <%- include('../templates/blogset/singleticket', {ticket: ticket, users: users}); %>
+        <%- include('../pages/tickets/singleticket', {ticket: ticket}); %>
     <% }); %>
   </div>
 

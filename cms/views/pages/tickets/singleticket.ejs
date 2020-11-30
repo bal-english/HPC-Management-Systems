@@ -1,31 +1,21 @@
-<html>
-
-<%- include ('../../templates/heading/htmlhead') -%>
-<%- include ('../../templates/heading/alertmanager') -%>
-<%- include ('../../templates/heading/standard_header') -%>
-<%- include ('../../templates/nav') -%>
-
-
-<br>
-<br>
-
-<body>
-	<div class="container">
-		<div class="card">
+<div class="row">
+	<div class="col-2"> 
+		<%= ticket.creator %>
+	</div>
+	<div class="col-10">
+		<div class="card" style="text-align:left">
 			<div class="card-body">
-				<h3 class="card-title">
+				<h4 class="card-title"> 
 					<%= ticket.title %>
-				</h3>
-				<p class="card-text">
+				</h4>
+				<% if (ticket.body.length > 384) { %>
+					<%= ticket.body.substring(0, 384) + "..." %>
+				<% } else { %>
 					<%= ticket.body %>
-				</p>
+				<% } %>
+			<a href="/ticket/<%= ticket.id %>" class="stretched-link"></a>
 			</div>
 		</div>
 	</div>
-</body>
-
+</div>
 <br>
-<br>
-<%- include ('../../templates/footer') -%>
-</body>
-</html>

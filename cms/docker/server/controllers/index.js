@@ -286,6 +286,7 @@ app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req,
 
 app.get('/profile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
 	const user_id = parseInt(req.internal.user_id);
+	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
 	const blog_page_data = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
 	blog_offset = blog_page_data.currpage*blog_page_data.view;
 	res.locals.blog_page_data = blog_page_data;
@@ -303,7 +304,7 @@ app.get('/profile', [validateBanner, clearBanner, verify_signin, revalidate_logi
 			'ticketview': req.query.ticketview
 		}
 	};
-	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data})
+	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data, user: ticket_creator})
 });
 
 app.use('/profile/reset', async (req, res, next) => {
@@ -633,10 +634,10 @@ app.post('/ticket/create', [revalidate_login], async function(req, res){
 	}
 });
 
-app.get('/tickets', [revalidate_login], function(req, res) {
-	db.datareq.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
+// app.get('/tickets', [revalidate_login], function(req, res) {
+// 	db.datareq.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
 
-});
+// });
 
 app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], function(req, res) {
 	res.locals.redirect_data = {
@@ -670,13 +671,14 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 
 	//this is the user id
 	u = req.internal.user_id;
-	console.log("ID: " + u);
+	// console.log("ID: " + u);
+	// console.log("---------------------------");
 
-	//object from id...
-	//ERROR: This is giving us the object, which doesn't send well to EJS
-	//unless we were going to do "." to access information?
 	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0]);
-	console.log("ticket creator:" + ticket_creator);
+	t_creator = JSON.stringify(ticket_creator);
+	// console.log("ticket creator:" + ticket_creator);
+	// console.log("JSON'd ticket creator:" + t_creator);
+	// console.log("---------------------------");
 
 	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
 		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
@@ -732,12 +734,12 @@ app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(r
 	}
 
 });
-/*
-app.get('/admin', [revalidate_login], function(req, res){
-	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
+
+app.get('/admin/home', [revalidate_login], function(req, res){
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
 });
-*/
-/*
+
+
 app.get('/admin/tickets', [revalidate_login], async function(req, res){
 	var x = await fetch('http://localhost:3000/api/tickets');
 	var y = await fetch('http://localhost:3000/api/users');
@@ -750,7 +752,7 @@ app.get('/admin/tickets', [revalidate_login], async function(req, res){
 
 	res.render('pages/adminhome', {tickets: x, users: y})
 });
-*/
+
 /*
 app.get('/admin/tickets/:id', [revalidate_login], function(req, res){
 	id = req.params.id;
