@@ -104,7 +104,8 @@ const getTickets = () => {
 }
 
 const getTicketsForUser = (u_id) => {
-	return pool.query('SELECT * FROM \"ticket\" WHERE creator = $1', [u_id]);
+	const user_id = parseInt(u_id);
+	return pool.query('SELECT * FROM \"ticket\" WHERE creator = $1', [user_id]);
 }
 
 const getTicketsSubset = (offset, limit) => {
@@ -112,13 +113,15 @@ const getTicketsSubset = (offset, limit) => {
 	return pool.query('SELECT * FROM \"ticket\" OFFSET $1 LIMIT $2', [offset, limit])
 }
 
-const getTicketsSubsetByUserId = (user_id, offset, limit) => {
+const getTicketsSubsetByUserId = (u_id, offset, limit) => {
+	const user_id = parseInt(u_id);
 	//return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit, user_id])
 	return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 OFFSET $1 LIMIT $2', [offset, limit, user_id])
 }
 
 const getTicketById = (u_id) => {
-	return pool.query('SELECT * FROM \"ticket\" WHERE id = $1', [u_id]);
+	const user_id = parseInt(u_id);
+	return pool.query('SELECT * FROM \"ticket\" WHERE id = $1', [user_id]);
 }
 
 const getPermissions = () => {
@@ -145,11 +148,13 @@ const getPermissionsOfUsergroup = (g_id) => {
 }
 
 const getAssignedByTicket = (t_id) => {
-	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE ticket_id = $1', [t_id]);
+	const ticket_id = parseInt(t_id);
+	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE ticket_id = $1', [ticket_id]);
 }
 
 const getAssignedByUser = (u_id) => {
-	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE user_id = $1', [u_id]);
+	const user_id = parseInt(u_id);
+	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]);
 }
 
 module.exports = {

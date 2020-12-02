@@ -9,7 +9,8 @@ const getTicketCount = () => {
 	return pool.query('SELECT count(*) FROM \"ticket\"', []);
 }
 
-const getTicketCountOfUser = (user_id) => {
+const getTicketCountOfUser = (u_id) => {
+	const user_id = parseInt(u_id);
 	return pool.query('SELECT count(*) FROM \"ticket\" WHERE creator = $1', [user_id]);
 }
 
@@ -17,12 +18,14 @@ const getCountOfBlogs = () => {
 	return pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" ORDER BY \"posttime\" DESC) AS \"table\"' , []);
 }
 
-const getBlogCountByUser = (user_id) => {
+const getBlogCountByUser = (u_id) => {
+	const user_id = parseInt(u_id);
 	return pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" WHERE id=$1 ORDER BY \"posttime\" DESC) AS \"table\"', [user_id])
 }
 
 const getCountOfBlogsByGroupId = (g_id) => {
-	return pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC) AS \"table\"' , [g_id]);
+	const group_id = parseInt(g_id);
+	return pool.query('SELECT count(*) FROM (SELECT * FROM \"blog\" WHERE \"group\"=$1 ORDER BY \"posttime\" DESC) AS \"table\"' , [group_id]);
 }
 
 const getCountOfBlogsOffsetBy = (offset) => {
