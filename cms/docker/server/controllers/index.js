@@ -287,14 +287,37 @@ app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req,
 app.get('/profile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
 	const user_id = parseInt(req.internal.user_id);
 	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
-	const blog_page_data = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
+	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
 	blog_offset = blog_page_data.currpage*blog_page_data.view;
 	res.locals.blog_page_data = blog_page_data;
-	blog_data = await db.datareq.getBlogsSubset/*ByUserId*/(/*user_id, */blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
-	const ticket_page_data = await db.quan.getTicketCount().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
+	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
 	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
 	res.locals.ticket_page_data = ticket_page_data;
-	ticket_data = await db.datareq.getTicketsSubset/*ByUserId*/(/*user_id, */ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'blogpage': req.query.blogpage,
+			'blogview': req.query.blogview,
+			'ticketpage': req.query.ticketpage,
+			'ticketview': req.query.ticketview
+		}
+	};
+	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data, user: ticket_creator})
+});
+
+app.get('/newprofile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
+	const user_id = parseInt(req.internal.user_id);
+	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
+	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
+	blog_offset = blog_page_data.currpage*blog_page_data.view;
+	res.locals.blog_page_data = blog_page_data;
+	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
+	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
+	res.locals.ticket_page_data = ticket_page_data;
+	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
 	res.locals.redirect_data = {
 		'redirect': req.path,
 		'queries': {
@@ -638,24 +661,42 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
 });
 
 app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
-
 	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
-	ticket_assignee = await db.datareq.getAssignedByTicket(parseInt(req.params.id)).then(results => results.rows[0]);
+	if(req.internal.user_id != ticket_query.creator) {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/mytickets');
+	}
+	else {
+		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+	}
+});
+
+/*
+app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+
+	const ticket_id = await parseInt(req.params.id);
+
+	ticket_query = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
+
+	// This breaks when no one has been assigned. Also, what is it supposed to return? Right now the it will return a JSONObject such as {"ticket_id": x, "user_id": y}
+	// - Alex
+	//ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows[0]);
 
 	user_assigned = await db.datareq.getUserById(ticket_assignee);
 	// console.log(user_assigned);
 
 	//this is the user id
-	u = req.internal.user_id;
+	u = parseInt(req.internal.user_id);
 	// console.log("ID: " + u);
 	// console.log("---------------------------");
 
-	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0]);
+	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0]).then(result => parseInt(result));
 	t_creator = JSON.stringify(ticket_creator);
 	// console.log("ticket creator:" + ticket_creator);
 	// console.log("JSON'd ticket creator:" + t_creator);
 	// console.log("---------------------------");
 
+	//// These auth checks each need to have an await, or they need to be chained with .then()
 	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
 		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
     } else {
@@ -668,6 +709,7 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 		res.redirect('/mytickets');
 	}
 });
+*/
 
 app.post('/ticket/status', [verify_signin, revalidate_login], async function(req, res) {
 
@@ -726,7 +768,7 @@ app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 			result = {'success': true};
 		} catch(err) {
 			console.log(err);
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -763,7 +805,7 @@ app.delete('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 			result = {'success': true};
 		} catch(err) {
 			console.log(err);
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -803,7 +845,7 @@ app.post('/admin/manage/user/group', [], async function(req, res, next) {
 			await db.connect.addUserToGroup(req.body.user_id, req.body.group_id)
 			result = {'success': true};
 		} catch(err) {
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -841,7 +883,7 @@ app.delete('/admin/manage/user/group', [], async function(req, res, next) {
 			await db.connect.removeUserFromGroup(req.body.user_id, req.body.group_id)
 			result = {'success': true};
 		} catch(err) {
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -878,7 +920,7 @@ app.post('/admin/manage/user/perm', [], async function(req, res, next) {
 			result = {'success': true};
 		} catch(err) {
 			console.log(err);
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -916,7 +958,7 @@ app.delete('/admin/manage/user/perm', [], async function(req, res, next) {
 			await db.connect.removePermFromUser(req.body.user_id, req.body.perm_id)
 			result = {'success': true};
 		} catch(err) {
-			result = await {'success': false, 'err': await err.toString()};
+			result = await {'success': false, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
