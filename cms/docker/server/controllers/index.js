@@ -45,7 +45,7 @@ function clearBanner(req, res, next) {
 	next();
 }
 
-function verify_signin(req, res, next) {
+async function verify_signin(req, res, next) {
 	const token = req.cookies.token;
 	if(token === undefined) {
 		res.cookie('banner', 'auth/signin_required').set('cookie set');
@@ -54,6 +54,8 @@ function verify_signin(req, res, next) {
 		next();
 	}
 }
+
+
 
 async function revalidate_login(req, res, next) {
 	const token = req.cookies.token
@@ -671,8 +673,8 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 	}
 });
 
-/*
-app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+
+app.get('/newticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
 
 	const ticket_id = await parseInt(req.params.id);
 
@@ -680,7 +682,7 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 
 	// This breaks when no one has been assigned. Also, what is it supposed to return? Right now the it will return a JSONObject such as {"ticket_id": x, "user_id": y}
 	// - Alex
-	//ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows[0]);
+	ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows[0]);
 
 	user_assigned = await db.datareq.getUserById(ticket_assignee);
 	// console.log(user_assigned);
@@ -690,14 +692,14 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 	// console.log("ID: " + u);
 	// console.log("---------------------------");
 
-	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0]).then(result => parseInt(result));
+	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0])//.then(result => parseInt(result));
 	t_creator = JSON.stringify(ticket_creator);
 	// console.log("ticket creator:" + ticket_creator);
 	// console.log("JSON'd ticket creator:" + t_creator);
 	// console.log("---------------------------");
 
 	//// These auth checks each need to have an await, or they need to be chained with .then()
-	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
+	if((await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true)) {
 		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
     } else {
     	console.log("user has no edit privileges");
@@ -709,7 +711,7 @@ app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function
 		res.redirect('/mytickets');
 	}
 });
-*/
+
 
 app.post('/ticket/status', [verify_signin, revalidate_login], async function(req, res) {
 
@@ -752,8 +754,13 @@ app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(r
 	}
 });
 
-app.get('/admin/manage/usergroup', [/*verify_signin,*/revalidate_login], function(res, res, next) {
-	res.render('pages/admin/usergroup-management');
+app.get('/admin/manage/usergroup', [verify_signin, revalidate_login], async function(res, res, next) {
+	if((await plman.authorityCheck(payload, "db.admin") == true) || (await plman.authorityCheck(payload, "user.deactivate.others") == true)) {
+		res.render('pages/admin/usergroup-management');
+	} else {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/');
+	}
 });
 
 app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
@@ -830,7 +837,7 @@ app.delete('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.get('/admin/manage/user', [/*verify_signin,*/revalidate_login], function(req, res, next) {
+app.get('/admin/manage/user', [verify_signin, revalidate_login], function(req, res, next) {
 	res.render('pages/admin/user-management');
 });
 
