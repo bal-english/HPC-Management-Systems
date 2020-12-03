@@ -35,9 +35,12 @@
       <span style="display:block; height: 20px;"></span>
     </form>
     <div id="Error"></div>
-    <button id="emailtoken" class="btn btn-primary" type="button">Email Me The Token!</button>
+    <button id="emailtoken" class="btn btn-primary" type="button" data-toggle="modal">Email Me The Token!</button>
     <hr>
     <span style="display:block; height: 20px;"></span>
+
+    <div id='modalWrapper'><%- include('modal', {id: 'exampleModal'}) %></div>
+
 </body>
 <div id="test"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
@@ -66,15 +69,85 @@
         email: $('#check_email').val()
       },
       success: function (data) {
-        if (data.error) {
+        if (!(data.error === null || data.error === undefined)) {
           displayError(data.error, 'Error');
+          $("#exampleModal").modal('hide');
         } else {
-          displaySuccess("CAN DO!", 'Error')
+          $("#exampleModal").modal('show');
+          var content = `<%- include('tokenInput', {}) %>`
+          jQuery('#exampleModal .modal-body').html(content);
+          jQuery('#exampleModal').attr('data-state', 'token');
+          jQuery('#exampleModal').attr('data-token', '');
+          jQuery('#exampleModal button[data-function="submit"]').click(function () {
+            var state = jQuery('#exampleModal').attr('data-state');
+
+            if (state === 'token') {
+              jQuery('#exampleModal').attr('data-state', 'reset');
+              var tokenInput = jQuery('#exampleModal input').val();
+              jQuery('#exampleModal').attr('data-token', tokenInput);
+
+              console.log(tokenInput);
+              $.ajax({
+                url: '/api/user/verifyPWToken',
+                type: 'POST',
+                datatype: 'json',
+                data: {
+                  token: tokenInput,
+                  state: 'token',
+                  email: data.email
+                },
+                success: function (data) {
+                  if (data.error) {
+                    displayError(data.error, 'error');
+                    jQuery('#exampleModal').attr('data-state', 'token');
+                  } else {
+                    var passwordContent = `<%- include('passwordInput', {}) %>`;
+                    jQuery('#exampleModal .modal-body').html(passwordContent);
+                    jQuery('#exampleModal .modal-title').text('Enter the password');
+                    jQuery('#error').html('');
+                  }
+                }
+              })
+
+
+            } else if (state === 'reset') {
+              $.ajax({
+                url: '/api/user/changePW',
+                type: 'POST',
+                datatype: 'json',
+                data: {
+                  token: jQuery('#exampleModal').attr('data-token'),
+                  state: 'reset',
+                  password: jQuery('#new-pass').val()
+                },
+                success: function (data) {
+                  if (data.error) {
+                    displayError(data.error, 'error');
+                  } else {
+                    jQuery('#exampleModal').attr('data-state', '');
+                    closeModal();
+                    displaySuccess("Password successfully changed", 'Error');
+                    
+                  }
+                }
+              })
+            }
+          })
+          jQuery('#exampleModal button[data-function="close"]').click(closeModal);
+
         }
       }
     });
 
   });
+
+  function closeModal() {
+    jQuery('#exampleModal').attr('data-state', '');
+    jQuery('#exampleModal .modal-body').html('');
+    jQuery('#exampleModal .modal-title').text('Enter login token');
+    jQuery('#error').html('');
+    $("#exampleModal").modal('hide');
+  }
   function displayError(msg, div) {
     var errorbox = `<div class="alert alert-danger alert-dismissible">
       <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>` + msg + `</div>`
@@ -84,6 +157,7 @@
     var successbox = `<div class="alert alert-success alert-dismissible">
       <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>` + msg + `</div>`
     $("#" + div).append(successbox);
-  } </script>
+  } 
+</script>
 
 </html>
