@@ -663,54 +663,88 @@ app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
 });
 
 app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+	
 	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
-	if(req.internal.user_id != ticket_query.creator) {
+
+	user_id = parseInt(req.internal.user_id);
+	
+		// TODO: parse ticket_assignee for each assigned admin, pulling each admin's information to post to page ?
+
+	ticket_assignee = await db.datareq.getAssignedByTicket(req.params.id).then(results => results.rows); //return "parsed" json array?
+	if (isNaN(ticket_assignee)){
+		db.update.ticketAssigned(1, ticket_query);
+	}
+
+	console.log("----------ticket_assignee-------------");
+	console.log(ticket_assignee); //should be array of json objs, 1 if originally no one was assigned
+
+	var assigned = {};
+	ticket_assignee.forEach(assignee => { assigned_admin.push(assigned) } );
+
+	console.log("----------assgined admin as json objects-------------");
+	console.log("These are the assigned admins: " + assigned);
+
+
+	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]) // this returns user's information to post ot page
+	console.log("----------ticket creator json obj--------------------");
+	console.log(ticket_creator);
+
+	if(admin_check = (await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true)) {
+		console.log("-----------admin----------");
+		console.log(admin_check);
+		res.render('pages/tickets/singleticket', {ticket: ticket_query, user: ticket_creator, assigned: assigned, admin: admin_check});
+    } else {
+    	console.log("user has no edit privileges");
+		res.render('pages/tickets/singleticket', {ticket: ticket_query, admin: admin_check});
+    }
+
+	if(user_id != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	}
 	else {
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+		res.render('pages/tickets/singleticket', {ticket: ticket_query, admin: admin_check});
 	}
 });
 
 
-app.get('/newticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+// app.get('/newticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
 
-	const ticket_id = await parseInt(req.params.id);
+// 	const ticket_id = await parseInt(req.params.id);
 
-	ticket_query = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
+// 	ticket_query = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
 
-	// This breaks when no one has been assigned. Also, what is it supposed to return? Right now the it will return a JSONObject such as {"ticket_id": x, "user_id": y}
-	// - Alex
-	ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows[0]);
+// 	// This breaks when no one has been assigned. Also, what is it supposed to return? Right now the it will return a JSONObject such as {"ticket_id": x, "user_id": y}
+// 	// - Alex
+// 	ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows[0]);
 
-	user_assigned = await db.datareq.getUserById(ticket_assignee);
-	// console.log(user_assigned);
+// 	user_assigned = await db.datareq.getUserById(ticket_assignee);
+// 	// console.log(user_assigned);
 
-	//this is the user id
-	u = parseInt(req.internal.user_id);
-	// console.log("ID: " + u);
-	// console.log("---------------------------");
+// 	//this is the user id
+// 	u = parseInt(req.internal.user_id);
+// 	// console.log("ID: " + u);
+// 	// console.log("---------------------------");
 
-	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0])//.then(result => parseInt(result));
-	t_creator = JSON.stringify(ticket_creator);
-	// console.log("ticket creator:" + ticket_creator);
-	// console.log("JSON'd ticket creator:" + t_creator);
-	// console.log("---------------------------");
+// 	ticket_creator = await db.datareq.getUserById(u).then(results => results.rows[0])//.then(result => parseInt(result));
+// 	t_creator = JSON.stringify(ticket_creator);
+// 	// console.log("ticket creator:" + ticket_creator);
+// 	// console.log("JSON'd ticket creator:" + t_creator);
+// 	// console.log("---------------------------");
 
-	//// These auth checks each need to have an await, or they need to be chained with .then()
-	if((await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true)) {
-		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
-    } else {
-    	console.log("user has no edit privileges");
-		res.render('pages/tickets/singleticket', {ticket: ticket_query});
-    }
+// 	//// These auth checks each need to have an await, or they need to be chained with .then()
+// 	if((await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true)) {
+// 		res.render('pages/ticketadmin.ejs', {ticket: ticket_query, user: ticket_creator, assigned: user_assigned});
+//     } else {
+//     	console.log("user has no edit privileges");
+// 		res.render('pages/tickets/singleticket', {ticket: ticket_query});
+//     }
 
-	if(u != ticket_query.creator) {
-		res.cookie('banner','error/unauthorized_view').set('cookie set');
-		res.redirect('/mytickets');
-	}
-});
+// 	if(u != ticket_query.creator) {
+// 		res.cookie('banner','error/unauthorized_view').set('cookie set');
+// 		res.redirect('/mytickets');
+// 	}
+// });
 
 
 app.post('/ticket/status', [verify_signin, revalidate_login], async function(req, res) {

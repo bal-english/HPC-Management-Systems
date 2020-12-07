@@ -24,8 +24,162 @@
 	</div>
 </body>
 
+<% if(admin) { %>
+	
+<br>
+<br>
+
+ <div class="container">
+  <div class="content">
+    
+    <div class="mb-3 card">
+      <div class="card-header">
+        <div class="row"> 
+          <div class="col">
+            <h5 id="ticket_creator" class="mb-2">
+              <%= user.firstName %><%= user.lastName %>
+              <!-- needs to send the user id with this \/ -->
+              <a id="ticket_email" href="/profile"> <%= user.email %> </a>
+            </h5>
+            <!-- <button class = "btn btn-sm">
+              //Add note to ticket
+            </button> -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <br>
+    <div class="card">
+      <div class="bg-light card-header">
+         <h4 class="mb-0">
+          Ticket information 
+         </h4>
+         <br>
+         <div class="border-top p-0 card-body">
+          <div class="align-items-center border-bottom ppy-2 px-3 no-gutters row">
+            <div class="pr-3 col-md-auto">
+              <p id="ticket_id" class="badge badge-soft-success-badge-pill"> <%= ticket.id %>
+              </p>
+            </div>
+            <div class="pr-3 col-md-auto">
+              <code id="status"><%= ticket.status %>
+              </code>
+            </div>
+            <div class="pr-3 col-md-auto">
+              <div class="pr-3 col-md-auto">
+              	<% if(assigned) { %>
+	              <span id="assigned_id" class="badge badge-soft-success-badge-pill"> <%= assigned.firstName %>  <%= assigned.lastName %>
+	              </span>
+              	<% }else{ %>
+              		<span id="assigned_id" class="badge badge-soft-success-badge-pill"> Unassigned
+	              </span>
+	            <% } %>
+              </div>
+            </div>
+            <div id="ticket_title" class="mt-1 mt-md-0 col-md">
+              <%= ticket.title %>
+            </div>
+            <div class="col-md-auto">
+              <br>
+              <p id="ticket_body" class="mb-0">
+                <%= ticket.body %>
+              </p>
+            </div>
+          </div>
+      </div>
+
+</div>
+</div>
+
+<div class="card">
+          <div class="container">
+            <label for="assign_change"> Change Assigned </label>
+            <input id="assign_change"> </input>
+            <div class="float-right">
+              <button id="assigned" class="btn btn-outline-primary btn-sm"> Edit </button>
+            </div>
+          </div>
+          <div class="container">
+            <label for="status_change"> Change Ticket Status </label>
+            <input id="status_change"> </input>
+            <div class="float-right">
+              <button id="status" class="btn btn-outline-primary btn-sm"> Edit </button>
+            </div>
+          </div>
+         </div>
+      </div>
+
+<% } %>
+
 <br>
 <br>
 <%- include ('../../templates/footer') -%>
 </body>
 </html>
+
+<% if(admin) { %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script type = "text/javascript">
+
+jQuery(document).ready(function($){
+
+  jQuery('#status').click(function() {
+
+    var status = {
+        ticket_id: jQuery('#ticket_id').val(),
+        status: jQuery('#status_change').val()
+      }
+
+    jQuery.ajax({
+
+        url: '/ticket/status',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(status),
+        success: function(data) {
+          console.log('STATUS POST success');
+          //send
+        },
+        error: function(req, err) {
+          console.log('POST error');
+        }
+
+      });
+
+    })
+
+    jQuery('#assigned').click(function() {
+
+      var assigned = {
+          ticket_id: jQuery('#ticket_id').val(),
+          user_id: jQuery('#assign_change').val()
+      }
+
+      console.log(assigned);
+
+      jQuery.ajax({
+
+          url: '/ticket/assigned',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(assigned),
+          success: function(data) {
+            console.log('ASSIGN POST success');
+            //send
+          },
+          error: function(req, err) {
+            console.log('POST error');
+          }
+
+        });
+
+      })
+
+});
+
+
+</script>
+<% } %>
