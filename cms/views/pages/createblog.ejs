@@ -38,32 +38,24 @@
 <script type = "text/javascript">
 
 jQuery(document).ready(function($){
-
   jQuery('#submit').click(function() {
-
     var blog = {
         title: jQuery('#title').val(),
         blog_content: jQuery('#blog_content').val()
       }
-
     jQuery.ajax({
-
       url: '/blog/create',
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(blog),
-      success: function(data) {
-        console.log(data);
-        console.log('POST success');
+      success: function(res) {
+        window.location.replace(res.url);
       },
-      error: function(req, err) {
-        console.log('POST error');
+      error: function(res, err) {
+        window.location.replace(res.responseJSON.url);
       }
-
     });
-
   })
-
 });
 
 </script>

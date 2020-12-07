@@ -12,7 +12,7 @@ const getUserById = (id) => {
 
 const getUserInfoById = (id) => {
 	const u_id = parseInt(id);
-	return pool.query('SELECT * FROM \"user\" WHERE id = $1 RETURNING \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\"', [u_id]);
+	return pool.query('SELECT id, lastName, firstName, email, deactivated FROM \"user\" WHERE id = $1', [u_id]);
 }
 
 const getUserByEmail = (email) => {
@@ -20,7 +20,7 @@ const getUserByEmail = (email) => {
 }
 
 const getUserInfoByEmail = (email) => {
-	return pool.query('SELECT * FROM \"user\" WHERE email=$1 RETURNING \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\"', [email]);
+	return pool.query('SELECT id, lastName, firstName, email, deactivated FROM \"user\" WHERE email=$1', [email]);
 }
 
 const getUserNonce = (u_id) => {

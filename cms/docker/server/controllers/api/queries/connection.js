@@ -8,7 +8,7 @@ const addUserToGroup = (u_id, g_id) => {
 }
 
 const removeUserFromGroup = (u_id, g_id) => {
-  const user_id = parseInt(user_id);
+  const user_id = parseInt(u_id);
   const group_id = parseInt(g_id);
   return pool.query('DELETE FROM \"user-usergroup\" WHERE user_id=$1 AND group_id=$2', [user_id, group_id]);
 }
