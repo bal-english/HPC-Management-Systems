@@ -100,24 +100,30 @@ const authorityCheck = async (payload, perm_name) => {
 	perm_id = perm_query.id;
 	return db.perm.userHasPerm(user_id, perm_id);
 }
-
+const nonceCheck = async (user_id, curr_nonce) => {
+	nonce = await db.datareq.getUserById(user_id).then(results => results.rows[0].nonce);
+	return nonce == curr_nonce;
+}
 const process = async (req, res) => {
 	var key = (await req.key);// delete req.key;
 	payload = {};
 	try {
 		payload = await validate(req.query.token, key);
 	} catch(err) {
-		res.cookie('banner','auth/failure_default').set('cookie set');
+		req.internal.banner = 'auth/failure_default';
+		res.cookie('banner', req.internal.banner).set('cookie set');
 		return {'res': res, 'req': req};
 	}
 
 	if(payload.type == payload_types.login_auth.name) {
 		res.cookie('token', req.query.token).set('cookie set');
-		res.cookie('banner','auth/user_login/success_default');
+		req.internal.banner = 'auth/user_login/success_default';
+		res.cookie('banner', req.internal.banner);
 		return {'res': res, 'req': req};
 	} else	if(payload.type == payload_types.reg_auth.name) {
 		if(payload.email == '') {
-			res.cookie('banner','auth/user_reg/failure_default').set('cookie set');
+			req.internal.banner = 'auth/user_reg/failure_default';
+			res.cookie('banner', req.internal.banner).set('cookie set');
 			res.clearCookie('token');
 			return {'res': res, 'req': req};
 		} else {
@@ -151,11 +157,13 @@ const process = async (req, res) => {
 				new_payload = construct('login_auth', payload.email, newuser.nonce);
 				new_token = tokenize(new_payload, key);
 				res.cookie('token', (await new_token)).set('cookie set');
-				res.cookie('banner','auth/user_reg/success_default').set('cookie set');
+				req.internal.banner = 'auth/user_reg/success_default';
+				res.cookie('banner', req.internal.banner).set('cookie set');
 				return {'res': res, 'req': req};
 			}
 			//} catch (err) {
-					res.cookie('banner','auth/user_reg/failure_default').set('cookie set');
+					req.internal.banner = 'auth/user_reg/failure_default';
+					res.cookie('banner', req.internal.banner).set('cookie set');
 					res.clearCookie('token');
 			//}
 	}
@@ -167,5 +175,6 @@ module.exports = {
 	tokenize,
 	validate,
 	authorityCheck,
+	nonceCheck,
 	process
 };

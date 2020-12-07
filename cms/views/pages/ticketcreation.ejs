@@ -50,19 +50,14 @@ jQuery(document).ready(function($){
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(ticket),
-        success: function(data) {
-          console.log(data);
-          console.log('POST success');
-          //send
+        success: function(res) {
+          window.location.replace(res.url);
         },
-        error: function(req, err) {
-          console.log('POST error');
+        error: function(res, err) {
+          window.location.replace(res.responseJSON.url);
         }
-
       });
-
     })
-
 });
 
 

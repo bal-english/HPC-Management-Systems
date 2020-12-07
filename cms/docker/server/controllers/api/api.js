@@ -10,6 +10,7 @@ const creation = require('./queries/creation');
 const connection = require('./queries/connection');
 const historical = require('./queries/historical');
 const update = require('./queries/update');
+const conversion = require('./queries/conversion');
 
 var db = {
 	'datareq': objective,
@@ -20,6 +21,7 @@ var db = {
 	'connect': connection,
 	'update': update,
 	'hist': historical,
+	'convert': conversion
 };
 
 router.get('/', (req, res) => {

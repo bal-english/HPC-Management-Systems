@@ -28,7 +28,8 @@ app.use('/api', api.router/*, function (req, res) {
 	res.sendStatus(401);
 }*/);
 
-function validateBanner(req, res, next) {
+
+async function validateBanner(req, res, next) {
 	try {
 		ejs.render('templates/alert/' + req.cookies.banner)
 	} catch(err) {
@@ -38,14 +39,14 @@ function validateBanner(req, res, next) {
 	res.locals.banner = req.cookies.banner;
 	next();
 }
-
-function clearBanner(req, res, next) {
+async function clearBanner(req, res, next) {
+	await console.log('This function (clearBanner) is deprecated, please update it.')
 	res.cookie('banner', 'none').set('cookie set');
 	//console.log(req.cookies);
 	next();
 }
-
 async function verify_signin(req, res, next) {
+	await console.log('This function (verify_signin) is deprecated, please update it.')
 	const token = req.cookies.token;
 	if(token === undefined) {
 		res.cookie('banner', 'auth/signin_required').set('cookie set');
@@ -54,10 +55,8 @@ async function verify_signin(req, res, next) {
 		next();
 	}
 }
-
-
-
 async function revalidate_login(req, res, next) {
+	await console.log('This function (revalidate_login) is deprecated, please update it.')
 	const token = req.cookies.token
 	if(token === undefined) {
 		next();
@@ -92,6 +91,119 @@ async function revalidate_login(req, res, next) {
 		}
 		next();
 	}
+};
+
+function internal_prep(req, res, next) {
+	console.log(req.cookies);
+	if(req.internal === undefined) {
+		req.internal = {'problem': {}, 'banner': 'none', 'require': {'signin': false}, 'user': {'authed': false}};
+	};
+	next();
+};
+
+function enable_signin_required(req, res, next) {
+	req.internal.require.signin = true;
+	next();
+}
+
+async function validate_signin(req, res, next) {
+	req.internal.problem.no_token = await false;
+	req.internal.problem.invalid_token = await false;
+	req.internal.problem.bad_email = await false;
+	req.internal.problem.bad_nonce = await false;
+	req.internal.problem.cannot_check_nonce = await false;
+
+	const token = req.cookies.token;
+	req.internal.problem.no_token = await new Promise((resolve, reject) => {
+		if(token === undefined && req.internal.require.signin) {
+			resolve(true);
+		} else {
+			resolve(false);
+		}
+	});
+	req.internal.problem.invalid_token = await new Promise(async (resolve, reject) => {
+		if(req.internal.problem.no_token == true || token === undefined) {
+			resolve(undefined);
+		} else {
+			const key = await app.get('key');
+			try {
+				req.internal.user.payload = await plman.validate(token, key);
+				resolve(false);
+			} catch(err) {
+				console.log(err);
+				resolve(true);
+			}
+		}
+	});
+	req.internal.problem.bad_email = await new Promise(async (resolve, reject) => {
+		if(req.internal.problem.invalid_token === undefined || req.internal.problem.invalid_token == true) {
+			resolve(undefined);
+		} else {
+			try {
+				req.internal.user.id = await db.convert.user.emailToId(req.internal.user.payload.email).then(results => results.rows[0].id);
+				resolve(false);
+			} catch(err) {
+				console.log("hello");
+				console.log(err);
+				resolve(true)
+			}
+		}
+	})
+	req.internal.problem.cannot_check_nonce = await new Promise(async (resolve, reject) => {
+		if(req.internal.problem.bad_email === undefined) {
+			resolve(undefined);
+			req.internal.problem.bad_nonce = undefined;
+		} else {
+			try {
+				req.internal.problem.bad_nonce = !(await plman.nonceCheck(req.internal.user.id, req.internal.user.payload.lastNonce));
+				if(req.internal.problem.bad_nonce != true && req.internal.problem.bad_nonce != false) {
+					throw 'ERR: Failure in nonce check.';
+				}
+				resolve(false);
+			} catch(err) {
+				console.log(err);
+				req.internal.problem.bad_nonce = undefined;
+				resolve(true);
+			}
+		}
+	})
+	req.internal.problem.any = () => {
+		for(key in req.internal.problem) {
+			if(key != "any" && (req.internal.problem[key] == true || req.internal.problem[key] === undefined)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	if(req.internal.problem.any() == false) {
+		req.internal.user.authed = true;
+	}
+	res.locals.user = req.internal.user;
+	res.locals.authed = req.internal.user.authed;
+	console.log(await req.internal.problem);
+	next();
+}
+
+async function process_banner(req, res, next) {
+	console.log(req.cookies.banner);
+	if((req.internal.banner == 'none' || req.internal.banner === undefined) && req.cookies.banner != 'none') {
+		req.internal.banner = req.cookies.banner;
+	}
+	try {
+		ejs.render('templates/alert/' + req.internal.banner)
+	} catch(err) {
+		req.internal.problem.invalid_banner = true;
+		req.internal.banner = 'auth/failure_default';
+	}
+	res.locals.banner = req.internal.banner;
+	console.log(res.locals.banner);
+	req.internal.banner = 'none';
+	res.cookie('banner', 'none').set('cookie set');
+	next();
+}
+function log_problems(req, res, next) {
+	console.log(req.internal.problem);
+	next();
 }
 
 function blog_pagination_check(req, res, next) {
@@ -124,20 +236,6 @@ function prepare_pagination(path, page, view, total, prefix) {
 	payload.prefix = prefix;
 	return payload;
 
-}
-
-function handle_signout(req, res, next) {
-	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
-		if(req.cookies.token == undefined) {
-			res.cookie('banner','auth/user_logout/failure_notsignedin').set('cookie set');
-		} else {
-			res.cookie('banner','auth/user_logout/success_default').set('cookie set');
-		}
-		res.clearCookie('token');
-		res.redirect('/');
-	} else {
-		next();
-	}
 }
 
 app.use(cookieParser());
@@ -179,13 +277,11 @@ var transporter = nodemailer.createTransport({
 async function send_email(from, to, sub, body) {
 	return transporter.sendMail({from: from, to: to, subject: sub, text: body});
 };
-
 async function send_login_auth(to, token) {
 	return send_email(from_email, to, 'SU HPCL: Login Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
 		throw err;
 	});
 }
-
 async function send_reg_auth(to, token) {
 	return send_email(from_email, to, 'SU HPCL: Account Registration', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
 		throw err;
@@ -193,15 +289,13 @@ async function send_reg_auth(to, token) {
 }
 
 // TODO: Create a router for middleware separation
-app.get('/auth', async function(req, res, next) {
+app.get('/auth', [internal_prep], async function(req, res, next) {
 	if(req.query.token === undefined) {
 		if(req.cookies.token === undefined) {
-			res.redirect('/');
-			return;
-		} else {
-			res.redirect('/?signout=true');
-			return;
+			res.cookie('banner', 'auth/user_login/failure_default');
 		}
+		res.redirect('/');
+		return;
 	} else {
 
 		// Signed out message here if token !== undefined
@@ -215,7 +309,7 @@ app.get('/auth', async function(req, res, next) {
 	}
 });
 
-app.get('/login', [validateBanner, clearBanner, revalidate_login], function(req, res){
+app.get('/login', [internal_prep, process_banner], function(req, res){
  	res.render('pages/user_accounts/login');
 });
 
@@ -267,107 +361,75 @@ async function profile_pagination_check(req, res, next) {
 	} else {
 		req.query.blogview = parseInt(req.query.blogview);	// TODO: Add error handling for NaN and #<1
 	}
+	console.log(req.query);
 	next();
 }
-/*
-app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req, res){
-	//this for blog gen from db
 
-	res.locals.total = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count);
-	res.locals.pagecnt = res.locals.total/req.query.view;
-	if(res.locals.total % req.query.view == 0) {
-		res.locals.pagecnt = res.locals.pagecnt-1
-	}
-	res.locals.currpage = req.query.page;
-	res.locals.stdview = (req.query.view == app.get('pagination').blog_def)
-	res.locals.redirect = req.path
-	offset = req.query.page*req.query.view;
-	db.datareq.getBlogsSubset(offset, req.query.view).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
-});
-*/
-
-app.get('/profile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
-	const user_id = parseInt(req.internal.user_id);
-	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
-	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
-	blog_offset = blog_page_data.currpage*blog_page_data.view;
-	res.locals.blog_page_data = blog_page_data;
-	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
-	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
-	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
-	res.locals.ticket_page_data = ticket_page_data;
-	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
-	res.locals.redirect_data = {
-		'redirect': req.path,
-		'queries': {
-			'blogpage': req.query.blogpage,
-			'blogview': req.query.blogview,
-			'ticketpage': req.query.ticketpage,
-			'ticketview': req.query.ticketview
-		}
-	};
-	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data, user: ticket_creator})
-});
-
-app.get('/newprofile', [validateBanner, clearBanner, verify_signin, revalidate_login, profile_pagination_check], async function(req, res, next) {
-	const user_id = parseInt(req.internal.user_id);
-	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
-	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
-	blog_offset = blog_page_data.currpage*blog_page_data.view;
-	res.locals.blog_page_data = blog_page_data;
-	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
-	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
-	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
-	res.locals.ticket_page_data = ticket_page_data;
-	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
-	res.locals.redirect_data = {
-		'redirect': req.path,
-		'queries': {
-			'blogpage': req.query.blogpage,
-			'blogview': req.query.blogview,
-			'ticketpage': req.query.ticketpage,
-			'ticketview': req.query.ticketview
-		}
-	};
-	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data, user: ticket_creator})
-});
-
-app.use('/profile/reset', async (req, res, next) => {
-	const token = req.cookies.token
-	if(token === undefined) {
-		res.cookie('banner','auth/invalid_default').set('cookie set');
-		res.clearCookie('token');
-		return res.status(400);
-	} else {
-		var key = await app.get('key');
-		payload = {};
-		try {
-			payload = await plman.validate(token, key);
-		} catch(err) {
-			console.log(err);
-			res.cookie('banner','auth/invalid_default').set('cookie set');
+app.get('/profile', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+		if(req.internal.problem.no_token == true) {
+			req.internal.banner = 'auth/signin_required'
 			res.clearCookie('token');
-			return res.status(400);
+		} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.cannot_check_nonce) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.bad_nonce) {
+			req.internal.banner = 'auth/invalid_nonce'
+			res.clearCookie('token');
 		}
-		res.locals.authed = true;
-		if(req.internal === undefined) {
-			req.internal = {};
+		if(req.internal.problem.any() == true) {
+			res.cookie('banner', req.internal.banner).set('cookie set');
+			res.redirect('/');
+		} else {
+			next();
 		}
-		req.internal.auth = true;
-		req.internal.payload = payload;
-		//console.log(req.internal.payload);
-		email = req.internal.payload.email;
-		email_query = await db.datareq.getUserByEmail(email).then(results => results.rows[0]);	// TODO: Add error handling
-		req.internal.user_id = email_query.id;
+}, profile_pagination_check, process_banner], async function(req, res) {
+	const user_id = parseInt(req.internal.user.id);
+	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
+	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
+	blog_offset = blog_page_data.currpage*blog_page_data.view;
+	res.locals.blog_page_data = blog_page_data;
+	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
+	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
+	res.locals.ticket_page_data = ticket_page_data;
+	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'blogpage': req.query.blogpage,
+			'blogview': req.query.blogview,
+			'ticketpage': req.query.ticketpage,
+			'ticketview': req.query.ticketview
+		}
+	};
+	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data})
+});
+
+app.post('/profile/reset', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token == true) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		return res.status(400).json({'redirect': true, 'url': '/'});
+	} else {
 		next();
 	}
-});
-
-app.post('/profile/reset', async function(req, res, next) {
-	console.log(req.cookies.token);
-
-	//res.status(200);
-	return await db.update.user.nonce(req.internal.user_id).then(results => results.rowCount).then(async (rowCount) => {
+}],async function(req, res, next) {
+	return await db.update.user.nonce(req.internal.user.id).then(results => results.rowCount).then(async (rowCount) => {
 		if(rowCount == 0) {
 			return new Promise((resolve, reject) => {
 				resolve(res.cookie('banner', 'auth/failure_default'));
@@ -380,41 +442,20 @@ app.post('/profile/reset', async function(req, res, next) {
 	})
 });
 
-app.get('/signout', [validateBanner, clearBanner, verify_signin, revalidate_login, handle_signout], function(req, res, next) {
-	res.render('pages/user_accounts/signout')
-});
+app.get('/signout', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	if(req.internal.problem.any() == true) {
+		res.redirect('/');
+	} else {
+		next();
+	}
+}], function(req, res,) {
+	res.render('pages/user_accounts/signout');
+})
 
-app.get('/register', [validateBanner, clearBanner], function(req, res){
+app.get('/register', [internal_prep, validate_signin, process_banner], function(req, res){
 	res.render('pages/user_accounts/register');
 });
 
-/*
-app.post('/register', async function(req, res) {
-	key = await app.get('key');
-	return db.datareq.getUserByEmail(req.body.email).then(results => {
-		if(results.rowCount == 0) {
-			return new Promise((resolve, reject) => {
-				resolve(plman.construct('reg_auth', req.body.email))
-			}).then(payload => plman.tokenize(payload, key)).then(async (token) => {
-				return new Promise(async (resolve, reject) => {
-					try {
-						send_reg_auth(req.body.email, token);
-						resolve(res.cookie('banner', 'mail/reg/success_default'));
-					} catch(err) {
-						reject(err);
-					}
-				});
-			}).catch(result => {
-				return res.coookie('banner', 'mail/reg/failure_default');
-			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
-		} else {
-			return new Promise((resolve, reject) => {
-				resolve(res.cookie('banner', 'mail/reg/failure_emailtaken'))
-			}).then(newres => newres.status(403).json({'redirect': true, 'url': '/register'}));	// TODO: Is this the right HTTP status for this?
-		}
-	})
-})
-*/
 app.post('/register', async function(req, res) {
 	key = await app.get('key');
 	return db.datareq.getUserByEmail(req.body.email).then(results => {
@@ -448,8 +489,27 @@ app.post('/register', async function(req, res) {
 	});
 });
 
-app.get('/blog/create', [verify_signin, revalidate_login], async function(req, res) {
-	const payload = req.internal.payload;
+app.get('/blog/create', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token == true) {
+		req.internal.banner = 'auth/signin_required';
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, process_banner], async function(req, res) {
+	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "content.create")) == true) {
 			res.render('pages/createblog');
 	} else {
@@ -458,12 +518,29 @@ app.get('/blog/create', [verify_signin, revalidate_login], async function(req, r
 	}
 });
 
-app.post('/blog/create', [verify_signin, revalidate_login], async function(req, res){
-
-	const payload = req.internal.payload;
+app.post('/blog/create', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token == true) {
+		req.internal.banner = 'auth/signin_required';
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		return res.status(400).json({'redirect': true, 'url': '/'});
+	} else {
+		next();
+	}
+}], async function(req, res){
+	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "content.create")) == true) {
-
-			var user_id = req.internal.user_id
+			var user_id = req.internal.user.id
 			var title = req.body.title;
 			var body = req.body.blog_content;
 			var group = 0;
@@ -471,46 +548,42 @@ app.post('/blog/create', [verify_signin, revalidate_login], async function(req, 
 			console.log(req.body.title);
 			console.log(req.body.blog_content);
 
-			var b_id = await db.create.blog(title, user_id, group, body).then(results => results.rows[0].id);
-
-			res.redirect('/blog/' + b_id);
-			res.end();
+			return db.create.blog(title, user_id, group, body).then(results => results.rows[0].id).then(b_id => '/blog/' + b_id).then(newurl => res.status(200).json({'redirect': true, 'url': newurl}))
 	} else {
 			res.cookie('banner','error/unauthorized_view').set('cookie set');
-			res.redirect('/');
+			res.status(200).json({'redirect': true, 'url': '/'})
 	}
 });
 
-app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], async function(req, res) {
-	const payload = req.internal.payload;
-	if((await plman.authorityCheck(payload, "content.create")) == true || (await db.hist.userAuthoredBlogs(req.internal.user_id)) == true) {
-		res.locals.redirect_data = {
-			'redirect': req.path,
-			'queries': {
-				'page': req.query.page,
-				'view': req.query.view
-			}
-		};
-		db.datareq.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
-	} else {
-		res.cookie('banner', 'error/unauthorized_view').set('cookie set');
-		res.redirect('/');
+app.get('/blog/:id([0-9]+)', [internal_prep, validate_signin, function(req, res, next) {
+	if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
 	}
-});
-
-app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
+	next();
+}, process_banner], function(req, res) {
 	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
 });
 
-app.get('/b', [revalidate_login], function(req, res) {
-	res.redirect('/blogs');
-});
-
-app.get('/blogs/:bg', [revalidate_login], function(req, res) {
-	res.redirect('/b/' + req.params.bg);
-});
-
-app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req, res){
+app.get('/blogs', [internal_prep, validate_signin, function(req, res, next) {
+	if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	next();
+}, process_banner, blog_pagination_check], async function(req, res) {
 	const page_data = await db.quan.getCountOfBlogs().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.page, req.query.view, total,""));
 	offset = page_data.currpage*page_data.view;
 	res.locals.page_data = page_data;
@@ -522,49 +595,12 @@ app.get('/blogs', [revalidate_login, blog_pagination_check], async function(req,
 		}
 	};
 	db.datareq.getBlogsSubset(offset, (await page_data.view) ).then(results => results.rows).then(qres => res.render('pages/bloghome', {blogs: qres}));
-});
-
-app.get('/b/:bg', [revalidate_login, blog_pagination_check], async function (req, res) {
-	p = parseInt(req.query.page)
-	if(isNaN(p)) {
-		p = 0;
-	}
-	origin = parseInt(req.query.origin)
-	if(isNaN(origin)) {
-		origin = (p*def_blogs_per_page)
-	}
-
-	group = req.params.bg;
-	numeric = true;
-	try {
-		group = parseInt(group);
-	} catch(err) {
-		numeric = false;
-	}
-
-	group_id = group;
-	if(!numeric) {
-		group_id = await db.datareq.getBloggroupByName(group).then(qres => qres.rows[0]).then(qres => parseInt(qres));
-	}
-
-	total = await db.quan.getCountOfBlogsByGroupIdOffsetBy(group_id, 0).then(qres => parseInt(qres.rows[0]));
-
-	console.log("group: " + group + "\ngroup id: " + group_id + "\ncount: " + total + "\norigin: " + origin);
-	db.datareq.getBlogsByGroupIdOffsetBy(group_id, origin).then(results => results.rows).then(qres => res.render("pages/bloghome", {blogs: qres}));
-});
-
-/*app.get('/b/:bg', function(req, res) {
-	p = parseInt(req.query.page);
-	if(isNaN(p)) {
-		res.redirect('/b/' + req.params.bg);
-	}
-}*/
+})
 
 app.get('/rtt', function(req, res, next) {
 	(async () => {
 		var key = await app.get('key');
 		x = await plman.tokenize(plman.construct("reg_auth", "maps@inkwright.net"), key);
-		//console.log(x);
 		res.redirect('/auth?token=' + (await x));
 	})()
 });
@@ -605,8 +641,28 @@ app.get('/cc', function(req, res) {
 	res.render('pages/home');
 });
 
-app.get('/ticket/create', [verify_signin, revalidate_login], async function(req, res) {
-	const payload = req.internal.payload;
+app.get('/ticket/create', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+		if(req.internal.problem.no_token) {
+			req.internal.banner = 'auth/signin_required'
+			res.clearCookie('token');
+		} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.cannot_check_nonce) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.bad_nonce) {
+			req.internal.banner = 'auth/invalid_nonce'
+			res.clearCookie('token');
+		}
+		if(req.internal.problem.any() == true) {
+			res.cookie('banner', req.internal.banner).set('cookie set');
+			res.redirect('/');
+		} else {
+			next();
+		}
+}, process_banner], async function(req, res) {
+	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "ticket.create")) == true) {
 		res.render('pages/ticketcreation');
 	} else {
@@ -615,64 +671,72 @@ app.get('/ticket/create', [verify_signin, revalidate_login], async function(req,
 	}
 });
 
-app.post('/ticket/create', [revalidate_login], async function(req, res){
-	const payload = req.internal.payload;
+app.post('/ticket/create', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token == true) {
+		req.internal.banner = 'auth/signin_required';
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		return res.status(400).json({'redirect': true, 'url': '/'});
+	} else {
+		next();
+	}
+}], async function(req, res){
+	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "ticket.create")) == true) {
-		var user_id = req.internal.user_id
+		var user_id = req.internal.user.id
 
 		var ticket_title = req.body.title;
 		var ticket_body = req.body.ticket_info;
 		console.log(ticket_title);
 		console.log(ticket_body);
 
-		var ticket_id = db.createTicket(user_id, ticket_title, ticket_body);
-
-		res.redirect('/ticket/' + ticket_id); //redirect
-		res.end();
+		return db.create.ticket(user_id, ticket_title, ticket_body).then(results => results.rows[0].id).then(t_id => '/ticket/' + t_id).then(newurl => res.status(200).json({'redirect': true, 'url': newurl}))
 	} else {
 			res.cookie('banner','error/unauthorized_view').set('cookie set');
-			res.redirect('/');
+			res.status(200).json({'redirect': true, 'url': '/'})
 	}
 });
 
-// app.get('/tickets', [revalidate_login], function(req, res) {
-// 	db.datareq.getTickets().then(qres => res.render('pages/ticketlist', {tickets: qres}));
-
-// });
-
-app.get('/mytickets', [validateBanner, clearBanner, verify_signin, revalidate_login], function(req, res) {
-	res.locals.redirect_data = {
-		'redirect': req.path,
-		'queries': {
-			'page': req.query.page,
-			'view': req.query.view
-		}
-	};
-	db.datareq.getTicketsForUser(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/tickets/mytickets', {tickets: qres}));
-});
-
-app.get('/myblogs', [validateBanner, clearBanner, verify_signin, revalidate_login], function(req, res) {
-	db.datareq.getBlogsByAuthorId(req.internal.user_id).then(results => results.rows).then(qres => res.render('pages/blogs/myblogs', {blogs: qres}));
-});
-
-app.get('/blog/:id([0-9]+)', [revalidate_login], function(req, res) {
-
-	db.datareq.getBlogById(parseInt(req.params.id)).then(results => results.rows[0]).then(qres => res.render('pages/blogs/singleblog', {blog: qres}));
-
-	//if logged in as admin, edit privileges?
-});
-
-app.get('/ticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
+app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, process_banner], async function(req, res) {
 	ticket_query = await db.datareq.getTicketById(parseInt(req.params.id)).then(results => results.rows[0]);
-	if(req.internal.user_id != ticket_query.creator) {
+	if(req.internal.user.id != ticket_query.creator) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
-		res.redirect('/mytickets');
+		res.redirect('/profile');
 	}
 	else {
 		res.render('pages/tickets/singleticket', {ticket: ticket_query});
 	}
 });
-
 
 app.get('/newticket/:id([0-9]+)', [verify_signin, revalidate_login], async function(req, res) {
 
@@ -754,8 +818,28 @@ app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(r
 	}
 });
 
-app.get('/admin/manage/usergroup', [verify_signin, revalidate_login], async function(res, res, next) {
-	if((await plman.authorityCheck(payload, "db.admin") == true) || (await plman.authorityCheck(payload, "user.deactivate.others") == true)) {
+app.get('/admin/manage/usergroup', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, process_banner], async function(res, res, next) {
+	if((await plman.authorityCheck(payload, "db.admin") == true)) {
 		res.render('pages/admin/usergroup-management');
 	} else {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
@@ -763,7 +847,33 @@ app.get('/admin/manage/usergroup', [verify_signin, revalidate_login], async func
 	}
 });
 
-app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
+
+app.post('/admin/manage/usergroup/perm', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
 	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
@@ -775,7 +885,7 @@ app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 			result = {'success': true};
 		} catch(err) {
 			console.log(err);
-			result = await {'success': false, 'err': err.toString()};
+			result = await {'success': false, 'auth': true, 'err': err.toString()};
 		}
 	}
 	htmlResponse = await new Promise((resolve, reject) => {
@@ -800,7 +910,32 @@ app.post('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.delete('/admin/manage/usergroup/perm', [], async function(req, res, next) {
+app.delete('/admin/manage/usergroup/perm', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
 	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
@@ -837,11 +972,61 @@ app.delete('/admin/manage/usergroup/perm', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.get('/admin/manage/user', [verify_signin, revalidate_login], function(req, res, next) {
-	res.render('pages/admin/user-management');
+app.get('/admin/manage/user', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, process_banner], async function(res, res, next) {
+	if((await plman.authorityCheck(payload, "db.admin") == true) || (await plman.authorityCheck(payload, "user.deactivate.others"))) {
+		res.render('pages/admin/user-management');
+	} else {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/');
+	}
 });
 
-app.post('/admin/manage/user/group', [], async function(req, res, next) {
+app.post('/admin/manage/user/group', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
 	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
@@ -877,7 +1062,32 @@ app.post('/admin/manage/user/group', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.delete('/admin/manage/user/group', [], async function(req, res, next) {
+app.delete('/admin/manage/user/group', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
 	console.log(exists.user);
@@ -915,7 +1125,32 @@ app.delete('/admin/manage/user/group', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.post('/admin/manage/user/perm', [], async function(req, res, next) {
+app.post('/admin/manage/user/perm', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
 	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
@@ -952,7 +1187,32 @@ app.post('/admin/manage/user/perm', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-app.delete('/admin/manage/user/perm', [], async function(req, res, next) {
+app.delete('/admin/manage/user/perm', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
 	console.log(exists.user);
@@ -990,60 +1250,35 @@ app.delete('/admin/manage/user/perm', [], async function(req, res, next) {
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
 
-/*
-app.get('/admin', [revalidate_login], function(req, res){
-	//fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres}));
-});
-
-
-app.get('/admin/tickets', [revalidate_login], async function(req, res){
-	var x = await fetch('http://localhost:3000/api/tickets');
-	var y = await fetch('http://localhost:3000/api/users');
-
-	x = await x.json();
-	y = await y.json();
-
-	// console.log(x);
-	// await console.log(y);
-
-	res.render('pages/adminhome', {tickets: x, users: y})
-});
-
-/*
-app.get('/admin/tickets/:id', [revalidate_login], function(req, res){
-	id = req.params.id;
-	console.log(id);
-	fetch('http://localhost:3000/api/ticket/' + id).then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {ticket: qres}));
-});
-*/
-/*
-app.get('/ticket/create', function(req, res){
-	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/ticketadmin', {tickets: qres}));
-});
-*/
-/*
-app.get('/admin/users/:id', [revalidate_login], function(req, res){
-	id = req.params.id;
-	console.log(id);
-	fetch('http://localhost:3000/api/users/'+ id).then(qres => qres.json()).then(qres => res.render('pages/userdisplay', {user: qres}));
-});
-*/
-
-//app.use('/', validateBanner);
-
-//app.use('/', clearBanner);
-
-// TODO:	setup a login route that makes a banner cookie and redirects here.
-//			make a middleware to handle and reset it here it
-app.get('/', [validateBanner, clearBanner, revalidate_login, handle_signout], function(req, res, next) {
-	res.render('pages/home');
+app.get('/', [internal_prep, validate_signin, function(req, res, next) {
+	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
+		if((req.internal.problem.no_token == true || req.internal.problem.invalid_token == true)) {
+			req.internal.problem.cannot_signout = true;
+			req.internal.banner = 'auth/user_logout/failure_notsignedin';
+		} else {
+			req.internal.problem.cannot_signout = false;
+			req.internal.banner = 'auth/user_logout/success_default';
+			req.internal.user.authed = false;
+			res.locals.authed = req.internal.user.authed;
+		}
+		res.clearCookie('token');
+	} else {
+		if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.cannot_check_nonce) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.bad_nonce) {
+			req.internal.banner = 'auth/invalid_nonce'
+			res.clearCookie('token');
+		}
+	}
 	next();
+}, process_banner], function(req, res) {
+	res.render('pages/home');
 });
 
 app.listen(port, () => {
 	console.log(`App running on port ${port}`);
 });
-
-/*(async () => {
-console.log("Test: " + await db.perm.userHasPerm(1, 1));
-})();*/
