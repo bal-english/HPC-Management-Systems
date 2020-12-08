@@ -545,11 +545,11 @@ app.post('/blog/create', [internal_prep, enable_signin_required, validate_signin
 	if((await plman.authorityCheck(payload, "content.create")) == true) {
 			var user_id = req.internal.user.id
 			var title = req.body.title;
-			var body = req.body.blog_content;
+			var body = req.body.body;
 			var group = 0;
 
 			console.log(req.body.title);
-			console.log(req.body.blog_content);
+			console.log(req.body.body);
 
 			return db.create.blog(title, user_id, group, body).then(results => results.rows[0].id).then(b_id => '/blog/' + b_id).then(newurl => res.status(200).json({'redirect': true, 'url': newurl}))
 	} else {
