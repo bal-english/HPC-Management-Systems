@@ -699,7 +699,7 @@ app.post('/ticket/create', [internal_prep, enable_signin_required, validate_sign
 		var user_id = req.internal.user.id
 
 		var ticket_title = req.body.title;
-		var ticket_body = req.body.ticket_info;
+		var ticket_body = req.body.detail;
 		console.log(ticket_title);
 		console.log(ticket_body);
 

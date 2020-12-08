@@ -2,64 +2,64 @@
 <%- include ('../templates/heading/htmlhead') -%>
 <%- include ('../templates/heading/alertmanager') -%>
 <%- include ('../templates/heading/standard_header') -%>
+<%- include ('../templates/nav') -%>
 
 <br>
 <br>
 
 <body>
-
- <div class = "container">
-  <div class = "content">
-
- <div class = "card">
-    <div class = "bg-light border-bottom-1 card-header">
-        <h3 class = "card-title"> Create a Ticket </h3>
-    </div>
-    <br>
-    <br>
-        <label for="title"> Title </label>
-        <input id="title"> </input>
-        <label for="ticket-info">Fill out your issue here</label>
-        <textarea class="form-control-sm" id="ticket-info"></textarea>
-
+  <div class = "container">
+    <div class = "content">
+      <div>
+        <h3> Create a Ticket </h3>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-6">
+          <label for="title"> Title: </label>
+          <input id="title" class="form-control" type="text" placeholder="Summarize your issue"> </input>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-10">
+          <label for="ticket-info"> Information: </label>
+          <textarea class="form-control" id="detail" type="text" placeholder="Describe your issue" rows="7"></textarea>
+        </div>
+      </div>
+      <br>
+      <br>
       <button id="submit" class="btn btn-primary">Submit</button>
- </div>
-
-</div>
-</div>
-
+    </div>
+  </div>
 </body>
-</html>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script type = "text/javascript">
 
 jQuery(document).ready(function($){
-
   jQuery('#submit').click(function() {
-
     var ticket = {
-        // user: user_id, //G: we get user creds server side
-        title: jQuery('#title').val(),
-        ticket_info: jQuery('#ticket-info').val()
-      }
-
+      title: jQuery('#title').val(),
+      detail: jQuery('#detail').val()
+    }
     jQuery.ajax({
-
-        url: '/ticket/create',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(ticket),
-        success: function(res) {
-          window.location.replace(res.url);
-        },
-        error: function(res, err) {
-          window.location.replace(res.responseJSON.url);
-        }
-      });
-    })
+      url: '/ticket/create',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(ticket),
+      success: function(res) {
+        window.location.replace(res.url);
+      },
+      error: function(res, err) {
+        window.location.replace(res.responseJSON.url);
+      }
+    });
+  })
 });
-
-
 </script>
+
 <%- include ('../templates/footer') -%>
+
+</html>
