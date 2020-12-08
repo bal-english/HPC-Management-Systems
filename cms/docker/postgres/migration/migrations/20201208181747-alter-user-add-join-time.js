@@ -15,7 +15,7 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db) {
-  return db.addColumn('ticket', 'posttime',
+  return db.addColumn('user', 'joined',
   {
     type: 'timestamp',
     notNull: true,

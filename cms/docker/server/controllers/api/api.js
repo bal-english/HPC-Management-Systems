@@ -1,4 +1,3 @@
-
 var express = require('express');
 var router = express.Router();
 
@@ -24,6 +23,7 @@ var db = {
 	'convert': conversion
 };
 
+/*
 router.get('/', (req, res) => {
 	res.json({info: 'Node.js, Express, and Postgres API' });
 })
@@ -271,7 +271,7 @@ router.get('/permset/group/:id([0-9]+)', (req, res) => {
 	const group_id = parseInt(req.params.id);
 	db.perm.getGroupPermSet(group_id).then(results => addperms(new Set(), results.rows)).then(permset => res.status(200).json(Array.from(permset)));
 })
-
+*/
 
 //router.patch('/permission/:id/:name', db.updatePermission)
 

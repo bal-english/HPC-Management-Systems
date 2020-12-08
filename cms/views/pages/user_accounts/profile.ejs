@@ -9,11 +9,24 @@
 <br>
 
 <body class="text-center bg-light">
-	<!-- <h2> <%= user.firstName + ' ' + user.lastName %> </h2> -->
+	<div class="container">
+			<div class="col-4">
+				<div class="card" style="text-align:left">
+					<div class="card-body">
+						<h3 class="card-title"> <%= account.firstName + ' ' + account.lastName %> </h3>
+						<h5> <%= account.email %> </h5>
+						<% date = account.joined.toLocaleString("en-US", {timeZone: "America/New_York"}) %>
+						<p> Signed Up: <%= date.substring(0, date.indexOf(',')) %> </p>
+					</div>
+				</div>
+			</div>
+	</div>
+	<br>
 	<%- include('../../templates/blogset/small', {blogs: blogs, page_data: blog_page_data}); %>
   <%- include('../../templates/ticketset/small', {tickets: tickets, page_data: ticket_page_data}); %>
+	<br>
 	<div class="container">
-    <button id="submit" value="accept"> Signout Across All Devices </button>
+    <button id="submit" class="btn btn-primary" value="accept"> Signout Across All Devices </button>
 	</div>
 </body>
 

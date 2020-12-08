@@ -11,6 +11,17 @@ const user = {
   }
 }
 
+const bloggroup = {
+  idToName: (g_id) => {
+    const group_id = parseInt(g_id);
+    return pool.query('SELECT \"name\" FROM \"bloggroup\" WHERE id = $1', [group_id]);
+  },
+  nameToId: (name) => {
+    return pool.query('SELECT \"id\" FROM \"bloggroup\" WHERE name = $1', [name]);
+  }
+}
+
 module.exports = {
-  user
+  user,
+  bloggroup
 }

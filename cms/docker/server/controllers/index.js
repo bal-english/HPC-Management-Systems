@@ -143,7 +143,6 @@ async function validate_signin(req, res, next) {
 				req.internal.user.id = await db.convert.user.emailToId(req.internal.user.payload.email).then(results => results.rows[0].id);
 				resolve(false);
 			} catch(err) {
-				console.log("hello");
 				console.log(err);
 				resolve(true)
 			}
@@ -180,12 +179,10 @@ async function validate_signin(req, res, next) {
 	}
 	res.locals.user = req.internal.user;
 	res.locals.authed = req.internal.user.authed;
-	console.log(await req.internal.problem);
 	next();
 }
 
 async function process_banner(req, res, next) {
-	console.log(req.cookies.banner);
 	if((req.internal.banner == 'none' || req.internal.banner === undefined) && req.cookies.banner != 'none') {
 		req.internal.banner = req.cookies.banner;
 	}
@@ -196,13 +193,11 @@ async function process_banner(req, res, next) {
 		req.internal.banner = 'auth/failure_default';
 	}
 	res.locals.banner = req.internal.banner;
-	console.log(res.locals.banner);
 	req.internal.banner = 'none';
 	res.cookie('banner', 'none').set('cookie set');
 	next();
 }
 function log_problems(req, res, next) {
-	console.log(req.internal.problem);
 	next();
 }
 
@@ -258,6 +253,9 @@ stdin.addListener("data", async function(d) {
 
 	if(input == "email") {
 		send_email('hpcl000test@gmail.com', 'maps@inkwright.net', 'Hello', 'World');
+	} else if(input == "date") {
+		d = await new Date();
+		console.log(d.toISOString())
 	} else {
 
 	}
@@ -364,7 +362,6 @@ async function profile_pagination_check(req, res, next) {
 	} else {
 		req.query.blogview = parseInt(req.query.blogview);	// TODO: Add error handling for NaN and #<1
 	}
-	console.log(req.query);
 	next();
 }
 
@@ -390,15 +387,20 @@ app.get('/profile', [internal_prep, enable_signin_required, validate_signin, fun
 		}
 }, profile_pagination_check, process_banner], async function(req, res) {
 	const user_id = parseInt(req.internal.user.id);
-	ticket_creator = await db.datareq.getUserById(user_id).then(results => results.rows[0]);
+	user_data = await db.datareq.getUserInfoById(user_id).then(results => results.rows[0]);
 	const blog_page_data = await db.quan.getBlogCountByUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.blogpage, req.query.blogview, total, "blog"));
 	blog_offset = blog_page_data.currpage*blog_page_data.view;
 	res.locals.blog_page_data = blog_page_data;
-	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	blog_data = await db.datareq.getBlogsSubsetByUserId(user_id, blog_offset, blog_page_data.view).then(results => results.rows).then(async blogs => {
+		await blogs.forEach(async element => {
+			element.group_name = await db.convert.bloggroup.idToName(element.group).then(results => 'b/' + results.rows[0].name);
+		});
+		return blogs
+	});
 	const ticket_page_data = await db.quan.getTicketCountOfUser(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.ticketpage, req.query.ticketview, total, "ticket"));
 	ticket_offset = ticket_page_data.currpage*ticket_page_data.view;
 	res.locals.ticket_page_data = ticket_page_data;
-	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);	// TODO: Change to be blogs for that user
+	ticket_data = await db.datareq.getTicketsSubsetByUserId(user_id, ticket_offset, ticket_page_data.view).then(results => results.rows);
 	res.locals.redirect_data = {
 		'redirect': req.path,
 		'queries': {
@@ -408,7 +410,8 @@ app.get('/profile', [internal_prep, enable_signin_required, validate_signin, fun
 			'ticketview': req.query.ticketview
 		}
 	};
-	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data})
+
+	res.render('pages/user_accounts/profile', {blogs: blog_data, tickets: ticket_data, account: user_data})
 });
 
 app.post('/profile/reset', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
@@ -547,9 +550,6 @@ app.post('/blog/create', [internal_prep, enable_signin_required, validate_signin
 			var title = req.body.title;
 			var body = req.body.body;
 			var group = 0;
-
-			console.log(req.body.title);
-			console.log(req.body.body);
 
 			return db.create.blog(title, user_id, group, body).then(results => results.rows[0].id).then(b_id => '/blog/' + b_id).then(newurl => res.status(200).json({'redirect': true, 'url': newurl}))
 	} else {
@@ -700,8 +700,6 @@ app.post('/ticket/create', [internal_prep, enable_signin_required, validate_sign
 
 		var ticket_title = req.body.title;
 		var ticket_body = req.body.detail;
-		console.log(ticket_title);
-		console.log(ticket_body);
 
 		return db.create.ticket(user_id, ticket_title, ticket_body).then(results => results.rows[0].id).then(t_id => '/ticket/' + t_id).then(newurl => res.status(200).json({'redirect': true, 'url': newurl}))
 	} else {
@@ -759,7 +757,7 @@ app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_
 	console.log("----------ticket creator json obj--------------------");
 	console.log(ticket_creator);
 
-	admin_check = await ((await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true));
+	admin_check = await ((await plman.authorityCheck(req.internal.user.payload, "ticket.claim") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.assign") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.process.others") == true));
 
 	if(user_id != ticket_query.creator && !admin_check) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
@@ -790,14 +788,11 @@ app.post('/ticket/status', [internal_prep, enable_signin_required, validate_sign
 			next();
 		}
 }], async function(req, res) {
-	console.log('hello');
 	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
 
 		var ticket_status = await req.body.status;
 		var ticket_id = await req.body.ticket_id;
-		console.log(ticket_status);
-		console.log(ticket_id);
 		return db.update.ticketStatus(ticket_id, ticket_status).then(results => results.rows[0].id).then(id => '/ticket/' + id).then(route => res.status(200).json({'redirect': true, 'url': route}));
 	} else {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
@@ -1118,9 +1113,7 @@ app.delete('/admin/manage/user/group', [internal_prep, enable_signin_required, v
 }], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
-	console.log(exists.user);
 	exists.group = await db.exis.checkUsergroupExistsById(req.body.group_id).then(results => results.rows[0].case == 1);
-	console.log(exists.group);
 	exists.connection = await db.exis.checkUserInGroup(req.body.user_id, req.body.group_id).then(results => results.rows[0].case == 1);
 	result = {'success': false}
 	if(exists.user && exists.group && exists.connection) {
@@ -1243,9 +1236,7 @@ app.delete('/admin/manage/user/perm', [internal_prep, enable_signin_required, va
 }], async function(req, res, next) {
 	exists = {};
 	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
-	console.log(exists.user);
 	exists.perm = await db.exis.checkPermExistsById(req.body.perm_id).then(results => results.rows[0].case == 1);
-	console.log(exists.perm);
 	exists.connection = await db.exis.checkUserHasPerm(req.body.user_id, req.body.perm_id).then(results => results.rows[0].case == 1);
 	result = {'success': false}
 	if(exists.user && exists.perm && exists.connection) {

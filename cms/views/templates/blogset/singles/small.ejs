@@ -1,5 +1,5 @@
 <tr onclick="window.location='/blog/<%=blog.id%>/'">
   <td> <%= blog.title %> </td>
-  <td> <%= blog.posttime %> </td>
-  <td> <%= blog.group %> </td>
+  <td> <%= blog.posttime.toLocaleString("en-US", {timeZone: "America/New_York"}) %> </td>
+  <td> <%= blog.group_name %> </td>
 </tr>

@@ -45,8 +45,8 @@ exports.up = function(db) {
 		time: {
 			type: 'datetime',
 			primaryKey: true,
-			notNull: true,//true	// TODO: Make This null
-			defaultValue: '2004-10-19 10:23:54'
+      notNull: true,
+      defaultValue: new String('(now() at time zone \'UTC\')')
 		},
 		origin: {
 			type: 'int',
