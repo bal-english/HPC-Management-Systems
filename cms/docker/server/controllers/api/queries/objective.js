@@ -12,7 +12,7 @@ const getUserById = (id) => {
 
 const getUserInfoById = (id) => {
 	const u_id = parseInt(id);
-	return pool.query('SELECT id, lastName, firstName, email, deactivated FROM \"user\" WHERE id = $1', [u_id]);
+	return pool.query('SELECT \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\" FROM \"user\" WHERE id = $1', [u_id]);
 }
 
 const getUserByEmail = (email) => {
@@ -20,7 +20,7 @@ const getUserByEmail = (email) => {
 }
 
 const getUserInfoByEmail = (email) => {
-	return pool.query('SELECT id, lastName, firstName, email, deactivated FROM \"user\" WHERE email=$1', [email]);
+	return pool.query('SELECT \"id\", \"lastName\", \"firstName\", \"email\", \"deactivated\" FROM \"user\" WHERE email=$1', [email]);
 }
 
 const getUserNonce = (u_id) => {
@@ -28,7 +28,7 @@ const getUserNonce = (u_id) => {
 }
 
 const getUserNameById = (u_id) => {
-	return pool.query('SELECT firstName, lastName FROM \"user\" WHERE id = $1' [u_id]);
+	return pool.query('SELECT \"firstName\", \"lastName\" FROM \"user\" WHERE id = $1' [u_id]);
 }
 
 const getUsersById = (min, max) => {
@@ -124,6 +124,11 @@ const getTicketById = (u_id) => {
 	return pool.query('SELECT * FROM \"ticket\" WHERE id = $1', [user_id]);
 }
 
+const getCreatorOfTicket = (t_id) => {
+	const ticket_id = parseInt(t_id);
+	return pool.query('SELECT \"creator\" FROM \"ticket\" WHERE id = $1', [ticket_id]);
+}
+
 const getPermissions = () => {
 	return pool.query('SELECT * FROM \"permission\"', []);
 }
@@ -157,6 +162,10 @@ const getAssignedByUser = (u_id) => {
 	return pool.query('SELECT * FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]);
 }
 
+const getPossibleTicketStatuses = () => {
+	return pool.query('SELECT enum_range(NULL::ticket_status)');
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -185,6 +194,7 @@ module.exports = {
 	getTicketsSubset,
 	getTicketsSubsetByUserId,
 	getTicketById,
+	getCreatorOfTicket,
 	getPermissions,
 	getPermissions_def,
 	getPermissionById,
@@ -193,5 +203,6 @@ module.exports = {
 	getPermissionsOfUser,
 	getPermissionsOfUsergroup,
 	getAssignedByTicket,
-	getAssignedByUser
+	getAssignedByUser,
+	getPossibleTicketStatuses
 }
