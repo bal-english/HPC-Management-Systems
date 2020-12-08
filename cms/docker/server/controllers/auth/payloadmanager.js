@@ -120,7 +120,7 @@ const process = async (req, res) => {
 		req.internal.banner = 'auth/user_signin/success_default';
 		res.cookie('banner', req.internal.banner);
 		return {'res': res, 'req': req};
-	} else	if(payload.type == payload_types.reg_auth.name) {
+	} else if(payload.type == payload_types.reg_auth.name) {
 		if(payload.email == '') {
 			req.internal.banner = 'auth/user_reg/failure_default';
 			res.cookie('banner', req.internal.banner).set('cookie set');
@@ -137,35 +137,58 @@ const process = async (req, res) => {
 						})
 						return arr;
 					}).then(arr => {
-						arr.forEach(async (element) =>{
+						arr.forEach(element => {
 							try {
-								await db.create.connection.user_usergroup(newuser.id, element);
+								db.connect.addUserToGroup(newuser.id, element);
 							} catch(err) {
 								console.log(err);
 							}
 						})
 					})
 				}
-				await payload.setup.usergroups.extra.forEach(async (element) => {
+				await payload.setup.usergroups.extra.forEach(element => {
 					try {
-						await db.create.connection.user_usergroup(newuser.id, element);
+						db.connect.addUserToGroup(newuser.id, element);
 					} catch(err) {
 						console.log(err);
 					}
 				});
-				// TODO: ADD default perms
+				if(payload.setup.permissions.def == true) {
+					await db.datareq.getPermissions_def('true').then(results => results.rows).then(results => {
+						arr = [];
+						results.forEach(element => {
+							arr.push(element.id);
+						})
+						return arr;
+					}).then(arr => {
+						arr.forEach(element => {
+							try {
+								db.connect.givePermToUser(newuser.id, element);
+							} catch(err) {
+								console.log(err);
+							}
+						})
+					})
+				}
+				await payload.setup.permissions.extra.forEach(element => {
+					try {
+						db.connect.givePermToUser(newuser.id, element);
+					} catch(err) {
+						console.log(err);
+					}
+				})
 				new_payload = construct('signin_auth', payload.email, newuser.nonce);
 				new_token = tokenize(new_payload, key);
 				res.cookie('token', (await new_token)).set('cookie set');
 				req.internal.banner = 'auth/user_reg/success_default';
 				res.cookie('banner', req.internal.banner).set('cookie set');
 				return {'res': res, 'req': req};
-			}
 			//} catch (err) {
-					req.internal.banner = 'auth/user_reg/failure_default';
-					res.cookie('banner', req.internal.banner).set('cookie set');
-					res.clearCookie('token');
+			//	req.internal.banner = 'auth/user_reg/failure_default';
+			//	res.cookie('banner', req.internal.banner).set('cookie set');
+			//	res.clearCookie('token');
 			//}
+		}
 	}
 	return {'res': res, 'req': req};
 }
