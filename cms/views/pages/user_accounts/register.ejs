@@ -19,18 +19,18 @@
     <div class="row">
       <div class="col-4">
         <label for="email"> SU Email: </label>
-        <input id="login_email" class="form-control" type="text" placeholder="SU email"> </input>
+        <input id="email" class="form-control" type="text" placeholder="SU email"> </input>
       </div>
     </div>
     <br>
     <div class="row">
       <div class="col-3">
         <label for="firstname"> First Name: </label>
-        <input id="login_first" class="form-control" type="text" placeholder="First Name"> </input>
+        <input id="firstname" class="form-control" type="text" placeholder="First Name"> </input>
       </div>
       <div class="col-3">
         <label for="lastname"> Last Name: </label>
-        <input id="login_last" class="form-control" type="text" placeholder="Last Name"> </input>
+        <input id="lastname" class="form-control" type="text" placeholder="Last Name"> </input>
       </div>
     </div>
     <br>
@@ -46,15 +46,14 @@
 jQuery(document).ready(function($){
   jQuery('#submit').click(function() { //ajax
     var user = {
-        email: jQuery('#login_email').val(),
-        first: jQuery('#login_first').val(),
-        last: jQuery('#login_last').val()
-      }
+      email: jQuery('#email').val(),
+      first: jQuery('#firstname').val(),
+      last: jQuery('#lastname').val()
+    }
     console.log(user);
     jQuery.ajax({
       url: '/register',
       type: 'POST',
-      // dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(user),
       success: async function(res) {

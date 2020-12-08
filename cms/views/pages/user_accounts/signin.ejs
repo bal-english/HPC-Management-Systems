@@ -9,42 +9,50 @@
 <br>
 
 <body>
-
- <div class = "container">
-  <div class = "content">
-
-  <div class = "card">
-    <div class = "bg-light border-bottom-1 card-header">
-      <h3 class = "card-title"> Log In </h3>
+  <!-- <div class = "container">
+    <div class = "content">
+      <div class = "card">
+        <div class = "bg-light border-bottom-1 card-header">
+          <h3 class = "card-title"> Log In </h3>
+        </div>
+        <label for="email"> Email: </label>
+        <input id="signin_email" class="form-control" type="text" placeholder=" Enter SU email here "> </input>
+        <br>
+        <br>
+        <button id="submit" value="accept">Submit</button>
+      </div>
     </div>
-    <label for="email"> Email: </label>
-    <input id="signin_email" class="form-control" type="text" placeholder=" Enter SU email here "> </input>
-    <br>
-    <br>
-    <button id="submit" value="accept">Submit</button>
-
-</div>
-</div>
-
+  </div> -->
+  <div class = "container">
+    <div class = "content">
+      <div>
+        <h3> Sign In </h3>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-4">
+          <label for="email"> SU Email: </label>
+          <input id="email" class="form-control" type="text" placeholder="SU email"> </input>
+        </div>
+      </div>
+      <br>
+      <br>
+      <button id="submit" value="accept">Submit</button>
+    </div>
+  </div>
 </body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
 jQuery(document).ready(function($){
-
   jQuery('#submit').click(function() {
-
     var formData = {
-        email: jQuery('#signin_email').val()
-      }
-
+      email: jQuery('#email').val()
+    }
     console.log(formData);
-
     jQuery.ajax({
-
       url: '/signin',
       type: 'POST',
-      //dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify(formData),
       success: async function(res) {
@@ -58,13 +66,9 @@ jQuery(document).ready(function($){
         }
         window.location.replace(res.responseJSON.url);
       }
-
     });
-
   })
-
 });
-
 </script>
 
 <%- include ('../../templates/footer') -%>
