@@ -11,8 +11,8 @@ const payload_types = {
 		"name": "reg_auth",
 		"def_exp": 1440
 	},
-	"login_auth": {
-		"name": "login_auth",
+	"signin_auth": {
+		"name": "signin_auth",
 		"def_exp": 30
 	}/*,
 	"passreset_auth": {
@@ -42,11 +42,11 @@ const payload_models = () => {
 				}
 			}
 		},
-		"login_auth": {
-			"type": payload_types["login_auth"].name,
+		"signin_auth": {
+			"type": payload_types["signin_auth"].name,
 			"email": "",
 			"lastNonce": "",
-			"expiration": payload_types["login_auth"].def_exp,
+			"expiration": payload_types["signin_auth"].def_exp,
 			"extra_perms": []
 		}
 	}
@@ -71,7 +71,7 @@ const construct = (type, email, nonce/*, expiration*/) => {
 	*/
 	payload = payload_models()[type];
 	payload.email = email;
-	if(payload.type == 'login_auth') {
+	if(payload.type == 'signin_auth') {
 		payload.lastNonce = parseInt(nonce);
 	}
 
@@ -115,9 +115,9 @@ const process = async (req, res) => {
 		return {'res': res, 'req': req};
 	}
 
-	if(payload.type == payload_types.login_auth.name) {
+	if(payload.type == payload_types.signin_auth.name) {
 		res.cookie('token', req.query.token).set('cookie set');
-		req.internal.banner = 'auth/user_login/success_default';
+		req.internal.banner = 'auth/user_signin/success_default';
 		res.cookie('banner', req.internal.banner);
 		return {'res': res, 'req': req};
 	} else	if(payload.type == payload_types.reg_auth.name) {
@@ -154,7 +154,7 @@ const process = async (req, res) => {
 					}
 				});
 				// TODO: ADD default perms
-				new_payload = construct('login_auth', payload.email, newuser.nonce);
+				new_payload = construct('signin_auth', payload.email, newuser.nonce);
 				new_token = tokenize(new_payload, key);
 				res.cookie('token', (await new_token)).set('cookie set');
 				req.internal.banner = 'auth/user_reg/success_default';

@@ -18,7 +18,7 @@
       <h3 class = "card-title"> Log In </h3>
     </div>
     <label for="email"> Email: </label>
-    <input id="login_email" class="form-control" type="text" placeholder=" Enter SU email here "> </input>
+    <input id="signin_email" class="form-control" type="text" placeholder=" Enter SU email here "> </input>
     <br>
     <br>
     <button id="submit" value="accept">Submit</button>
@@ -35,14 +35,14 @@ jQuery(document).ready(function($){
   jQuery('#submit').click(function() {
 
     var formData = {
-        email: jQuery('#login_email').val()
+        email: jQuery('#signin_email').val()
       }
 
     console.log(formData);
 
     jQuery.ajax({
 
-      url: '/login',
+      url: '/signin',
       type: 'POST',
       //dataType: 'json',
       contentType: 'application/json',

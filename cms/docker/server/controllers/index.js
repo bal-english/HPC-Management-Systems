@@ -96,6 +96,7 @@ function internal_prep(req, res, next) {
 	console.log(req.cookies);
 	if(req.internal === undefined) {
 		req.internal = {'problem': {}, 'banner': 'none', 'require': {'signin': false}, 'user': {'authed': false}};
+		res.locals.user = req.internal.user;
 	};
 	next();
 };
@@ -247,7 +248,7 @@ app.use('/', function(req, res, next) {
 });
 */
 
-app.locals.banner = 'none';//"auth/user_login/success_default";
+app.locals.banner = 'none';//"auth/user_signin/success_default";
 app.locals.authed = false;
 var stdin = process.openStdin();
 
@@ -276,8 +277,8 @@ var transporter = nodemailer.createTransport({
 async function send_email(from, to, sub, body) {
 	return transporter.sendMail({from: from, to: to, subject: sub, text: body});
 };
-async function send_login_auth(to, token) {
-	return send_email(from_email, to, 'SU HPCL: Login Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
+async function send_signin_auth(to, token) {
+	return send_email(from_email, to, 'SU HPCL: Signin Authorization', 'localhost:3000/auth?token=' + token + '\n10.0.0.233:3000/auth?token=' + token).catch(async (err) => {
 		throw err;
 	});
 }
@@ -291,7 +292,7 @@ async function send_reg_auth(to, token) {
 app.get('/auth', [internal_prep], async function(req, res, next) {
 	if(req.query.token === undefined) {
 		if(req.cookies.token === undefined) {
-			res.cookie('banner', 'auth/user_login/failure_default');
+			res.cookie('banner', 'auth/user_signin/failure_default');
 		}
 		res.redirect('/');
 		return;
@@ -308,30 +309,33 @@ app.get('/auth', [internal_prep], async function(req, res, next) {
 	}
 });
 
-app.get('/login', [internal_prep, process_banner], function(req, res){
- 	res.render('pages/user_accounts/login');
+app.get('/login', function(req, res) {
+	res.redirect('/signin')
+})
+app.get('/signin', [internal_prep, process_banner], function(req, res){
+ 	res.render('pages/user_accounts/signin');
 });
 
-app.post('/login', async function(req, res){
+app.post('/signin', async function(req, res){
 	key = await app.get('key');
 	return db.datareq.getUserByEmail(req.body.email).then(results => {
 		if(results.rowCount == 0) {
 			return new Promise((resolve, reject) => {
-				resolve(res.cookie('banner', 'mail/login/failure_noaccount'));
-			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/login'}));
+				resolve(res.cookie('banner', 'mail/signin/failure_noaccount'));
+			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/signin'}));
 		} else {
 			return new Promise((resolve, reject) => {
-				resolve(plman.construct('login_auth', req.body.email, results.rows[0].nonce))
+				resolve(plman.construct('signin_auth', req.body.email, results.rows[0].nonce))
 			}).then(payload => plman.tokenize(payload, key)).then(token => {
 				return new Promise(async (resolve, reject) => {
 					try {
-						await send_login_auth(req.body.email, token);
-						resolve(res.cookie('banner', 'mail/login/success_default'));
+						await send_signin_auth(req.body.email, token);
+						resolve(res.cookie('banner', 'mail/signin/success_default'));
 					} catch(err) {
 						reject(err);
 					}
 				}).catch((result) => {
-					return res.cookie('banner', 'mail/login/failure_default');
+					return res.cookie('banner', 'mail/signin/failure_default');
 				});
 			}).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
 		}
@@ -436,7 +440,7 @@ app.post('/profile/reset', [internal_prep, enable_signin_required, validate_sign
 		} else {
 			return new Promise((resolve, reject) => {
 				resolve(res.clearCookie('token'));
-			}).then(newres => newres.cookie('banner', 'auth/user_logout/success_all')).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
+			}).then(newres => newres.cookie('banner', 'auth/user_signout/success_all')).then(newres => newres.status(200).json({'redirect': true, 'url': '/'}));
 		}
 	})
 });
@@ -610,7 +614,7 @@ app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(1).then(results => results.rows[0]);
 		var key = await app.get('key');
-		x = await plman.tokenize(plman.construct("login_auth", "benglish4@gulls.salisbury.edu", data.nonce), key);
+		x = await plman.tokenize(plman.construct("signin_auth", "benglish4@gulls.salisbury.edu", data.nonce), key);
 		//res.cookie('token', x).set('cookie set');
 		res.redirect('/auth?token=' + (await x));
 	})()
@@ -629,7 +633,7 @@ app.get('/tt3', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(5).then(results => results.rows[0]);
 		var key = await app.get('key');
-		x = x = await plman.tokenize(plman.construct("login_auth", "rcquackenbush@salisbury.edu", data.nonce), key);
+		x = x = await plman.tokenize(plman.construct("signin_auth", "rcquackenbush@salisbury.edu", data.nonce), key);
 		res.cookie('token', x).set('cookie set');
 		res.redirect('auth');
 	})()
@@ -1278,10 +1282,10 @@ app.get('/', [internal_prep, validate_signin, function(req, res, next) {
 	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {
 		if((req.internal.problem.no_token == true || req.internal.problem.invalid_token == true)) {
 			req.internal.problem.cannot_signout = true;
-			req.internal.banner = 'auth/user_logout/failure_notsignedin';
+			req.internal.banner = 'auth/user_signout/failure_notsignedin';
 		} else {
 			req.internal.problem.cannot_signout = false;
-			req.internal.banner = 'auth/user_logout/success_default';
+			req.internal.banner = 'auth/user_signout/success_default';
 			req.internal.user.authed = false;
 			res.locals.authed = req.internal.user.authed;
 		}
