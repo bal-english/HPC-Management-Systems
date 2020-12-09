@@ -1,9 +1,12 @@
 <html>
 
-<%- include ('../../templates/heading/htmlhead') -%>
-<%- include ('../../templates/heading/alertmanager') -%>
-<%- include ('../../templates/heading/standard_header') -%>
-<%- include ('../../templates/nav') -%>
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<% if(user.status.any) { %>
+  <%- include('/home/app/views/templates/heading/admin_header') -%>
+<% } else { %>
+  <%- include ('/home/app/views/templates/heading/standard_header') -%>
+<% } %>
 
 <br>
 <br>
@@ -22,8 +25,8 @@
 			</div>
 	</div>
 	<br>
-	<%- include('../../templates/blogset/small', {blogs: blogs, page_data: blog_page_data}); %>
-  <%- include('../../templates/ticketset/small', {tickets: tickets, page_data: ticket_page_data}); %>
+	<%- include('/home/app/views/templates/blogset/small', {blogs: blogs, page_data: blog_page_data}); %>
+  <%- include('/home/app/views/templates/ticketset/small', {tickets: tickets, page_data: ticket_page_data}); %>
 	<br>
 	<div class="container">
     <button id="submit" class="btn btn-primary" value="accept"> Signout Across All Devices </button>
@@ -33,7 +36,7 @@
 
 <br>
 <br>
-<%- include ('../../templates/footer') -%>
+<%- include ('/home/app/views/templates/footer') -%>
 </body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>

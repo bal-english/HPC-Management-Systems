@@ -177,6 +177,14 @@ async function validate_signin(req, res, next) {
 	if(req.internal.problem.any() == false) {
 		req.internal.user.authed = true;
 	}
+	req.internal.user.status = {'support': false, 'content': false, 'manager': false, 'admin': false};
+	if(req.internal.user.authed == true) {
+		req.internal.user.status.support = await ((await plman.authorityCheck(req.internal.user.payload, 'ticket.claim')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.track')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.assign')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.process.others')))
+		req.internal.user.status.content = await ((await plman.authorityCheck(req.internal.user.payload, 'content.edit.others')) || (await plman.authorityCheck(req.internal.user.payload, 'content.publish.others')) || (await plman.authorityCheck(req.internal.user.payload, 'user.deactivate.others')))
+		req.internal.user.status.manager = await ((await plman.authorityCheck(req.internal.user.payload, 'db.admin')));
+	}
+	req.internal.user.status.any = (req.internal.user.status.support || req.internal.user.status.content || req.internal.user.status.manager || req.internal.user.status.admin);
+	console.log(req.internal.user.status);
 	res.locals.user = req.internal.user;
 	res.locals.authed = req.internal.user.authed;
 	next();
@@ -731,26 +739,24 @@ app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_
 }, process_banner], async function(req, res) {
 
 	const ticket_id = await parseInt(req.params.id);
-
-	ticket_query = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
-
+	ticket = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
 	user_id = parseInt(req.internal.user.id);
 
 		// TODO: parse ticket_assignee for each assigned admin, pulling each admin's information to post to page ?
 
 	ticket_assignee = await db.datareq.getAssignedByTicket(ticket_id).then(results => results.rows); //return "parsed" json array?
-	if (isNaN(ticket_assignee)){
-		db.update.ticketAssigned(1, ticket_query);
-	}
+	/*if (isNaN(ticket_assignee)){
+		db.update.ticketAssigned(ticket.id, 1);
+	}*/
 
 	console.log("----------ticket_assignee-------------");
 	console.log(ticket_assignee); //should be array of json objs, 1 if originally no one was assigned
 
-	var assigned = {};
-	ticket_assignee.forEach(assignee => { assigned_admin.push(assigned) } );
+	var assigned_admin = [];
+	ticket_assignee.forEach(assignee => { assigned_admin.push(assignee.user_id) } );
 
 	console.log("----------assgined admin as json objects-------------");
-	console.log("These are the assigned admins: " + assigned);
+	console.log("These are the assigned admins: " + assigned_admin);
 
 
 	ticket_creator = await db.datareq.getCreatorOfTicket(ticket_id).then(results => parseInt(results.rows[0].creator)).then(id => db.datareq.getUserInfoById(id)).then(results => results.rows[0]);//db.datareq.getUserById(user_id).then(results => results.rows[0]) // this returns user's information to post ot page
@@ -759,12 +765,12 @@ app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_
 
 	admin_check = await ((await plman.authorityCheck(req.internal.user.payload, "ticket.claim") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.assign") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.process.others") == true));
 
-	if(user_id != ticket_query.creator && !admin_check) {
+	if(user_id != ticket.creator && !admin_check) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	}
 	else {
-		db.datareq.getPossibleTicketStatuses().then(results => results.rows[0].enum_range).then(stat_str => stat_str.substring(1, stat_str.length-1).split(',')).then(arr => res.render('pages/tickets/singleticket', {ticket: ticket_query, author: ticket_creator, assigned: assigned, admin: admin_check, statuses: arr}))
+		db.datareq.getPossibleTicketStatuses().then(results => results.rows[0].enum_range).then(stat_str => stat_str.substring(1, stat_str.length-1).split(',')).then(arr => res.render('pages/tickets/singleticket', {ticket: ticket, author: ticket_creator, assigned: assigned_admin, admin: admin_check, statuses: arr}))
 	}
 });
 
@@ -790,7 +796,6 @@ app.post('/ticket/status', [internal_prep, enable_signin_required, validate_sign
 }], async function(req, res) {
 	const payload = req.internal.user.payload;
 	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
-
 		var ticket_status = await req.body.status;
 		var ticket_id = await req.body.ticket_id;
 		return db.update.ticketStatus(ticket_id, ticket_status).then(results => results.rows[0].id).then(id => '/ticket/' + id).then(route => res.status(200).json({'redirect': true, 'url': route}));
@@ -821,23 +826,36 @@ app.post('/ticket/status', [verify_signin, revalidate_login], async function(req
 	}
 });
 */
-app.post('/ticket/assigned', [verify_signin, revalidate_login], async function(req, res) {
-
-	const payload = req.internal.payload;
-	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
+app.post('/ticket/assigned', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+		if(req.internal.problem.no_token == true) {
+			req.internal.banner = 'auth/signin_required';
+		} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.cannot_check_nonce) {
+			req.internal.banner = 'auth/invalid_default'
+			res.clearCookie('token');
+		} else if(req.internal.problem.bad_nonce) {
+			req.internal.banner = 'auth/invalid_nonce'
+			res.clearCookie('token');
+		}
+		if(req.internal.problem.any() == true) {
+			res.cookie('banner', req.internal.banner).set('cookie set');
+			return res.status(400).json({'redirect': true, 'url': '/'});
+		} else {
+			next();
+		}
+}], async function(req, res) {
+	const payload = req.internal.user.payload;
+	if((await plman.authorityCheck(payload, "ticket.claim") == true) || (await plman.authorityCheck(payload, "ticket.assign") == true) || (await plman.authorityCheck(payload, "ticket.process.others") == true)) {
 
 		var assigned_admin = req.body.user_id;
 		var ticket_id = req.body.ticket_id;
-		console.log(assigned_admin);
-		console.log("ticket id: " + ticket_id);
 
-		var t_id = db.update.ticketAssigned(ticket_id, assigned_admin).then(results => results.rows[0].id);
-		res.redirect('/ticket/' + t_id);
-		res.end();
-
+		return db.connect.assignTicketToUser(assigned_admin, ticket_id).then(results => results.rows[0].ticket_id).then(id => '/ticket/' + id).then(route => res.status(200).json({'redirect': true, 'url': route}));
 	} else {
-			res.cookie('banner','error/unauthorized_view').set('cookie set');
-			res.redirect('/');
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.status(200).json({'redirect': true, 'url': '/'})
 	}
 });
 
@@ -1268,6 +1286,10 @@ app.delete('/admin/manage/user/perm', [internal_prep, enable_signin_required, va
 	});
 	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
 })
+
+app.get('/admin', [internal_prep, validate_signin], function(req, res){
+	fetch('http://localhost:3000/api/tickets').then(qres => qres.json()).then(qres => res.render('pages/adminhome', {tickets: qres, admin:true}));
+});
 
 app.get('/', [internal_prep, validate_signin, function(req, res, next) {
 	if(req.query.signout == true || req.query.signout == 'true' || req.query.signout == 'True' || req.query.signout == 'TRUE') {

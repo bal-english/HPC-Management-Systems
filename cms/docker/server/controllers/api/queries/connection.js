@@ -37,6 +37,17 @@ const removePermFromUsergroup = (g_id, p_id) => {
   return pool.query('DELETE FROM \"usergroup-permission\" WHERE group_id=$1 AND perm_id=$2', [group_id, perm_id]);
 }
 
+const assignTicketToUser = (u_id, t_id) => {
+  const user_id = parseInt(u_id);
+  const ticket_id = parseInt(t_id);
+  return pool.query('INSERT INTO \"ticket-user_assignee\" (\"user_id\", \"ticket_id\") VALUES ($1, $2) RETURNING \"ticket_id\"', [user_id, ticket_id]);
+}
+
+const assignTicketToGroup = (u_id, t_id) => {
+  const group_id = parseInt(g_id);
+  const ticket_id = parseInt(t_id);
+  return pool.query('INSERT INTO \"ticket-group_assignee\" (\"group_id\", \"ticket_id\") VALUES ($1, $2) RETURNING \"ticket_id\"', [group_id, ticket_id]);
+}
 
 module.exports = {
   addUserToGroup,
@@ -44,5 +55,7 @@ module.exports = {
   givePermToUser,
   removePermFromUser,
   givePermToUsergroup,
-  removePermFromUsergroup
+  removePermFromUsergroup,
+  assignTicketToUser,
+  assignTicketToGroup
 }

@@ -6,8 +6,11 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 
 <%- include ('/home/app/views/templates/heading/alertmanager') -%>
-<%- include ('/home/app/views/templates/heading/standard_header') -%>
-<%- include ('/home/app/views/templates/nav') -%>
+<% if(user.status.any) { %>
+  <%- include('/home/app/views/templates/heading/admin_header') -%>
+<% } else { %>
+  <%- include ('/home/app/views/templates/heading/standard_header') -%>
+<% } %>
 
 <br>
 <br>

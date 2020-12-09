@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+  <a class="navbar-brand" href="/">
+  <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fclipart-library.com%2Fimages_k%2Fred-bird-silhouette%2Fred-bird-silhouette-19.png&f=1&nofb=1" width="30" height="30" class="d-inline-block align-top" alt="">
+      HPCL
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <div class="vl"></div>
+      <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+      <li class="nav-item"><a class="nav-link" href="/blogs">Blogs</a></li>
+      <!-- <li class = "nav-item"><a class="nav-link" href="/ticket/create">Submit a Ticket</a></li> -->
+      <li class="nav-item"><a class="nav-link" href="/ticket/create">Submit a Ticket</a></li>
+      <!-- <li class="nav-item"><a class="nav-link" href="/admin/home">Admin Home</a></li> -->
+    </ul>
+    <% if(user.status.support || user.status.content || user.status.manager || user.status.admin) { %>
+      <ul class="navbar-nav" id="bar">
+        <li class="nav-item disabled"> <div class="nav-link"> <b> | </b> </div></li>
+      </ul>
+    <% } %>
+    <ul class="navbar-nav" id="admin_nav_section">
+      <% if(user.status.support || user.status.admin) { %>
+        <li class="nav-item"><a class="nav-link" href="/admin/support">Support</a></li>
+      <% } %>
+      <% if(user.status.content || user.status.admin) { %>
+        <li class="nav-item"><a class="nav-link" href="/admin/content">Content Managment</a></li>
+      <% } %>
+      <% if(user.status.manager || user.status.admin) { %>
+        <li class="nav-item"><a class="nav-link" href="/admin/manage">Site Managment</a></li>
+      <% } %>
+    </ul>
+  </div>
+  <% if(user.authed) { %>
+    <%- include('account_buttons/account') %>
+  <% } else {%>
+      <%- include('account_buttons/auth') %>
+  <% } %>
+</nav>

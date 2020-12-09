@@ -1,8 +1,8 @@
 <html>
 
-<%- include ('../templates/heading/htmlhead') -%>
-<%- include ('../templates/heading/alertmanager') -%>
-<%- include('../templates/adminnav') -%>
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<%- include('/home/app/views/templates/adminnav') -%>
 
 
 <br>
@@ -11,7 +11,7 @@
 <body class = "text-center bg-light">
  <div class = "container">
   <div class = "content">
-    
+
   <div class = "card">
     <div class = "bg-light border-bottom-1 card-header">
       <h3 class = "card-title"> Activity Log </h3>
@@ -29,12 +29,12 @@
         </div>
     </div>
     <% tickets.forEach(function(ticket){ %>
-        <%- include('../pages/tickets/singleticket', {ticket: ticket}); %>
+        <%- include('/home/app/views/templates/ticketset/singleticket', {ticket: ticket}); %>
     <% }); %>
   </div>
 
 </div>
 </div>
- 
+
 </body>
-<%- include ('../templates/footer') -%>
+<%- include ('/home/app/views/templates/footer') -%>

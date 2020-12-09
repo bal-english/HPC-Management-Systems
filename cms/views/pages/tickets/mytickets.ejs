@@ -1,10 +1,12 @@
 <html>
 
-<%- include ('../../templates/heading/htmlhead') -%>
-<%- include ('../../templates/heading/alertmanager') -%>
-<%- include ('../../templates/heading/standard_header') -%>
-
-<%- include ('../../templates/nav') -%>
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<% if(user.status.any) { %>
+  <%- include('/home/app/views/templates/heading/admin_header') -%>
+<% } else { %>
+  <%- include ('/home/app/views/templates/heading/standard_header') -%>
+<% } %>
 
 <br>
 <br>
@@ -21,7 +23,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<%- include('../../templates/ticketing/user/ticketset', {tickets: tickets}) %>
+				<%- include('/home/app/views/templates/ticketing/user/ticketset', {tickets: tickets}) %>
 			</tbody>
 		</table>
 	</div>
@@ -29,6 +31,6 @@
 
 <br>
 <br>
-<%- include ('../../templates/footer') -%>
+<%- include ('/home/app/views/templates/footer') -%>
 </body>
 </html>

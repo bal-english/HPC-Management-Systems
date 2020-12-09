@@ -1,21 +1,20 @@
 <html>
 
-<%- include ('../../templates/heading/htmlhead') -%>
-<%- include ('../../templates/heading/alertmanager') -%>
-<%- include ('../../templates/heading/standard_header') -%>
-<%- include ('../../templates/nav') -%>
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<% if(user.status.any) { %>
+  <%- include('/home/app/views/templates/heading/admin_header') -%>
+<% } else { %>
+  <%- include ('/home/app/views/templates/heading/standard_header') -%>
+<% } %>
 
 
-
-<br>
-<br>
-
-<body>
+<body class="text-center bg-light">
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-	<div class="container">
+	<div class="container" style="text-align:left">
 		<div class="card">
 			<div class="card-body">
 				<h3 class="card-title">
@@ -27,34 +26,33 @@
 			</div>
 		</div>
 	</div>
-</body>
 
-<% if(admin) { %>
+	<% if(admin) { %>
 
-<br>
-<br>
+	<br>
+	<br>
 
- <div class="container">
-  <div class="content">
-    <div class="mb-3 card">
-      <div class="card-header">
-        <div class="row">
-          <div class="col">
-            <h5 id="ticket_creator" class="mb-2">
-              <%= author.firstName %><%= author.lastName %>
-              <!-- needs to send the user id with this \/ -->
-              <a id="ticket_email" href="/profile"> <%= author.email %> </a>
-            </h5>
-            <!-- <button class = "btn btn-sm">
+	<div class="container" style="text-align:left">
+		<div class="content">
+  		<div class="mb-3 card">
+      	<div class="card-header">
+        	<div class="row">
+          	<div class="col">
+            	<h5 id="ticket_creator" class="mb-2">
+              	<%= author.firstName %><%= author.lastName %>
+              	<!-- needs to send the user id with this \/ -->
+              	<a id="ticket_email" href="/profile"> <%= author.email %> </a>
+            	</h5>
+            	<!-- <button class = "btn btn-sm">
               //Add note to ticket
-            </button> -->
-          </div>
-        </div>
-      </div>
-    </div>
-    <br>
-    <br>
-    <div class="card">
+            	</button> -->
+          	</div>
+        	</div>
+      	</div>
+    	</div>
+    	<br>
+    	<br>
+    	<div class="card">
       <div class="bg-light card-header">
       	<h4 class="mb-0">
           Ticket information
@@ -126,7 +124,7 @@
 
 <br>
 <br>
-<%- include ('../../templates/footer') -%>
+<%- include ('/home/app/views/templates/footer') -%>
 </body>
 </html>
 
@@ -158,13 +156,13 @@ jQuery(document).ready(function($){
 		      window.location.replace(res.url);
         },
         error: function(res, err) {
-          console.log('POST error');
+					window.location.replace(res.responseJSON.url);
         }
       });
     })
     jQuery('#assigned').click(function() {
       var assigned = {
-          ticket_id: jQuery('#ticket_id').val(),
+          ticket_id: <%= ticket.id %>,
           user_id: jQuery('#assign_change').val()
       }
       console.log(assigned);
@@ -173,11 +171,11 @@ jQuery(document).ready(function($){
           type: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(assigned),
-          success: function(data) {
-            console.log('ASSIGN POST success');
+          success: function(res) {
+			      window.location.replace(res.url);
           },
           error: function(req, err) {
-            console.log('POST error');
+			      window.location.replace(res.responseJSON.url);
           }
         });
       })
