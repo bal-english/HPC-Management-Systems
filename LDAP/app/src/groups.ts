@@ -108,8 +108,6 @@ export class Group {
                 const dn:LdapTypes.DistinguishedName = new LdapTypes.DistinguishedName(groupDNComponents);
                 const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
                 const member:LdapTypes.MemberBag = new LdapTypes.MemberBag(memberComponents);
-                const inDBflag:boolean=false;
-
                 const gidNum: LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(res[0]);
                 const createdGroup = new Group(dn, cn, gidNum, objClass, member, false);
                 createdGroup.SystemAccount = res[1];
@@ -142,9 +140,9 @@ export class Group {
     }
 
     async save():Promise<Group>{
-    // Checks if user is in db by DN
+    // Checks if group is in db by DN
     // -If already in, then throw error
-    // -If not already in, add based on user object
+    // -If not already in, add based on group object
     //    --Based on modify or create
 
         // Add to DB
@@ -165,7 +163,7 @@ export class Group {
     static async loadGroup(dn: string):Promise<Group>{
         // Finds group and returns group object
         // 1. LDAPsearch with DN
-        // 2. Fill in user variables with fields from LDAP
+        // 2. Fill in group variables with fields from LDAP
         // 3. Return group object if found
 
         let loadedDN: LdapTypes.DistinguishedName;
@@ -181,7 +179,6 @@ export class Group {
             const ret: LdapTypes.LdapKeyValuePair[] = new Array();
             for (const val of dnComponents) {
                 const keyValueSplit: string[] = val.split('=');
-                // TODO: Error handling
                 switch (keyValueSplit[0]) {
                     case "dc":
                         ret.push(new LdapTypes.DomainComponent(keyValueSplit[1]));
@@ -218,10 +215,6 @@ export class Group {
     }
 
     private async modifyMember(user:User, ldapOperation:string){
-        /*if(!(ldapOperation in ['add', 'delete'])){
-            throw Error("operation not supported: " + ldapOperation);
-        }*/
-        // Change to fixed version of above later
         if(ldapOperation !== 'add' && ldapOperation !== 'delete'){
             throw Error("operation not supported: " + ldapOperation);
         }

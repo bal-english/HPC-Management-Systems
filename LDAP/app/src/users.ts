@@ -50,6 +50,7 @@ export class User {
         const cn:LdapTypes.CommonName = new LdapTypes.CommonName(comName);
         const gidNumber:LdapTypes.GroupIDNumber = new LdapTypes.GroupIDNumber(100);
         const uid:LdapTypes.UserID = new LdapTypes.UserID(emailComponents[0]);
+        // TODO: /home should not be a static value
         const homeDir: LdapTypes.HomeDirectory = new LdapTypes.HomeDirectory("/home/" + uid.toString());
         const surname:LdapTypes.Surname = new LdapTypes.Surname(uid.toString());
         const loginShell:LdapTypes.LoginShell = new LdapTypes.LoginShell("/bin/bash");
@@ -93,7 +94,7 @@ export class User {
         if(this.isInDB)
         {
             return client.delAsync(this.dn.toString())
-            .then((res:any)=>{return this.setInDB(false)})
+            .then((res:any)=>{return this.setInDB(false)});
         }
         return Promise.resolve(this);
     }
@@ -237,7 +238,6 @@ export class User {
             const ret: LdapTypes.LdapKeyValuePair[] = new Array();
             for (const val of dnComponents) {
                 const keyValueSplit: string[] = val.split('=');
-                // TODO: Error handling
                 switch (keyValueSplit[0]) {
                     case "dc":
                         ret.push(new LdapTypes.DomainComponent(keyValueSplit[1]));

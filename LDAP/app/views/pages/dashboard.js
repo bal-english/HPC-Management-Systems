@@ -6,8 +6,7 @@ $('#createuser').click(function(){
       datatype: 'json',
       data: {
         email: $('#create_email').val(),
-        cn: $('#create_cn').val(),
-        password: $('#create_pw').val()
+        cn: $('#create_cn').val()
       },
       success: function(data){
         if(data.error)

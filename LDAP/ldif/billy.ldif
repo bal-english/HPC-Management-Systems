@@ -98,6 +98,15 @@ dn: cn=faculty,ou=group,dc=linuxlab,dc=salisbury,dc=edu
 cn: faculty
 gidNumber: 1000
 member: uid=dummyaccount,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+member: uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu
+objectClass: groupOfNames
+objectClass: top
+objectClass: posixGroup
+
+dn: cn=admin,ou=group,dc=linuxlab,dc=salisbury,dc=edu
+cn: admin
+gidNumber: 20
+member: uid=wwolf1,ou=people,dc=linuxlab,dc=salisbury,dc=edu
 objectClass: groupOfNames
 objectClass: top
 objectClass: posixGroup

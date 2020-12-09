@@ -1,10 +1,3 @@
-/*
-  Fix close & X button
-  Implement pw reset
-  thats it (probably)
-
-
-*/
 import * as bodyparser from 'body-parser';
 import express from 'express';
 import paseto from "paseto";
@@ -14,16 +7,12 @@ import { UmsQueue } from "./UmsQueue";
 import { authenticateWorkerAuthToken, authenticateWorkerSessionToken } from "./workerauthentication";
 import { createPrivateKey } from 'crypto';
 import { validateUserPass, validateUserCN, validateUserDN, validateUserEmail } from "./validateUser";
-import { UserGroups } from "./UserGroups";
-import { authenticateUser } from "./authentication";
-import path from 'path'
-import { each } from 'bluebird';
+import path from 'path';
 import { authLogin } from './authenticateLogin';
 import { Obfuscation } from './Obfuscation';
-import * as main from "./main";
 const cookieParser = require('cookie-parser')
 const auth = require('./authentication');
-
+// Remove it
 // TESTING
 User.createUserFromEmail("William Wolf", "wwolf1@gulls.salisbury.edu")
   .then(async (res: User) => {
@@ -52,9 +41,7 @@ app.use(bodyparser.json());
   app.set('workerKey', key);
 
   // Generates static auth token
-  // TODO
-  //  - Middleware needs to be changed to admin role middleware
-  //  - Ian has got it, talk to him
+  // TODO: Middleware needs to be changed to admin role middleware
   app.post('/admin/homeDirQueue/createToken', authenticateWorkerAuthToken, async (request: Request, response: Response) => {
     const token = await V2.sign({ subject: 'auth_token', issuer: 'homedirqueue' }, app.get('workerKey'), { subject: 'auth_token', issuer: 'homedirqueue' });
     response.send({ 'token': token });
@@ -67,6 +54,7 @@ app.use(bodyparser.json());
     response.send({ 'token': token });
   });
 
+  // TODO: This should probably be changed
   app.get('/admin/tokenTest', async (request: Request, response: Response) => {
     response.sendFile('/app/views/pages/tokenTest.html');
   })
@@ -123,9 +111,10 @@ const resetPWfunction = (modalToggle: boolean) => {
         const tempEmail = request.body.email.split("@");
         const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
         const res = await User.loadUser(tempUID);
-        const token = await V2.sign({issuer: request.body.email}, app.get('key'), {issuer: request.body.email});
+        const token = await V2.sign({ issuer: request.body.email }, app.get('key'), { issuer: request.body.email });
         console.log(token);
         // uhh note to richard email them the token
+        // TODO:
         response.send({
           modalToggle,
           email: request.body.email
@@ -181,7 +170,7 @@ const resetPWfunction = (modalToggle: boolean) => {
     }
   }
 }
-
+// Multiple routes are used for the modal functionality
 app.post('/api/user/resetPW', resetPWfunction(false));
 
 app.post('/api/user/verifyPWToken', resetPWfunction(true));
@@ -193,62 +182,51 @@ app.post('/api/user/changePW', async (req: Request, res: Response, next: any) =>
   }
   try {
     const key = req.app.get('key');
-    console.log(req.body);
-    console.log("Squidward Tennisballs");
     if (req.body == null || req.body.token == null) {
-       throw new Error('Malformed request');
+      throw new Error('Malformed request');
     } else {
-       const token = req.body.token;
-       const { V2: { verify, decrypt } } = paseto
-       const payload: any = await verify(token, key);
-       req.body.token = payload;
-       return next();
+      const token = req.body.token;
+      // This should be imported
+      const { V2: { verify, decrypt } } = paseto;
+      const payload: any = await verify(token, key);
+      req.body.token = payload;
+      return next();
     }
- } catch (error) {
+  } catch (error) {
     if (error) {
-       console.log("ERROR: Error when attempting to reset password " + error.toString());
-       res.send({
+      console.log("ERROR: Error when attempting to reset password " + error.toString());
+      res.send({
         error: 'Unexpected error: ' + error.toString()
       })
     }
- }
+  }
 
-},resetPWfunction(true));
+}, resetPWfunction(true));
 
 app.get('/', (request: Request, response: Response) => {
-  response.render('pages/login', {
-    test: "HPCL UMS Test"
-  });
+  response.render('pages/login');
 });
 
 app.get('/dashboard', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], (request: Request, response: Response) => {
-  response.render('pages/dashboard', {
-    test: "HPCL UMS Test2"
-  });
+  response.render('pages/dashboard');
 });
 
-app.get('/resetPW', /*auth.checkPermissions(["admin", "faculty", ])],*/(request: Request, response: Response) => {
-  response.render('pages/resetPW', {
-    test: "HPCL UMS Test2"
-  });
+app.get('/resetPW', (request: Request, response: Response) => {
+  response.render('pages/resetPW');
 });
-
+// TODO: This should be put into a static route
 app.get('/dashboard.js', (request: Request, response: Response) => {
   response.sendFile(path.join(__dirname, '../views/pages/dashboard.js'))
 });
 
-
 app.post('/api/user/create', [auth.authenticateUser, auth.checkPermissions(["admin"])], async (request: Request, response: Response) => {
   const email: string = request.body.email;
   const cn: string = request.body.cn;
-  const password: Obfuscation = request.body.password;
   try {
     if (!validateUserEmail(email))
       throw new Error("Invalid university email entered");
     if (!validateUserCN(cn))
       throw new Error("Common name must be alphabetic and at least 3 characters");
-    if (!validateUserPass(password))
-      throw new Error("Password must be composed of either letters, numbers or symbols and at least 4 characters");
 
     const res = await User.createUserFromEmail(cn, email);
     const res1 = await res.save();
@@ -263,46 +241,48 @@ app.post('/api/user/create', [auth.authenticateUser, auth.checkPermissions(["adm
     });
   }
 });
-
-app.post('/api/user/modify', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], async (request: Request, response: Response) => {
-  const dn: string = request.body.dn;
-  try {
-    if (!validateUserDN(dn))
-      throw new Error("Invaid User ID, needs to be composed of letters and numbers");
-    const tempUID = "uid=" + dn + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
-    const userPassword: Obfuscation = request.body.password;
-    let res
+// TODO: Confusing naming on /modify should be /modifyPW
+app.post('/api/user/modify', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])],
+  async (request: Request, response: Response) => {
+    const dn: string = request.body.dn;
     try {
-      res = await User.loadUser(tempUID);
-    } catch (error) {
+      if (!validateUserDN(dn))
+        throw new Error("Invaid User ID, needs to be composed of letters and numbers");
+      const tempUID = "uid=" + dn + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu"
+      const userPassword: Obfuscation = request.body.password;
+      let res
+      try {
+        res = await User.loadUser(tempUID);
+      } catch (error) {
+        response.send({
+          error: "Could not load user with that User ID",
+        })
+        return
+      }
+      if (validateUserPass(userPassword)) {
+        res = await res.setUserPassword(userPassword.getPass());
+      } else {
+        throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+      }
+      await res.save();
       response.send({
-        error: "Could not load user with that User ID",
-      })
-      return
+      });
     }
-    if (validateUserPass(userPassword)) {
-      res = await res.setUserPassword(userPassword.getPass());
-    } else {
-      throw new Error("Password Error: must be composed of either letters, numbers or symbols <br> and at least 4 characters");
+    catch (err) {
+      response.send({
+        error: err.toString(),
+      });
     }
-    await res.save();
-    response.send({
-    });
-  }
-  catch (err) {
-    response.send({
-      error: err.toString(),
-    });
-  }
-});
+  });
 
-
+// TODO: /modifyOwn should be called /modifyOwnPW
 app.post('/api/user/modifyOwn', [auth.authenticateUser, auth.checkPermissions(["admin", "faculty"])], async (request: Request, response: Response) => {
   const userPassword: Obfuscation = request.body.password;
   try {
     const key = request.app.get('key');
     const token = request.cookies.token;
-    const { V2: { verify, decrypt } } = paseto
+    // TODO: Imports should be at the top of the file
+    const { V2: { verify, decrypt } } = paseto;
     const payload: any = await verify(token, key);
     let res = await User.loadUser(payload.uid);
     if (validateUserPass(userPassword)) {
@@ -320,25 +300,26 @@ app.post('/api/user/modifyOwn', [auth.authenticateUser, auth.checkPermissions(["
     });
   }
 });
-// added authenticate user
-app.post('/api/user/delete', [auth.authenticateUser, auth.checkPermissions(["faculty", "admin"])], async (request: Request, response: Response,) => {
 
-  if (!validateUserEmail(request.body.email))
-    throw new Error("Invaid university email entered");
-  const tempEmail = request.body.email.split("@");
-  const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
-  try {
-    const user = await User.loadUser(tempUID)
-    await user.disableUser();
-    await user.save();
-    response.send("User was successfully disabled!")
-  }
-  catch (error) {
-    response.send({ error: "Error: User was not successfully disabled!" })
-  }
+app.post('/api/user/delete', [auth.authenticateUser, auth.checkPermissions(["faculty", "admin"])],
+  async (request: Request, response: Response,) => {
 
-});
+    try {
+      if (!validateUserEmail(request.body.email))
+        throw new Error("Invaid university email entered");
+      const tempEmail = request.body.email.split("@");
+      const tempUID = "uid=" + tempEmail[0] + ",ou=people,dc=linuxlab,dc=salisbury,dc=edu";
+      const user = await User.loadUser(tempUID)
+      await user.disableUser();
+      await user.save();
+      response.send("User was successfully disabled!")
+    }
+    catch (error) {
+      response.send({ error: "Error: User was not successfully disabled!" })
+      throw error;
+    }
 
+  });
 
 app.post('/api/user/login', async (request: Request, response: Response) => {
   const email = request.body.email
@@ -350,6 +331,7 @@ app.post('/api/user/login', async (request: Request, response: Response) => {
     if (!validateUserEmail(email)) {
       throw new Error();
     }
+    // TODO: Some of these user validation should be put into a middleware
     if (password.getPass() === "!!")
       throw new Error();
     await authLogin(tempUID, password)
@@ -357,21 +339,23 @@ app.post('/api/user/login', async (request: Request, response: Response) => {
   catch (error) {
     if (error) {
       response.send({ error: "Could not login with the credentials" })
-      return
+      throw error;
     }
 
   }
+
   user = await User.loadUser(tempUID);
   const roles: string[] = await user.getRoles();
   const key = app.get('key');
-  const { V2: { sign } } = paseto
-  const token = await sign({ roles, uid: tempUID }, key)
+  const { V2: { sign } } = paseto;
+  const token = await sign({ roles, uid: tempUID }, key);
+  console.log(roles);
   response.send(token);
 });
 
+// This has other functionality not in the route
 app.post('/api/user/logout', async (request: Request, response: Response) => {
   response.send(true);
 });
-
 
 app.listen(80, 'node');

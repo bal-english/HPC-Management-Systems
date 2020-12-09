@@ -30,6 +30,7 @@ const validateUserDN = (dn: string) => {
     }
     return false;
 }
+// TODO: Use an email validation library
 const validateUserEmail = (email: string) => {
     if  (/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)){
         if(email.split("@")[1] === 'gulls.salisbury.edu' || email.split("@")[1] === 'salisbury.edu' ){
