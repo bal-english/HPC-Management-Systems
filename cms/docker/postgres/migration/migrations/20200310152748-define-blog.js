@@ -23,8 +23,8 @@ exports.up = function(db) {
 		},
 		posttime: {
 			type: 'timestamp',
-			notNull: false,//true	// TODO: Make This null
-			defaultValue: '2004-10-19 10:23:54'
+			notNull: false,
+	    defaultValue: new String('(now() at time zone \'UTC\')')
 		},
 		title: {
 			type: 'text',

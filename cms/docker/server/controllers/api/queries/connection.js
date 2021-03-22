@@ -42,6 +42,11 @@ const assignTicketToUser = (u_id, t_id) => {
   const ticket_id = parseInt(t_id);
   return pool.query('INSERT INTO \"ticket-user_assignee\" (\"user_id\", \"ticket_id\") VALUES ($1, $2) RETURNING \"ticket_id\"', [user_id, ticket_id]);
 }
+const unassignTicketToUser = (u_id, t_id) => {
+  const user_id = parseInt(u_id);
+  const ticket_id = parseInt(t_id);
+  return pool.query('DELETE FROM \"ticket-user_assignee\" WHERE user_id=$1 AND ticket_id=$2', [user_id, ticket_id]);
+}
 
 const assignTicketToGroup = (u_id, t_id) => {
   const group_id = parseInt(g_id);
@@ -57,5 +62,6 @@ module.exports = {
   givePermToUsergroup,
   removePermFromUsergroup,
   assignTicketToUser,
+  unassignTicketToUser,
   assignTicketToGroup
 }

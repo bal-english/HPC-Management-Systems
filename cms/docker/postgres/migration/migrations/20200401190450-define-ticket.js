@@ -23,6 +23,11 @@ exports.up = function(db) {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		posttime: {
+			type: 'timestamp',
+			notNull: false,
+	    defaultValue: new String('(now() at time zone \'UTC\')')
+		},
 		status: {
 			type: 'ticket_status',
 			notNull: true,

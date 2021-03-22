@@ -1,0 +1,41 @@
+<html>
+
+<%- include ('/home/app/views/templates/heading/htmlhead') -%>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+<%- include ('/home/app/views/templates/heading/alertmanager') -%>
+<% if(user.status.any) { %>
+  <%- include('/home/app/views/templates/heading/admin_header') -%>
+<% } else { %>
+  <%- include ('/home/app/views/templates/heading/standard_header') -%>
+<% } %>
+
+<br>
+<br>
+
+<body class="text-center bg-light">
+  <div class="container" style="max-width:1620">
+    <div class="row">
+      <div class="col col-lg-5">
+        <%- include('/home/app/views/templates/ticketset/small', {title: "New Tickets", tickets: queued_set, page_data: queued_page_data}) %>
+      </div>
+      <div class="col">
+        <%- include('/home/app/views/templates/ticketset/small', {title: "In Progress", tickets: inprog_set, page_data: inprog_page_data}); %>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-lg-5">
+
+      </div>
+      <div class="col">
+        <%- include('/home/app/views/templates/ticketset/small', {title: "Assigned Queue", tickets: assigned_queue, page_data: assigned_queue_page_data}); %>
+      </div>
+    </div>
+  </div>
+</body>
+
+<%- include ('/home/app/views/templates/footer') -%>
+
+</html>

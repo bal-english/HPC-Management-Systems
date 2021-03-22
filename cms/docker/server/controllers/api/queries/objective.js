@@ -116,7 +116,7 @@ const getTicketsSubset = (offset, limit) => {
 const getTicketsSubsetByUserId = (u_id, offset, limit) => {
 	const user_id = parseInt(u_id);
 	//return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 ORDER BY \"posttime\" DESC OFFSET $1 LIMIT $2', [offset, limit, user_id])
-	return pool.query('SELECT * FROM \"ticket\" WHERE id=$3 OFFSET $1 LIMIT $2', [offset, limit, user_id])
+	return pool.query('SELECT * FROM \"ticket\" WHERE creator=$3 OFFSET $1 LIMIT $2', [offset, limit, user_id])
 }
 
 const getTicketById = (u_id) => {
@@ -127,6 +127,264 @@ const getTicketById = (u_id) => {
 const getCreatorOfTicket = (t_id) => {
 	const ticket_id = parseInt(t_id);
 	return pool.query('SELECT \"creator\" FROM \"ticket\" WHERE id = $1', [ticket_id]);
+}
+
+const getTicketsAssignedToUserByUserId = (u_id) => {
+	const user_id = parseInt(u_id)
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(async ticket_ids => {
+		console.log(ticket_ids.length)
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			console.log("test");
+			str = "WHERE";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR";
+			})
+			str = await str.substring(0, str.length - 3)
+			console.log(str);
+			console.log('SELECT * FROM \"ticket\" ' + str)
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str))
+}
+
+const getTicketsAssignedToUserSubsetByUserId = (u_id, offset, limit) => {
+	const user_id = parseInt(u_id)
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str))
+}
+
+const getQueuedTicketsAssignedToUserByUserId = (u_id) => {
+	const user_id = parseInt(u_id)
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(async ticket_ids => {
+		console.log(ticket_ids.length)
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			console.log("test");
+			str = "WHERE ()";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR";
+			})
+			str = await str.substring(0, str.length - 3) + ")"
+			console.log(str);
+			console.log('SELECT * FROM \"ticket\" ' + str)
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Assigned\''))
+}
+
+const getQueuedTicketsAssignedToUserSubsetByUserId = (u_id, offset, limit) => {
+	const user_id = parseInt(u_id)
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE (";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + ")"// + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Assigned\' OFFSET ' + offset + ' LIMIT ' + limit))
+}
+
+const getInProgressTicketsAssignedToUserSubsetByUserId = (u_id, offset, limit) => {
+	const user_id = parseInt(u_id)
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-user_assignee\" WHERE user_id = $1', [user_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE (";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + ")"// + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Working\' OFFSET ' + offset + ' LIMIT ' + limit))
+}
+/*
+const getQueuedTicketsAssignedToGroupByGroupId = (g_id) => {
+	const group_id = parseInt(g_id)
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-group_assignee\" WHERE group_id = $1', [group_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(async ticket_ids => {
+		console.log(ticket_ids.length)
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			console.log("test");
+			str = "WHERE ()";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR";
+			})
+			str = await str.substring(0, str.length - 3) + ")"
+			console.log(str);
+			console.log('SELECT * FROM \"ticket\" ' + str)
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Assigned\''))
+}
+
+const getQueuedTicketsAssignedToGroupSubsetByGroupId = (g_id, offset, limit) => {
+	const group_id = parseInt(g_id)
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-group_assignee\" WHERE group_id = $1', [group_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE (";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + ")"// + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Assigned\' OFFSET ' + offset + ' LIMIT ' + limit))
+}
+
+const getInProgressTicketsAssignedToGroupSubsetByGroupId = (g_id, offset, limit) => {
+	const group_id = parseInt(g_id)
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-group_assignee\" WHERE group_id = $1', [group_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE (";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + ")"// + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Working\' OFFSET ' + offset + ' LIMIT ' + limit))
+}
+
+const getQueuedTicketsAssignedToGroupsSubsetByGroupIds = (g_ids, offset, limit) => {
+	if(!Array.isArray(g_ids)) {
+		throw "Supplied Variable is not an array."
+	}
+	for(i = 0; i < g_ids; i++) {
+		g_ids[i] = parseInt(g_ids[i]);
+	}
+	const group_ids = g_ids
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+
+	return pool.query('SELECT \"ticket_id\" FROM \"ticket-group_assignee\" WHERE group_id = $1', [group_id]).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.ticket_id);
+		})
+		return arr;
+	}).then(ticket_ids => {
+		if(ticket_ids.length == 0) {
+			return " WHERE id = -1";
+		} else {
+			str = "WHERE (";
+			ticket_ids.forEach(id => {
+				str += " id = " + id + " OR"
+			})
+			str = str.substring(0, str.length - 3) + ")"// + " OFFSET " + offset + " LIMIT " + limit;
+			return str;
+		}
+	}).then(str => pool.query('SELECT * FROM \"ticket\" ' + str + ' AND status = \'Assigned\' OFFSET ' + offset + ' LIMIT ' + limit))
+}
+*/
+
+const getUnassignedTicketsSubset = (offset, limit) => {
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+	console.log(offset)
+	console.log(limit);
+	return pool.query('SELECT * FROM \"ticket\" WHERE status = \'Queued\' OFFSET $1 LIMIT $2', [offset, limit]);
+}
+
+const getTicketRepliesByTicketId = (t_id) => {
+	const ticket_id = parseInt(t_id);
+	return pool.query('SELECT * FROM \"thread-reply\" WHERE parent = $1', [ticket_id]);
+}
+
+const getTicketRepliesSubsetByTicketId = (t_id, offset, limit) => {
+	const ticket_id = parseInt(t_id);
+	offset = parseInt(offset);
+	limit = parseInt(limit);
+	return pool.query('SELECT * FROM \"thread-reply\" WHERE parent = $1 OFFSET $2, LIMIT $3', [ticket_id, offset, limit]);
 }
 
 const getPermissions = () => {
@@ -194,7 +452,18 @@ module.exports = {
 	getTicketsSubset,
 	getTicketsSubsetByUserId,
 	getTicketById,
+	getTicketsAssignedToUserByUserId,
+	getTicketsAssignedToUserSubsetByUserId,
+	getQueuedTicketsAssignedToUserByUserId,
+	getQueuedTicketsAssignedToUserSubsetByUserId,
+	getInProgressTicketsAssignedToUserSubsetByUserId,
+	/*getQueuedTicketsAssignedToGroupByGroupId,
+	getQueuedTicketsAssignedToGroupSubsetByGroupId,
+	getInProgressTicketsAssignedToGroupSubsetByGroupId,*/
+	getUnassignedTicketsSubset,
 	getCreatorOfTicket,
+	getTicketRepliesByTicketId,
+	getTicketRepliesSubsetByTicketId,
 	getPermissions,
 	getPermissions_def,
 	getPermissionById,

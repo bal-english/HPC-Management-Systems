@@ -10,7 +10,6 @@ const connection = require('./queries/connection');
 const historical = require('./queries/historical');
 const update = require('./queries/update');
 const conversion = require('./queries/conversion');
-
 var db = {
 	'datareq': objective,
 	'exis': existential,

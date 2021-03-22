@@ -6,10 +6,19 @@ const makeNonce = () => {
 }
 
 const user = {
-  nonce: (user_id) => {
+  nonce: (u_id) => {
+		const user_id = parseInt(u_id);
     const newnonce = parseInt(makeNonce());
     return pool.query('UPDATE \"user\" SET nonce=$1 WHERE id=$2', [newnonce, user_id]);
-  }
+  },
+	deactivate: (u_id) => {
+		const user_id = parseInt(u_id);
+    return pool.query('UPDATE \"user\" SET deactivated=\'1\' WHERE id=$1', [user_id]);
+	},
+	reactivate: (u_id) => {
+		const user_id = parseInt(u_id);
+    return pool.query('UPDATE \"user\" SET deactivated=\'0\' WHERE id=$1', [user_id]);
+	}
 }
 
 const ticketStatus = (t_id, t_status) => {

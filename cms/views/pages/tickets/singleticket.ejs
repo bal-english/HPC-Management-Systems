@@ -13,19 +13,32 @@
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
 	<div class="container" style="text-align:left">
 		<div class="card">
-			<div class="card-body">
-				<h3 class="card-title">
-					<%= ticket.title %>
-				</h3>
-				<p class="card-text">
+      <div class="card-header">
+        <div class="row">
+          <div class="col text-left">
+    				<h3 class="card-title">
+    					<%= ticket.title %>
+    				</h3>
+          </div>
+          <div class="col-sm-auto text-right">
+            <%= author.firstName %> <%= author.lastName %>
+          </div>
+        </div>
+			  <div class="card-body">
+				  <p class="card-text">
 					<%= ticket.body %>
-				</p>
-			</div>
-		</div>
-	</div>
+				  </p>
+			  </div>
+        <div class="card-footer">
+          <p> Status: <%= ticket.status %> </p>
+        </div>
+		  </div>
+    </div>
 
 	<% if(admin) { %>
 
@@ -34,24 +47,6 @@
 
 	<div class="container" style="text-align:left">
 		<div class="content">
-  		<div class="mb-3 card">
-      	<div class="card-header">
-        	<div class="row">
-          	<div class="col">
-            	<h5 id="ticket_creator" class="mb-2">
-              	<%= author.firstName %><%= author.lastName %>
-              	<!-- needs to send the user id with this \/ -->
-              	<a id="ticket_email" href="/profile"> <%= author.email %> </a>
-            	</h5>
-            	<!-- <button class = "btn btn-sm">
-              //Add note to ticket
-            	</button> -->
-          	</div>
-        	</div>
-      	</div>
-    	</div>
-    	<br>
-    	<br>
     	<div class="card">
       <div class="bg-light card-header">
       	<h4 class="mb-0">
@@ -122,17 +117,205 @@
 
 <% } %>
 
+<% if(admin) { %>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="row">
+          <div class="col">
+            <h5 id="ticket_creator" class="mb-2">
+              <%= author.firstName + " "%><%=author.lastName %>
+            </h5>
+          </div>
+          <div class="col">
+            <p> <%= author.email %> </h5>
+          </div>
+          <div class="col">
+            <p id="ticket_id"> <%= ticket.id %> </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% if(perms.claim || perms.assign) { %>
+    <br>
+    <div class="accordion" id="groupAccordion">
+      <% if(perms.claim) { %>
+        <div class="card">
+          <div class="card-header" id="headingZero">
+            <h2 class="mb-0">
+              <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseZero", aria-expanded="true" aria-controls="collapseZero">
+                Claim Ticket (Assign to Yourself)
+              </button>
+            </h2>
+          </div>
+          <div id="collapseZero" class="collapse" aria-labelledby="headingZero" data-parent="#groupAccordion">
+            <div class="card-body">
+              <div class="row">
+                <div class="p-0" id="claim-status">
+                </div>
+              </div>
+              <div class="row">
+                <button class="btn btn-outline-primary btn-sm" id="claim-submit" value="accept">Claim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+      <% if(perms.assign) { %>
+      <div class="card">
+        <div class="card-header" id="headingOne">
+          <h2 class="mb-0">
+            <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Assign Ticket to User
+            </button>
+          </h2>
+        </div>
+        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#groupAccordion">
+          <div class="card-body">
+            <div class="row">
+                <div class="p-2">
+                  <div class="card">
+                    <div class="card-header">
+                      <label for="assign-user_id"> User ID: </label>
+                      <input id="assign-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <div class="row">
+                <div class="p-0" id="assign-status">
+                </div>
+              </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="assign-submit" value="accept">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <div class="card">
+          <div class="card-header" id="headingTwo">
+            <h2 class="mb-0">
+              <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Unassign Ticket to User
+              </button>
+            </h2>
+          </div>
+          <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#groupAccordion">
+            <div class="card-body">
+              <div class="row">
+                <div class="p-2">
+                  <div class="card">
+                    <div class="card-header">
+                      <label for="remove-user_id"> User ID: </label>
+                      <input id="remove-user_id" class="form-control" type="text" placeholder="User ID:"> </input>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <div class="row">
+              <div class="p-0" id="remove-status">
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn btn-outline-primary btn-sm" id="remove-submit" value="accept">Submit</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+    <br>
+    <% if(ticket.status == "Queued") { } else { %>
+      <% if(ticket.status == "Assigned") { %>
+        <button class="btn btn-primary" id="status_update"> Begin Working </button>
+        <button class="btn btn-primary" id="status_reject"> Reject Ticket </button>
+      <% } else if(ticket.status == "Working") { %>
+        <button class="btn btn-primary" id="status_update"> Mark Ticket As Complete </button>
+        <button class="btn btn-primary" id="status_reject"> Reject Ticket </button>
+      <% } else if(ticket.status == "Completed") { %>
+        <button class="btn btn-primary" id="status_update"> Return to This Ticket </button>
+      <% } else if(ticket.status == "Rejected") { %>
+        <button class="btn btn-primary" id="status_reject"> Reject Ticket </button>
+      <% } %>
+    <% } %>
+  </div>
+<% } %>
+
+  <% if(replies.length != 0) { %>
+    <div class="container">
+      <% replies.forEach(reply => { %>
+        <div class="card">
+          <div class="card-header">
+            <div class="row">
+              <div class="col text-left">
+                <h4> Id: <%= reply.author %> </h4>
+              </div>
+              <div class="col text-right">
+                <% date = reply.posttime.toLocaleString("en-US", {timeZone: "America/New_York"}) %>
+    						<p> <%= date.substring(0, date.length /*date.indexOf(',')*/) %> </p>
+              </div>
+            </div>
+          </div>
+          <div class="card-body text-left">
+            <p> <%= reply.body %> </p>
+          </div>
+        </div>
+        <br>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if(user.is_assigned || (ticket.creator == user.id && (ticket.status != "Completed" || ticket.status != "Rejected"))) { %>
+    <div class="container border-top my-3">
+      <br>
+      <div class="content">
+        <div>
+          <h3> Reply <h3>
+        </div>
+        <br>
+        <div class="row">
+          <div class="p-0" id="reply-status">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-10">
+            <label for="ticket-info"> Information: </label>
+            <textarea class="form-control" id="detail" type="text" placeholder"Reply Here" rows="7"></textarea>
+          </div>
+        </div>
+        <br>
+        <br>
+        <button id="reply_submit" class="btn btn-primary">Submit</button>
+      </div>
+      </div>
+    </div>
+  <% } %>
+
 <br>
 <br>
 <%- include ('/home/app/views/templates/footer') -%>
 </body>
-</html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <% if(admin) { %>
 
 <script type = "text/javascript">
-
 jQuery(document).ready(function($){
+  $('#claim-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('#assign-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
+  $('remove-status').animate({
+    'height': 'toggle',
+    'opacity': 0
+  }, 1, 'linear');
 
 	$(function(){
 		$(".dropdown-menu li a").click(function(){
@@ -141,6 +324,108 @@ jQuery(document).ready(function($){
 		});
 	});
 
+  jQuery('#claim-submit').click(function() {
+    //var ticket_id = <%= ticket.id %>;
+    jQuery.ajax({
+      url: '/ticket/<%= ticket.id %>/claim',
+      type: 'POST',
+      contentType: 'application/json',
+      //data: JSON.stringify(ticket_id),
+      success: async function(res) {
+        console.log('POST success');
+        console.log(res);
+        if($('#claim-status').is(":visible")) {
+          $('#claim-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#claim-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#claim-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('POST error');
+      }
+    });
+  });
+  jQuery('#assign-submit').click(function() {
+    var data = {
+      user_id: jQuery('#assign-user_id').val()
+    }
+    jQuery.ajax({
+      url: '/ticket/<%= ticket.id %>/assign',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('POST success');
+        console.log(res);
+        if($('#assign-status').is(":visible")) {
+          $('#assign-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#assign-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#assign-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('POST error');
+      }
+    });
+  });
+
+  jQuery('#remove-submit').click(function() {
+    var data = {
+      user_id: jQuery('#remove-user_id').val()
+    }
+    jQuery.ajax({
+      url: '/ticket/<%= ticket.id %>/assign',
+      type: 'DELETE',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('DELETE success');
+        console.log(res);
+        if($('#remove-status').is(":visible")) {
+          $('#remove-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#remove-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#remove-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('DELETE error');
+      }
+    });
+  });
+
   jQuery('#status').click(function() {
     var info = {
         ticket_id: <%= ticket.id %>,
@@ -148,38 +433,88 @@ jQuery(document).ready(function($){
       }
 		console.log(info.status);
     jQuery.ajax({
-        url: '/ticket/status',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(info),
-        success: function(res) {
-		      window.location.replace(res.url);
-        },
-        error: function(res, err) {
-					window.location.replace(res.responseJSON.url);
+      url: '/ticket/status',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(info),
+      success: function(res) {
+	      window.location.replace(res.url);
+      },
+      error: function(res, err) {
+				window.location.replace(res.responseJSON.url);
         }
-      });
-    })
-    jQuery('#assigned').click(function() {
-      var assigned = {
-          ticket_id: <%= ticket.id %>,
-          user_id: jQuery('#assign_change').val()
+    });
+  })
+  jQuery('#assigned').click(function() {
+    var assigned = {
+        ticket_id: <%= ticket.id %>,
+        user_id: jQuery('#assign_change').val()
+    }
+    console.log(assigned);
+    jQuery.ajax({
+      url: '/ticket/assigned',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(assigned),
+      success: function(res) {
+	      window.location.replace(res.url);
+      },
+      error: function(res, err) {
+	      window.location.replace(res.responseJSON.url);
       }
-      console.log(assigned);
-      jQuery.ajax({
-          url: '/ticket/assigned',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify(assigned),
-          success: function(res) {
-			      window.location.replace(res.url);
-          },
-          error: function(req, err) {
-			      window.location.replace(res.responseJSON.url);
-          }
-        });
-      })
+    });
+  })
 });
 
 </script>
 <% } %>
+
+<script>
+
+jQuery(document).ready(function($){
+  jQuery('#reply_submit').click(function() {
+    var ticket = {
+      body: jQuery('#detail').val(),
+    }
+    jQuery.ajax({
+      url: '/ticket/reply',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(ticket),
+      success: function(res) {
+        console.log('POST success');
+        console.log(res);
+        if(res.response !== undefined) {
+          if($('#reply-status').is(":visible")) {
+            $('#reply-status').animate({
+              'height': 'toggle',
+              'opacity': 0
+            }, 500, 'linear', function() {
+              $('#reply-status').html(res.response).animate({
+                'height': 'toggle',
+                'opacity': 1
+              }, 450, 'linear');
+            });
+          } else {
+            $('#reply-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 525, 'linear');
+          }
+        } else if(res.redirect == true) {
+          window.location.replace(res.url);
+        } else {
+          console.log('bad reponse data');
+        }
+      },
+      error: function(res, err) {
+        console.log('POST error');
+        console.log(res);
+        //window.location.replace(res.responseJSON.url);
+      }
+    });
+  });
+});
+</script>
+
+</html>

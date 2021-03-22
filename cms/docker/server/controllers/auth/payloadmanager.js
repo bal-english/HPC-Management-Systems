@@ -20,7 +20,6 @@ const payload_types = {
 		"def_exp": 30
 	}*/
 };
-
 const payload_models = () => {
 	return {
 		"reg_auth": {
@@ -52,6 +51,7 @@ const payload_models = () => {
 	}
 }
 
+// TODO: Change to lambda function
 const default_account_perms = Array.from(db.datareq.getPermissions_def(true));
 const default_account_groups = Array.from(db.datareq.getUsergroups_def(true));
 
@@ -93,17 +93,20 @@ const authorityCheck = async (payload, perm_name) => {
 	if(payload.type == "reg_auth") {
 		throw "Not a valid token"
 	}
-
+	console.log(payload)
 	email_query = await db.datareq.getUserByEmail(payload.email).then(results => results.rows[0]);	// TODO: Add error handling
+	console.log(email_query)
 	user_id = email_query.id;
 	perm_query = await db.datareq.getPermissionByName(perm_name).then(results => results.rows[0]); // TODO: Add error handling
 	perm_id = perm_query.id;
 	return db.perm.userHasPerm(user_id, perm_id);
 }
+
 const nonceCheck = async (user_id, curr_nonce) => {
 	nonce = await db.datareq.getUserById(user_id).then(results => results.rows[0].nonce);
 	return nonce == curr_nonce;
 }
+
 const process = async (req, res) => {
 	var key = (await req.key);// delete req.key;
 	payload = {};

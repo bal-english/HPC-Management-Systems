@@ -1,5 +1,6 @@
 const port = 3000;
 const def_blogs_per_page = 3;
+
 var express = require('express');
 var ejs = require('ejs');
 var app = express();
@@ -95,14 +96,19 @@ async function revalidate_login(req, res, next) {
 function internal_prep(req, res, next) {
 	console.log(req.cookies);
 	if(req.internal === undefined) {
-		req.internal = {'problem': {}, 'banner': 'none', 'require': {'signin': false}, 'user': {'authed': false}};
+		req.internal = {'problem': {}, 'banner': 'none', 'require': {'signin': false, 'ticket_token': false}, 'user': {'authed': false}};
 		res.locals.user = req.internal.user;
 	};
+	req.internal.user.status = {'any':false};
 	next();
 };
 
 function enable_signin_required(req, res, next) {
 	req.internal.require.signin = true;
+	next();
+}
+function enabled_ticket_token_required(req, res, next) {
+	req.internal.require.ticket_token = true;
 	next();
 }
 
@@ -112,6 +118,7 @@ async function validate_signin(req, res, next) {
 	req.internal.problem.bad_email = await false;
 	req.internal.problem.bad_nonce = await false;
 	req.internal.problem.cannot_check_nonce = await false;
+	req.internal.problem.no_ticket_token = await false;
 
 	const token = req.cookies.token;
 	req.internal.problem.no_token = await new Promise((resolve, reject) => {
@@ -166,6 +173,32 @@ async function validate_signin(req, res, next) {
 			}
 		}
 	})
+	console.log("test0");
+	req.internal.problem.no_ticket_token = await new Promise(async (resolve, reject) => {
+		if(req.internal.require.ticket_token == true) {
+			console.log("test1a");
+			ticket_token = req.cookies.ticket;
+			if(ticket_token === undefined) {
+				console.log("test2a");
+				resolve(true);
+			} else {
+				console.log("test2b");
+				const key = await app.get('key');
+				try {
+					req.internal.ticket_payload = await plman.validate(ticket_token, key);
+					resolve(false);
+					console.log("test3a");
+				} catch(err) {
+					console.log("test2b");
+					console.log(err);
+					resolve(true);
+				}
+			}
+		} else {
+			console.log("test1b");
+			resolve(false);
+		}
+	});
 	req.internal.problem.any = () => {
 		for(key in req.internal.problem) {
 			if(key != "any" && (req.internal.problem[key] == true || req.internal.problem[key] === undefined)) {
@@ -179,14 +212,17 @@ async function validate_signin(req, res, next) {
 	}
 	req.internal.user.status = {'support': false, 'content': false, 'manager': false, 'admin': false};
 	if(req.internal.user.authed == true) {
-		req.internal.user.status.support = await ((await plman.authorityCheck(req.internal.user.payload, 'ticket.claim')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.track')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.assign')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.process.others')))
+		req.internal.user.status.admin =  await ((await plman.authorityCheck(req.internal.user.payload, 'db.admin')))
+		req.internal.user.status.support = await ((await plman.authorityCheck(req.internal.user.payload, 'ticket.claim')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.track')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.assign')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.process.self')) || (await plman.authorityCheck(req.internal.user.payload, 'ticket.process.others')))
 		req.internal.user.status.content = await ((await plman.authorityCheck(req.internal.user.payload, 'content.edit.others')) || (await plman.authorityCheck(req.internal.user.payload, 'content.publish.others')) || (await plman.authorityCheck(req.internal.user.payload, 'user.deactivate.others')))
-		req.internal.user.status.manager = await ((await plman.authorityCheck(req.internal.user.payload, 'db.admin')));
+		req.internal.user.status.manager = await (/*(await plman.authorityCheck(req.internal.user.payload, 'db.admin'))*/req.internal.user.status.admin || await plman.authorityCheck(req.internal.user.payload, 'user.deactivate.others'));
 	}
 	req.internal.user.status.any = (req.internal.user.status.support || req.internal.user.status.content || req.internal.user.status.manager || req.internal.user.status.admin);
 	console.log(req.internal.user.status);
 	res.locals.user = req.internal.user;
 	res.locals.authed = req.internal.user.authed;
+
+	console.log("test10");
 	next();
 }
 
@@ -203,9 +239,6 @@ async function process_banner(req, res, next) {
 	res.locals.banner = req.internal.banner;
 	req.internal.banner = 'none';
 	res.cookie('banner', 'none').set('cookie set');
-	next();
-}
-function log_problems(req, res, next) {
 	next();
 }
 
@@ -616,8 +649,6 @@ app.get('/rtt', function(req, res, next) {
 	})()
 });
 
-;
-
 app.get('/tt', function(req, res, next) {
 	(async () => {
 		var data = await db.datareq.getUserById(1).then(results => results.rows[0]);
@@ -740,7 +771,12 @@ app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_
 
 	const ticket_id = await parseInt(req.params.id);
 	ticket = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0]);
+	var key = await app.get('key');
+	ticket_token = await plman.tokenize(ticket, key);
+	res.cookie('ticket', ticket_token).set('cookie set');
 	user_id = parseInt(req.internal.user.id);
+	res.locals.user = req.internal.user;
+	res.locals.user.is_assigned = await db.exis.userIsAssignedTicket(req.internal.user.id, ticket_id).then(results => results.rows[0].case == 1);
 
 		// TODO: parse ticket_assignee for each assigned admin, pulling each admin's information to post to page ?
 
@@ -764,15 +800,288 @@ app.get('/ticket/:id([0-9]+)', [internal_prep, enable_signin_required, validate_
 	console.log(ticket_creator);
 
 	admin_check = await ((await plman.authorityCheck(req.internal.user.payload, "ticket.claim") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.assign") == true) || (await plman.authorityCheck(req.internal.user.payload, "ticket.process.others") == true));
+	perms = {"claim": false, "assign": false, "process": {"self": false, "others": false}};
+	if(req.internal.user.status.support == true) {
+		perms.any = true;
+		perms.claim = await plman.authorityCheck(req.internal.user.payload, "ticket.claim") == true;
+		perms.assign = await plman.authorityCheck(req.internal.user.payload, "ticket.assign") == true;
+		perms.process.self = await plman.authorityCheck(req.internal.user.payload, "ticket.process.self") == true;
+		perms.process.others = await plman.authorityCheck(req.internal.user.payload, "ticket.process.others") == true;
+	}
 
-	if(user_id != ticket.creator && !admin_check) {
+	if(user_id != ticket.creator && !perms.any) {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/mytickets');
 	}
 	else {
-		db.datareq.getPossibleTicketStatuses().then(results => results.rows[0].enum_range).then(stat_str => stat_str.substring(1, stat_str.length-1).split(',')).then(arr => res.render('pages/tickets/singleticket', {ticket: ticket, author: ticket_creator, assigned: assigned_admin, admin: admin_check, statuses: arr}))
+		const replies = await db.datareq.getTicketRepliesByTicketId(ticket_id).then(results => results.rows);
+		db.datareq.getPossibleTicketStatuses().then(results => results.rows[0].enum_range).then(stat_str => stat_str.substring(1, stat_str.length-1).split(',')).then(arr => res.render('pages/tickets/singleticket', {ticket: ticket, author: ticket_creator, assigned: assigned_admin, admin: perms.any, statuses: arr, replies: replies, perms: perms}))
 	}
 });
+
+app.post('/ticket/reply', [internal_prep, enable_signin_required, enabled_ticket_token_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else if(req.internal.problem.no_ticket_token) {
+			banner_message = 'The ticket information was not found or could not be decrypted (ERR: No Ticket Token)'
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
+	response = {'result': false, 'response': undefined, 'redirect': false, 'url': undefined};
+	console.log("test");
+	const payload = req.internal.user.payload;
+	const user_id = parseInt(req.internal.user.id);
+	const ticket_id = parseInt(req.internal.ticket_payload.id);
+	const author_id = parseInt(req.internal.ticket_payload.creator);
+	if(await db.exis.userIsAssignedTicket(req.internal.user.id, req.internal.ticket_payload.id).then(results => results.rows[0].case == 1) || user_id == author_id || await plman.authorityCheck(payload, "db.admin")) {
+		return db.create.ticket_reply(ticket_id, req.internal.user.id, req.body.body).then(results => results.rows[0].id).then(id => {
+			response.result = false;
+			response.redirect = true;
+			response.url = '/ticket/' + ticket_id;
+			return response;
+		}).then(response => res.status(200).json(response));
+	} else {
+		response.response = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/error/unauthorized_do.ejs'))
+		})
+		res.status(200).json(response);
+	}
+})
+
+app.post('/ticket/:id([0-9]+)/claim', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if(await plman.authorityCheck(req.internal.user.payload, "ticket.claim") == false && await plman.authorityCheck(req.internal.user.payload, "db.admin") == false) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
+	const ticket_id = parseInt(req.params.id);
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.internal.user.id).then(results => results.rows[0].case == 1);
+	exists.ticket = await db.exis.checkTicketExistsById(ticket_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.userIsAssignedTicket(req.internal.user.id, ticket_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.ticket && !exists.connection) {
+		try {
+			await db.connect.assignTicketToUser(req.internal.user.id, ticket_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': err.toString()};
+		}
+	}
+	status = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0].status)
+	if(status == 'Queued') {
+		try {
+			db.update.ticketStatus(ticket_id, 'Assigned');
+		} catch(err) {
+			console.log('ERR: could not update status of ' + ticket_id.toString() + ' from \'Queued\' to \'Assigned\'')
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Ticket Successfully Assigned.'}));
+		} else {
+			if(exists.user && exists.ticket) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You are already assigned to this ticket.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'Your account and this ticket were successfully identified, and you were not assigned to it, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.ticket) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error2.ejs', {message: 'Something went wrong - Neither your user account nor this ticket could be found.', message2: 'You should not be seeing this error. <strong> Please contact the website owner. </strong>'}));
+			} else if(!exists.user) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error2.ejs', {message: 'Something went wrong - A user account with your information could not be found on the server.', message2: 'You <i> probably <i> should not be seeing this error. <strong> Please contact the website owner. </strong>'}));
+			} else if(!exists.ticket) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'Something went wrong - This ticket could not be found. It may have been deleted manually.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.post('/ticket/:id([0-9]+)/assign', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if(await plman.authorityCheck(payload, "ticket.assign") == false && await plman.authorityCheck(payload, "db.admin") == false) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
+	const ticket_id = parseInt(req.params.id);
+	const user_id = parseInt(req.body.user_id);
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.ticket = await db.exis.checkTicketExistsById(ticket_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.userIsAssignedTicket(req.body.user_id, ticket_id).then(results => results.rows[0].case == 1);
+	result = {'success': false}
+	if(exists.user && exists.ticket && !exists.connection) {
+		try {
+			await db.connect.assignTicketToUser(req.body.user_id, ticket_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': err.toString()};
+		}
+	}
+	status = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0].status)
+	if(status == 'Queued') {
+		try {
+			db.update.ticketStatus(ticket_id, 'Assigned');
+		} catch(err) {
+			console.log('ERR: could not update status of ' + ticket_id.toString() + ' from \'Queued\' to \'Assigned\'')
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Ticket Successfully Assigned.'}));
+		} else {
+			if(exists.user && exists.ticket) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That user is already assigned to this ticket.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That user and this ticket exist and you are not connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.ticket) {
+
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That User and this ticket with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.ticket) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'This ticket could not be found. It may have been deleted manually.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.delete('/ticket/:id([0-9]+)/assign', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else if(await plman.authorityCheck(payload, "ticket.assign") == false && await plman.authorityCheck(payload, "db.admin") == false) {
+		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		next();
+	}
+}], async function(req, res, next) {
+	const ticket_id = parseInt(req.params.id);
+	const user_id = parseInt(req.body.user_id);
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.ticket = await db.exis.checkTicketExistsById(ticket_id).then(results => results.rows[0].case == 1);
+	exists.connection = await db.exis.userIsAssignedTicket(req.body.user_id, ticket_id).then(results => results.rows[0].case == 1);
+	console.log(exists);
+	result = {'success': false}
+	if(exists.user && exists.ticket && exists.connection) {
+		try {
+			await db.connect.unassignTicketToUser(user_id, ticket_id)
+			result = {'success': true};
+		} catch(err) {
+			result = await {'success': false, 'err': err.toString()};
+		}
+	}
+
+	assignee_count = await db.quan.getCountOfUsersAssignedToTicket(ticket_id).then(results => results.rows[0].count);
+	if(assignee_count == 0) {
+		status = await db.datareq.getTicketById(ticket_id).then(results => results.rows[0].status)
+		try {
+			db.update.ticketStatus(ticket_id, 'Queued');
+		} catch(err) {
+			console.log('ERR: could not update status of ' + ticket_id.toString() + ' from ' + status + ' to \'Queued\'')
+		}
+	}
+	console.log(result);
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'Ticket Successfully Unassigned.'}));
+		} else {
+			if(exists.user && exists.ticket) {
+				if(exists.connection) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That user is already not assigned to this ticket.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That user and this ticket exist and you are connected, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user && !exists.ticket) {
+
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That User and this ticket with those IDs could not be found.'}));
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			} else if(!exists.ticket) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'This ticket could not be found. It may have been deleted manually.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
 
 app.post('/ticket/status', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
 		if(req.internal.problem.no_token == true) {
@@ -805,27 +1114,6 @@ app.post('/ticket/status', [internal_prep, enable_signin_required, validate_sign
 	}
 });
 
-/*
-app.post('/ticket/status', [verify_signin, revalidate_login], async function(req, res) {
-
-	const payload = req.internal.payload;
-	if((await plman.authorityCheck(payload, "ticket.claim") == true || plman.authorityCheck(payload, "ticket.assign") == true || plman.authorityCheck(payload, "ticket.process.others")) == true) {
-
-		var ticket_status = req.body.status;
-		var ticket_id = req.body.ticket_id;
-		console.log(ticket_status);
-		console.log(ticket_id);
-
-		var t_id = db.update.ticketStatus(ticket_id, ticket_status).then(results => results.rows[0].id);
-		res.redirect('/ticket/' + t_id);
-		res.end();
-
-	} else {
-		res.cookie('banner','error/unauthorized_view').set('cookie set');
-		res.redirect('/');
-	}
-});
-*/
 app.post('/ticket/assigned', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
 		if(req.internal.problem.no_token == true) {
 			req.internal.banner = 'auth/signin_required';
@@ -859,6 +1147,155 @@ app.post('/ticket/assigned', [internal_prep, enable_signin_required, validate_si
 	}
 });
 
+async function support_pagination_check(req, res, next) {
+	//req.internal.pagination.support = {};
+	if(req.query.assignedpage === undefined) {
+		req.query.assignedpage = 0;
+	} else {
+		req.query.assignedpage = parseInt(req.query.assignedpage);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.assignedview === undefined) {
+		req.query.assignedview = app.get('pagination').blog_def;
+	} else {
+		req.query.assignedview = parseInt(req.query.assignedview);	// TODO: Add error handling for NaN and #<1
+	}
+
+	if(req.query.inprogpage === undefined) {
+		req.query.inprogpage = 0;
+	} else {
+		req.query.inprogpage = parseInt(req.query.assignedpage);	// TODO: Add error handling for NaN and #<1
+	}
+	if(req.query.inprogview === undefined) {
+		req.query.inprogview = app.get('pagination').blog_def;
+	} else {
+		req.query.inprogview = parseInt(req.query.assignedview);	// TODO: Add error handling for NaN and #<1
+	}
+
+	if(req.query.queuedpage === undefined) {
+		req.query.queuedpage = 0;
+	} else {
+		req.query.queuedpage = parseInt(req.query.queuedpage);
+	}
+	if(req.query.queuedview === undefined) {
+		req.query.queuedview = app.get('pagination').blog_def;
+	} else {
+		req.query.queuedview = parseInt(req.query.queuedview);
+	}
+	next();
+}
+
+app.get('/admin/support', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, support_pagination_check, process_banner], async function(req, res, next) {
+	perms = await {"db.admin": req.internal.user.status.admin, "ticket.process.self": false, "ticket.process.others": false, "ticket.claim": false, "ticket.track": false, "ticket.assign": false, "any": false}
+	/*for(key in req.internal.problem) {
+		if(key != "any" && (req.internal.problem[key] == true || req.internal.problem[key] === undefined)) {
+			return true;
+		}
+	}*/
+	for(key in perms) {
+		if(key != "any" && key != "db.admin") {
+			console.log(req.internal.user.payload)
+			perms[key] = await plman.authorityCheck(req.internal.user.payload, key);
+			if(perms[key] == true) {
+				perms["any"] = true;
+			}
+		}
+	}
+	console.log(perms);
+
+	const user_id = parseInt(req.internal.user.id);
+	const assigned_page_data = await db.quan.getCountOfQueuedTicketsAssignedToUserByUserId(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.assignedpage, req.query.assignedview, total, "assigned"))
+	assigned_offset = assigned_page_data.currpage*assigned_page_data.view;
+	res.locals.assigned_page_data = assigned_page_data;
+	assigned_data = await db.datareq.getQueuedTicketsAssignedToUserSubsetByUserId(user_id, assigned_offset, assigned_page_data.view).then(results => results.rows)//db.datareq.getTicketsAssignedToUserSubsetByUserId(user_id, assigned_offset, assigned_page_data.view).then(results => results.rows)
+
+	const inprog_page_data = await db.quan.getCountOfInProgressTicketsAssignedToUserByUserId(user_id).then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.inprogpage, req.query.inprogview, total, "inprog"))
+	inprog_offset = inprog_page_data.currpage*inprog_page_data.view;
+	res.locals.inprog_page_data = inprog_page_data;
+	inprog_data = await db.datareq.getInProgressTicketsAssignedToUserSubsetByUserId(user_id, inprog_offset, inprog_page_data.view).then(results => results.rows)
+
+	/*const usersgroups = await db.datareq.getUsergroupsOfUser(user_id).then(results => results.rows).then(vals => {
+		arr = []
+		vals.forEach(val => {
+			arr.push(val.group_id);
+		})
+		return arr;
+	}).then()
+	const group_inprog_page_data = await db.quan.getCountOfInProgressTicketsAssignedToGroupByGroupId(group)
+	*/
+
+	const queued_page_data = await db.quan.getCountOfUnassignedTickets().then(qres => qres.rows[0].count).then(total => prepare_pagination(req.path, req.query.queuedpage, req.query.queuedview, total, "queued"))
+	queued_offset = queued_page_data.currpage*queued_page_data.view;
+	res.locals.queued_page_data = queued_page_data;
+	queued_data = await db.datareq.getUnassignedTicketsSubset(queued_offset, queued_page_data.view).then(results => results.rows)
+
+	res.locals.redirect_data = {
+		'redirect': req.path,
+		'queries': {
+			'assignedpage': req.query.assignedpage,
+			'assignedview': req.query.assignedview,
+			'inprogpage': req.query.inprogpage,
+			'inprogview': req.query.inprogview
+		}
+	};
+	if(perms.any == true) {
+		res.render('pages/admin/support/landing', {assigned_queue: assigned_data, assigned_queue_page_data: assigned_page_data, inprog_set: inprog_data, inprog_page_data: inprog_page_data, queued_set: queued_data, queued_page_data: queued_page_data});
+	} else {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/');
+	}
+});
+
+app.get('/admin/manage', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
+	if(req.internal.problem.no_token) {
+		req.internal.banner = 'auth/signin_required'
+		res.clearCookie('token');
+	} else if(req.internal.problem.invalid_token == true || req.internal.problem.bad_email == true) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.cannot_check_nonce) {
+		req.internal.banner = 'auth/invalid_default'
+		res.clearCookie('token');
+	} else if(req.internal.problem.bad_nonce) {
+		req.internal.banner = 'auth/invalid_nonce'
+		res.clearCookie('token');
+	}
+	if(req.internal.problem.any() == true) {
+		res.cookie('banner', req.internal.banner).set('cookie set');
+		res.redirect('/');
+	} else {
+		next();
+	}
+}, process_banner], async function(req, res, next) {
+	result = await plman.authorityCheck(req.internal.user.payload, "db.admin")
+	console.log(result)
+	if(result == true) {
+		res.render('pages/admin/site/landing');
+	} else {
+		res.cookie('banner','error/unauthorized_view').set('cookie set');
+		res.redirect('/');
+	}
+});
+
 app.get('/admin/manage/usergroup', [internal_prep, enable_signin_required, validate_signin, function(req, res, next) {
 	if(req.internal.problem.no_token) {
 		req.internal.banner = 'auth/signin_required'
@@ -881,13 +1318,12 @@ app.get('/admin/manage/usergroup', [internal_prep, enable_signin_required, valid
 	}
 }, process_banner], async function(res, res, next) {
 	if((await plman.authorityCheck(payload, "db.admin") == true)) {
-		res.render('pages/admin/usergroup-management');
+		res.render('pages/admin/site/usergroup-management');
 	} else {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/');
 	}
 });
-
 
 app.post('/admin/manage/usergroup/perm', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
 	result = {'success': false, 'auth': false};
@@ -1033,9 +1469,9 @@ app.get('/admin/manage/user', [internal_prep, enable_signin_required, validate_s
 	} else {
 		next();
 	}
-}, process_banner], async function(res, res, next) {
-	if((await plman.authorityCheck(payload, "db.admin") == true) || (await plman.authorityCheck(payload, "user.deactivate.others"))) {
-		res.render('pages/admin/user-management');
+}, process_banner], async function(req, res, next) {
+	if((await plman.authorityCheck(req.internal.user.payload, "db.admin") == true) || (await plman.authorityCheck(req.internal.user.payload, "user.deactivate.others"))) {
+		res.render('pages/admin/site/user-management');
 	} else {
 		res.cookie('banner','error/unauthorized_view').set('cookie set');
 		res.redirect('/');
@@ -1061,7 +1497,7 @@ app.post('/admin/manage/user/group', [internal_prep, enable_signin_required, val
 			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
 		})
 		res.status(200).json({'result': result, 'response': htmlResponse});
-	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+	} else if(await plman.authorityCheck(payload, "db.admin") == false) {
 		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
 		res.status(200).json({'result': result, 'response': htmlResponse});
 	} else {
@@ -1122,7 +1558,7 @@ app.delete('/admin/manage/user/group', [internal_prep, enable_signin_required, v
 			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
 		})
 		res.status(200).json({'result': result, 'response': htmlResponse});
-	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+	} else if(await plman.authorityCheck(payload, "db.admin") == false) {
 		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
 		res.status(200).json({'result': result, 'response': htmlResponse});
 	} else {
@@ -1183,7 +1619,7 @@ app.post('/admin/manage/user/perm', [internal_prep, enable_signin_required, vali
 			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
 		})
 		res.status(200).json({'result': result, 'response': htmlResponse});
-	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+	} else if(await plman.authorityCheck(payload, "db.admin") == false) {
 		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
 		res.status(200).json({'result': result, 'response': htmlResponse});
 	} else {
@@ -1245,7 +1681,7 @@ app.delete('/admin/manage/user/perm', [internal_prep, enable_signin_required, va
 			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
 		})
 		res.status(200).json({'result': result, 'response': htmlResponse});
-	} else if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+	} else if(await plman.authorityCheck(payload, "db.admin") == false) {
 		htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
 		res.status(200).json({'result': result, 'response': htmlResponse});
 	} else {
@@ -1281,6 +1717,128 @@ app.delete('/admin/manage/user/perm', [internal_prep, enable_signin_required, va
 				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
 			} else if(!exists.perm) {
 				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A Permission with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+
+
+app.patch('/admin/manage/user/deactivate', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		result.auth = true;
+		if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+			htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+			res.status(200).json({'result': result, 'response': htmlResponse});
+		} else {
+			next();
+		}
+	}
+}], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.activated = await db.exis.checkUserDeactivatedById(req.body.user_id).then(results => results.rows[0].deactivated != 1);
+	result = {'success': false}
+	if(exists.user && exists.activated) {
+		try {
+			await db.update.user.deactivate(req.body.user_id)
+			result = {'success': true};
+		} catch(err) {
+			console.log(err);
+			result = await {'success': false, 'err': err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'User successfully deactivated.'}));
+		} else {
+			if(exists.user) {
+				if(!exists.activated) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That user is already inactive.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User exists and isn\'t deactivated, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
+			}
+		}
+	});
+	res.status(200).json({'result': result, 'exist_data': exists, 'response': htmlResponse});
+})
+
+app.patch('/admin/manage/user/reactivate', [internal_prep, enable_signin_required, validate_signin, async function(req, res, next) {
+	result = {'success': false, 'auth': false};
+	if(req.internal.problem.any() == true) {
+		banner_message = 'Your authorization could not be verified';
+		if(req.internal.problem.no_token) {
+			banner_message += ' (ERR: No Auth)';
+		} else if(req.internal.problem.invalid_token == true) {
+			banner_message += ' (ERR: Invalid Auth)';
+		} else if(req.internal.problem.bad_email == true || req.internal.problem.cannot_check_nonce == true) {
+			banner_message += ' (ERR: Bad Auth)';
+		} else if(req.internal.problem.bad_nonce) {
+			banner_message += ' (ERR: Bad Nonce)';
+		} else {
+			banner_message += ' (ERR: Unknown)';
+		}
+		htmlResponse = await new Promise((resolve, reject) => {
+			return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: banner_message}))
+		})
+		res.status(200).json({'result': result, 'response': htmlResponse});
+	} else {
+		result.auth = true;
+		if((await plman.authorityCheck(payload, "db.admin") == false) && (await plman.authorityCheck(payload, "user.deactivate.others") == false)) {
+			htmlResponse = await ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'You do not have permission to do that action.'});
+			res.status(200).json({'result': result, 'response': htmlResponse});
+		} else {
+			next();
+		}
+	}
+}], async function(req, res, next) {
+	exists = {};
+	exists.user = await db.exis.checkUserExistsById(req.body.user_id).then(results => results.rows[0].case == 1);
+	exists.activated = await db.exis.checkUserDeactivatedById(req.body.user_id).then(results => results.rows[0].deactivated != 1);
+	result = {'success': false}
+	if(exists.user && !exists.activated) {
+		try {
+			await db.update.user.reactivate(req.body.user_id)
+			result = {'success': true};
+		} catch(err) {
+			console.log(err);
+			result = await {'success': false, 'err': err.toString()};
+		}
+	}
+	htmlResponse = await new Promise((resolve, reject) => {
+		if(result.success) {
+			return resolve(ejs.renderFile('../views/templates/alert/std/success.ejs', {message: 'User successfully reactivated.'}));
+		} else {
+			if(exists.user) {
+				if(exists.activated) {
+					return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'That user is already active.'}));
+				} else {
+					return resolve(ejs.renderFile('../views/templates/alert/std/warning.ejs', {message: 'That User exists and is deactivated, but the server returned a failure state for an unknown reason.'}));
+				}
+			} else if(!exists.user) {
+				return resolve(ejs.renderFile('../views/templates/alert/std/error.ejs', {message: 'A User with that ID could not be found.'}));
 			}
 		}
 	});

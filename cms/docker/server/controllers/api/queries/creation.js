@@ -11,15 +11,24 @@ const user = async (lastName, firstName, email) => {
 }
 
 const blog = (title, author, group, body) => {
+	//TODO: Add parseint
 	return pool.query('INSERT INTO \"blog\" (\"title\", \"author\", \"group\", \"body\") VALUES ($1, $2, $3, $4) RETURNING \"id\"', [title, author, group, body]);
 }
 
-const ticket = (email, title, body) => {
-	return pool.query('INSERT INTO \"ticket\" (\"creator\", \"title\", \"body\") VALUES ($1, $2, $3) RETURNING \"id\"', [email, title, body]);
+const ticket = (u_id, title, body) => {
+	const user_id = parseInt(u_id);
+	return pool.query('INSERT INTO \"ticket\" (\"creator\", \"title\", \"body\") VALUES ($1, $2, $3) RETURNING \"id\"', [user_id, title, body]);
+}
+
+const ticket_reply = (parent_ticket, author, body) => {
+	const parent = parseInt(parent_ticket);
+	const user_id = parseInt(author);
+	return pool.query('INSERT INTO \"thread-reply\" (\"parent\", \"author\", \"body\") VALUES ($1, $2, $3) RETURNING \"id\"', [parent, user_id, body]);
 }
 
 module.exports = {
 	user,
   blog,
   ticket,
+	ticket_reply
 }

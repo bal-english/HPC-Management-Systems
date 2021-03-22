@@ -186,7 +186,7 @@
 </div>
 
 <br>
-<% if(false) { %> <!-- disabled for now -->
+<% if(true) { %> <!-- disabled for now -->
 <div class="container">
   <div class="accordion" id="deactAccordion">
     <div class="card">
@@ -197,7 +197,7 @@
           </button>
         </h2>
       </div>
-      <div id="UD-collapseOne" class="collapse" aria-labelledby="UD-headingOne" data-parent="#permAccordion">
+      <div id="UD-collapseOne" class="collapse" aria-labelledby="UD-headingOne" data-parent="#deactAccordion">
         <div class="card-body">
             <div class="row">
               <div class="p-2">
@@ -228,7 +228,7 @@
             </button>
           </h2>
         </div>
-        <div id="UD-collapseTwo" class="collapse" aria-labelledby="UD-headingTwo" data-parent="#permAccordion">
+        <div id="UD-collapseTwo" class="collapse" aria-labelledby="UD-headingTwo" data-parent="#deactAccordion">
           <div class="card-body">
 
             <div class="row">
@@ -420,6 +420,78 @@ jQuery(document).ready(function($){
       },
       error: async function(res, err) {
         console.log('DELETE error');
+      }
+    });
+  })
+  jQuery('#UD-De-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UD-De-user_id').val(),
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/deactivate',
+      type: 'PATCH',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('PATCH success');
+        console.log(res);
+        if($('#UD-De-status').is(":visible")) {
+          $('#UD-De-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UD-De-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UD-De-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('PATCH error');
+      }
+    });
+  })
+  jQuery('#UD-Re-submit').click(function() {
+    var data = {
+        user_id: jQuery('#UD-Re-user_id').val()
+      }
+    console.log(data);
+    jQuery.ajax({
+      url: '/admin/manage/user/reactivate',
+      type: 'PATCH',
+      // dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: async function(res) {
+        console.log('PATCH success');
+        console.log(res);
+        if($('#UD-Re-status').is(":visible")) {
+          $('#UD-Re-status').animate({
+            'height': 'toggle',
+            'opacity': 0
+          }, 500, 'linear', function() {
+            $('#UD-Re-status').html(res.response).animate({
+              'height': 'toggle',
+              'opacity': 1
+            }, 450, 'linear');
+          });
+        } else {
+          $('#UD-Re-status').html(res.response).animate({
+            'height': 'toggle',
+            'opacity': 1
+          }, 525, 'linear');
+        }
+      },
+      error: async function(res, err) {
+        console.log('PATCH error');
       }
     });
   })
