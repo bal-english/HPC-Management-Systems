@@ -19,7 +19,7 @@
     "tslint": "^6.0.0",
     "tsmonad": "^0.8.0",
     "typescript": "^3.8.3",
-    "validator": "^13.1.1"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@types/ldapjs": "^1.0.7"
