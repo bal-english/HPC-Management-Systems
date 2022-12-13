@@ -12,7 +12,7 @@
     "@types/express": "^4.17.3",
     "bluebird": "^3.7.2",
     "ejs": "^3.1.2",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "ldapjs": "^1.0.2",
     "paseto": "^1.0.7",
     "tslint": "^6.0.0",
